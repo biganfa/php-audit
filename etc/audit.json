@@ -1,0 +1,44 @@
+{
+  "database": {
+    "host_name": "localhost",
+    "user_name": "rank_owner",
+    "password": "rank_owner",
+    "database_name": "rank_data"
+  },
+  "audit_columns": [
+    {
+      "name": "audit_timestamp",
+      "type": "datetime not null",
+      "expression": "@audit_uuid"
+    },
+    {
+      "name": "audit_type ",
+      "type": "varchar(4)",
+      "expression": ""
+    },
+    {
+      "name": "audit_uuid",
+      "type": "bigint unsigned not null",
+      "expression": "@audit_uuid"
+    },
+    {
+      "name": "rownum",
+      "type": "int unsigned not null",
+      "expression": "@audit_rownum"
+    },
+    {
+      "name": "audit_ses_id",
+      "type": " int unsigned,",
+      "expression": "@abc_g_ses_id"
+    },
+    {
+      "name": "audit_usr_id ",
+      "type": " int unsigned,",
+      "expression": "@abc_g_usr_id"
+    }
+  ],
+  "tables": {
+    "ABC_BLOB": "True",
+    "ABC_BLOB_DATA": "False"
+  }
+}
