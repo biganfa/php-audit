@@ -1,4 +1,5 @@
-# Created by .ignore support plugin (hsz.mobi)
 .idea
-vendor/
+bin/phing
+bin/phpunit
 composer.lock
+vendor/
