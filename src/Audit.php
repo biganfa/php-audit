@@ -77,6 +77,8 @@ class Audit
 
     $this->getColumns();
 
+    $this->generateSqlCreateTable();
+
     // Drop database connection
     DataLayer::disconnect();
 
@@ -106,6 +108,54 @@ class Audit
       $this->myConfig['table_columns'] = [];
     }
     $this->rewriteConfig();
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
+   * Generate sql code for creating table with merging columns.
+   *
+   * @return array
+   */
+  public function generateSqlCreateTable()
+  {
+    foreach ($this->myConfig['tables'] as $table_name => $flag)
+    {
+      if (filter_var($flag, FILTER_VALIDATE_BOOLEAN))
+      {
+        $sql_create = "CREATE TABLE AUD_{$table_name} (";
+        $columns    = $this->getMergeColumns($table_name);
+        foreach ($columns as $column)
+        {
+          $sql_create .= $column['name'].' '.$column['type'].",";
+        }
+        $sql_create .= ");";
+
+        print_r($sql_create);
+      }
+    }
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
+   * Generate array with audit columns and columns from data table.
+   *
+   * @param $theTableName  string name of table
+   *
+   * @return array
+   */
+  public function getMergeColumns($theTableName)
+  {
+    $columns = [];
+    foreach ($this->myConfig['audit_columns'] as $column)
+    {
+      $columns[] = ['name' => $column['name'], 'type' => $column['type']];
+    }
+    foreach ($this->myConfig['table_columns'][$theTableName] as $name => $type)
+    {
+      $columns[] = ['name' => $name, 'type' => $type.' DEFAULT NULL'];
+    }
+
+    return $columns;
   }
 
   //--------------------------------------------------------------------------------------------------------------------
