@@ -205,18 +205,20 @@ class DataLayer
   /**
    * Select all table names in a schema.
    *
-   * @param $theSchemaName string name of database
+   * @param string $theSchemaName name of database
    *
-   * @return array
+   * @return array[]
    */
-  public static function getTablesNames($theSchemaName)
+  public static function getTables($theSchemaName)
   {
-    $sql = '
+    $sql = "
 select TABLE_NAME AS table_name
 from   information_schema.TABLES
-where  TABLE_SCHEMA = "'.$theSchemaName.'"
-and    TABLE_TYPE = "BASE TABLE"
-ORDER BY TABLE_NAME';
+where  TABLE_SCHEMA = '%s'
+and    TABLE_TYPE   = 'BASE TABLE'
+ORDER BY TABLE_NAME";
+
+    $sql = sprintf($sql, self::$ourMySql->real_escape_string($theSchemaName));
 
     return self::executeRows($sql);
   }

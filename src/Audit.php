@@ -182,9 +182,9 @@ class Audit
    */
   public function listOfTables()
   {
-    $this->myDataSchemaTables = DataLayer::getTablesNames('rank_data');
+    $this->myDataSchemaTables = DataLayer::getTables('rank_data');
 
-    $this->myAuditSchemaTables = DataLayer::getTablesNames('rank_audit');
+    $this->myAuditSchemaTables = DataLayer::getTables('rank_audit');
   }
 
   //--------------------------------------------------------------------------------------------------------------------
