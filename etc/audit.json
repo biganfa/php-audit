@@ -40,5 +40,17 @@
   "tables": {
     "ABC_BLOB": "True",
     "ABC_BLOB_DATA": "False"
+  },
+  "table_columns": {
+    "ABC_BLOB": {
+      "bdt_id": "int",
+      "blb_crc32": "int",
+      "blb_file_name": "varchar",
+      "blb_id": "int",
+      "blb_inserted": "datetime",
+      "blb_mime_type": "varchar",
+      "blb_size": "int",
+      "cmp_id": "smallint"
+    }
   }
 }

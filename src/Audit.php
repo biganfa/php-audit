@@ -20,6 +20,13 @@ class Audit
   private $myConfig;
 
   /**
+   * If true remove all column information from config file.
+   *
+   * @var boolean
+   */
+  private $myPruneOption;
+
+  /**
    * Array of tables from audit schema.
    *
    * @var array
@@ -44,13 +51,17 @@ class Audit
   /**
    * Main function .
    *
-   * @param string $theConfigFilename
+   * @param string  $theConfigFilename
+   *
+   * @param boolean $thePruneOption
    *
    * @return int
    */
-  public function main($theConfigFilename)
+  public function main($theConfigFilename, $thePruneOption)
   {
     $this->myConfigFileName = $theConfigFilename;
+
+    $this->myPruneOption = $thePruneOption;
 
     $this->readConfigFile($theConfigFilename);
 
@@ -64,12 +75,37 @@ class Audit
 
     $this->compareAuditTables();
 
-    $this->columnsOfTable();
+    $this->getColumns();
 
     // Drop database connection
     DataLayer::disconnect();
 
     return 0;
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
+   * Compares the tables listed in the config file and the tables found in the audit schema
+   */
+  public function getColumns()
+  {
+    $this->myConfig['table_columns'] = [];
+    foreach ($this->myConfig['tables'] as $table_name => $flag)
+    {
+      if (filter_var($flag, FILTER_VALIDATE_BOOLEAN))
+      {
+        $columns = $this->columnsOfTable($table_name);
+        foreach ($columns as $column)
+        {
+          $this->myConfig['table_columns'][$table_name][$column['column_name']] = $column['data_type'];
+        }
+      }
+    }
+    if ($this->myPruneOption==1)
+    {
+      $this->myConfig['table_columns'] = [];
+    }
+    $this->rewriteConfig();
   }
 
   //--------------------------------------------------------------------------------------------------------------------
@@ -153,13 +189,17 @@ class Audit
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
-   * Getting list of all tables from information_schema of database from config file.
+   * Getting columns names and data_types from table from information_schema of database from config file.
+   *
+   * @param $theTableName
+   *
+   * @return array
    */
-  public function columnsOfTable()
+  public function columnsOfTable($theTableName)
   {
-    $result = DataLayer::getTableColumns('rank_data', 'RNK_SYSTEM');
+    $result = DataLayer::getTableColumns('rank_data', $theTableName);
 
-//    var_dump($result);
+    return $result;
   }
 
   //--------------------------------------------------------------------------------------------------------------------

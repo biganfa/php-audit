@@ -36,8 +36,13 @@ function getSetting($options)
   {
     switch ($param)
     {
+      case '--prune':
+        $setting['prune']  = true;
+        $setting['config'] = array_shift($options);
+        break;
       case '-c':
       case '--config':
+        $setting['prune']  = false;
         $setting['config'] = array_shift($options);
         break;
     }
@@ -84,7 +89,7 @@ function main($options)
   $setting = getSetting($options);
 
   $constants = new Audit();
-  $ret       = $constants->main($setting['config']);
+  $ret       = $constants->main($setting['config'], $setting['prune']);
   if ($ret!=0) exit($ret);
 
   exit(0);
