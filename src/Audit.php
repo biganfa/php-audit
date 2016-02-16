@@ -276,7 +276,7 @@ class Audit
    */
   private function rewriteConfig()
   {
-    Util::writeTwoPhases($this->myConfigFileName, json_encode($this->myConfig));
+    Util::writeTwoPhases($this->myConfigFileName, json_encode($this->myConfig,JSON_PRETTY_PRINT));
   }
 
   //--------------------------------------------------------------------------------------------------------------------
