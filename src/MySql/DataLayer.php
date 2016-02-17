@@ -10,7 +10,6 @@
 //----------------------------------------------------------------------------------------------------------------------
 namespace SetBased\Audit\MySql;
 
-use SetBased\Audit\Exception\FallenException;
 use SetBased\Audit\Exception\ResultException;
 use SetBased\Audit\Exception\RuntimeException;
 
@@ -27,13 +26,6 @@ class DataLayer
    * @var string
    */
   public static $ourCharSet = 'utf8';
-
-  /**
-   * If set queries must be logged.
-   *
-   * @var bool
-   */
-  public static $ourQueryLogFlag = false;
 
   /**
    * The SQL mode of the MySQL instance.
@@ -70,25 +62,11 @@ class DataLayer
   protected static $ourHaveFetchAll;
 
   /**
-   * Value of variable max_allowed_packet
-   *
-   * @var int
-   */
-  protected static $ourMaxAllowedPacket;
-
-  /**
    * The connection between PHP and the MySQL instance.
    *
    * @var \mysqli
    */
   protected static $ourMySql;
-
-  /**
-   * The query log.
-   *
-   * @var array[]
-   */
-  protected static $ourQueryLog;
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
@@ -101,30 +79,6 @@ class DataLayer
   {
     $ret = self::$ourMySql->autocommit(false);
     if (!$ret) self::mySqlError('mysqli::autocommit');
-  }
-
-  //--------------------------------------------------------------------------------------------------------------------
-  /**
-   * @param \mysqli_stmt $stmt
-   * @param array        $out
-   */
-  public static function bindAssoc($stmt, &$out)
-  {
-    $data = $stmt->result_metadata();
-    if (!$data) self::mySqlError('mysqli_stmt::result_metadata');
-
-    $fields = [];
-    $out    = [];
-
-    while ($field = $data->fetch_field())
-    {
-      $fields[] = &$out[$field->name];
-    }
-
-    $b = call_user_func_array([$stmt, 'bind_result'], $fields);
-    if ($b===false) self::mySqlError('mysqli_stmt::bind_result');
-
-    $data->free();
   }
 
   //--------------------------------------------------------------------------------------------------------------------
@@ -199,49 +153,6 @@ class DataLayer
       self::$ourMySql->close();
       self::$ourMySql = null;
     }
-  }
-
-  //--------------------------------------------------------------------------------------------------------------------
-  /**
-   * Select all table names in a schema.
-   *
-   * @param $theSchemaName string name of database
-   *
-   * @return array
-   */
-  public static function getTablesNames($theSchemaName)
-  {
-    $sql = '
-select TABLE_NAME AS table_name
-from   information_schema.TABLES
-where  TABLE_SCHEMA = "'.$theSchemaName.'"
-and    TABLE_TYPE = "BASE TABLE"
-ORDER BY TABLE_NAME';
-
-    return self::executeRows($sql);
-  }
-
-  //--------------------------------------------------------------------------------------------------------------------
-  /**
-   * Select all columns from table in a schema.
-   *
-   * @param $theSchemaName string name of database
-   *
-   * @param $theTableName  string name of table
-   *
-   * @return array
-   */
-  public static function getTableColumns($theSchemaName, $theTableName)
-  {
-    $sql = '
-select COLUMN_NAME AS column_name
-,      DATA_TYPE AS data_type
-from   information_schema.COLUMNS
-where  TABLE_SCHEMA = "'.$theSchemaName.'"
-and    TABLE_NAME = "'.$theTableName.'"
-ORDER BY COLUMN_NAME';
-
-    return self::executeRows($sql);
   }
 
   //--------------------------------------------------------------------------------------------------------------------
@@ -395,109 +306,6 @@ ORDER BY COLUMN_NAME';
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
-   * Executes a query and shows the data in a formatted in a table (like mysql's default pager) of in multiple tables
-   * (in case of a multi query).
-   *
-   * @param string $theQuery The query.
-   *
-   * @return int The total number of rows in the tables.
-   */
-  public static function executeTable($theQuery)
-  {
-    $row_count = 0;
-
-    self::multi_query($theQuery);
-    do
-    {
-      $result = self::$ourMySql->store_result();
-      if (self::$ourMySql->errno) self::mySqlError('mysqli::store_result');
-      if ($result)
-      {
-        $columns = [];
-
-        // Get metadata to array.
-        foreach ($result->fetch_fields() as $str_num => $column)
-        {
-          $columns[$str_num]['header'] = $column->name;
-          $columns[$str_num]['type']   = $column->type;
-          $columns[$str_num]['length'] = max(4, $column->max_length, strlen($column->name));
-        }
-
-        // Show the table header.
-        self::executeTableShowHeader($columns);
-
-        // Show for all rows all columns.
-        while ($row = $result->fetch_row())
-        {
-          $row_count++;
-
-          // First row separator.
-          echo "|";
-
-          foreach ($row as $i => $value)
-          {
-            self::executeTableShowTableColumn($columns[$i], $value);
-            echo "|";
-          }
-
-          echo "\n";
-        }
-
-        // Show the table footer.
-        self::executeTableShowFooter($columns);
-      }
-
-      $continue = self::$ourMySql->more_results();
-      if ($continue)
-      {
-        $tmp = self::$ourMySql->next_result();
-        if ($tmp===false) self::mySqlError('mysqli::next_result');
-      }
-    } while ($continue);
-
-    return $row_count;
-  }
-
-  //--------------------------------------------------------------------------------------------------------------------
-  /**
-   * Returns the value of the MySQL variable max_allowed_packet.
-   *
-   * @return int
-   */
-  public static function getMaxAllowedPacket()
-  {
-    if (!isset(self::$ourMaxAllowedPacket))
-    {
-      $query              = "show variables like 'max_allowed_packet'";
-      $max_allowed_packet = self::executeRow1($query);
-
-      self::$ourMaxAllowedPacket = $max_allowed_packet['Value'];
-
-      // Note: When setting $ourChunkSize equal to $ourMaxAllowedPacket it is not possible to transmit a LOB
-      // with size $ourMaxAllowedPacket bytes (but only $ourMaxAllowedPacket - 8 bytes). But when setting the size of
-      // $ourChunkSize less than $ourMaxAllowedPacket than it is possible to transmit a LOB with size
-      // $ourMaxAllowedPacket bytes.
-      self::$ourChunkSize = min(self::$ourMaxAllowedPacket - 8, 1024 * 1024);
-    }
-
-    return self::$ourMaxAllowedPacket;
-  }
-
-  //--------------------------------------------------------------------------------------------------------------------
-  /**
-   * Returns the query log.
-   *
-   * To enable the query log set {@link $ourQueryLogFlag} to true.
-   *
-   * @return array[]
-   */
-  public static function getQueryLog()
-  {
-    return self::$ourQueryLog;
-  }
-
-  //--------------------------------------------------------------------------------------------------------------------
-  /**
    * Returns the first row in a row set for which a column has a specific value.
    *
    * Throws an exception if now row is found.
@@ -526,6 +334,51 @@ ORDER BY COLUMN_NAME';
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
+   * Select all columns from table in a schema.
+   *
+   * @param $theSchemaName string name of database
+   *
+   * @param $theTableName  string name of table
+   *
+   * @return array
+   */
+  public static function getTableColumns($theSchemaName, $theTableName)
+  {
+    $sql = '
+select COLUMN_NAME AS column_name
+,      DATA_TYPE AS data_type
+from   information_schema.COLUMNS
+where  TABLE_SCHEMA = "'.$theSchemaName.'"
+and    TABLE_NAME = "'.$theTableName.'"
+ORDER BY COLUMN_NAME';
+
+    return self::executeRows($sql);
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
+   * Select all table names in a schema.
+   *
+   * @param string $theSchemaName name of database
+   *
+   * @return array[]
+   */
+  public static function getTables($theSchemaName)
+  {
+    $sql = "
+select TABLE_NAME AS table_name
+from   information_schema.TABLES
+where  TABLE_SCHEMA = '%s'
+and    TABLE_TYPE   = 'BASE TABLE'
+ORDER BY TABLE_NAME";
+
+    $sql = sprintf($sql, self::$ourMySql->real_escape_string($theSchemaName));
+
+    return self::executeRows($sql);
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
    * Executes multiple SQL statements.
    *
    * Wrapper around [multi_mysqli::query](http://php.net/manual/mysqli.multi-query.php), however on failure an exception
@@ -537,21 +390,8 @@ ORDER BY COLUMN_NAME';
    */
   public static function multi_query($theQueries)
   {
-    if (self::$ourQueryLogFlag)
-    {
-      $time0 = microtime(true);
-
-      $ret = self::$ourMySql->multi_query($theQueries);
-      if ($ret===false) self::mySqlError($theQueries);
-
-      self::$ourQueryLog[] = ['query' => $theQueries,
-                              'time'  => microtime(true) - $time0];
-    }
-    else
-    {
-      $ret = self::$ourMySql->multi_query($theQueries);
-      if ($ret===false) self::mySqlError($theQueries);
-    }
+    $ret = self::$ourMySql->multi_query($theQueries);
+    if ($ret===false) self::mySqlError($theQueries);
 
     return $ret;
   }
@@ -568,21 +408,8 @@ ORDER BY COLUMN_NAME';
    */
   public static function query($theQuery)
   {
-    if (self::$ourQueryLogFlag)
-    {
-      $time0 = microtime(true);
-
-      $ret = self::$ourMySql->query($theQuery);
-      if ($ret===false) self::mySqlError($theQuery);
-
-      self::$ourQueryLog[] = ['query' => $theQuery,
-                              'time'  => microtime(true) - $time0];
-    }
-    else
-    {
-      $ret = self::$ourMySql->query($theQuery);
-      if ($ret===false) self::mySqlError($theQuery);
-    }
+    $ret = self::$ourMySql->query($theQuery);
+    if ($ret===false) self::mySqlError($theQuery);
 
     return $ret;
   }
@@ -604,48 +431,6 @@ ORDER BY COLUMN_NAME';
     else
     {
       return "b'".self::$ourMySql->real_escape_string($theBits)."'";
-    }
-  }
-
-  //--------------------------------------------------------------------------------------------------------------------
-  public static function quoteListOfInt($theList, $theDelimiter, $theEnclosure, $tehEscape)
-  {
-    if ($theList===null || $theList===false || $theList==='' || $theList===[])
-    {
-      return 'NULL';
-    }
-    else
-    {
-      $ret = '';
-      if (is_scalar($theList))
-      {
-        $list = str_getcsv($theList, $theDelimiter, $theEnclosure, $tehEscape);
-      }
-      elseif (is_array($theList))
-      {
-        $list = $theList;
-      }
-      else
-      {
-        throw new RuntimeException("Unexpected parameter type '%s'. Array or scalar expected.", gettype($theList));
-      }
-
-      foreach ($list as $number)
-      {
-        if ($theList===null || $theList===false || $theList==='')
-        {
-          throw new RuntimeException("Empty values are not allowed.");
-        }
-        if (!is_numeric($number))
-        {
-          throw new RuntimeException("Value '%s' is not a number.", (is_scalar($number)) ? $number : gettype($number));
-        }
-
-        if ($ret) $ret .= ',';
-        $ret .= $number;
-      }
-
-      return self::quoteString($ret);
     }
   }
 
@@ -713,21 +498,8 @@ ORDER BY COLUMN_NAME';
    */
   public static function realQuery($theQuery)
   {
-    if (self::$ourQueryLogFlag)
-    {
-      $time0 = microtime(true);
-
-      $ret = self::$ourMySql->real_query($theQuery);
-      if ($ret===false) self::mySqlError($theQuery);
-
-      self::$ourQueryLog[] = ['query' => $theQuery,
-                              'time'  => microtime(true) - $time0];
-    }
-    else
-    {
-      $ret = self::$ourMySql->real_query($theQuery);
-      if ($ret===false) self::mySqlError($theQuery);
-    }
+    $ret = self::$ourMySql->real_query($theQuery);
+    if ($ret===false) self::mySqlError($theQuery);
   }
 
   //--------------------------------------------------------------------------------------------------------------------
@@ -801,102 +573,6 @@ ORDER BY COLUMN_NAME';
     $message .= "\n";
 
     throw new RuntimeException($message);
-  }
-
-  //--------------------------------------------------------------------------------------------------------------------
-  /**
-   * Helper method for method executeTable. Shows table footer.
-   *
-   * @param array $theColumns
-   */
-  private static function executeTableShowFooter($theColumns)
-  {
-    $separator = '+';
-
-    foreach ($theColumns as $column)
-    {
-      $separator .= str_repeat('-', $column['length'] + 2)."+";
-    }
-    echo $separator, "\n";
-  }
-
-  //--------------------------------------------------------------------------------------------------------------------
-  /**
-   * Helper method for method executeTable. Shows table header.
-   *
-   * @param array $theColumns
-   */
-  private static function executeTableShowHeader($theColumns)
-  {
-    $separator = '+';
-    $header    = '|';
-
-    foreach ($theColumns as $column)
-    {
-      $separator .= str_repeat('-', $column['length'] + 2)."+";
-      $spaces = ($column['length'] + 2) - strlen($column['header']);
-
-      $l_spaces = $spaces / 2;
-      $r_spaces = ($spaces / 2) + ($spaces % 2);
-
-      $l_spaces = ($l_spaces>0) ? str_repeat(" ", $l_spaces) : '';
-      $r_spaces = ($r_spaces>0) ? str_repeat(" ", $r_spaces) : '';
-
-      $header .= $l_spaces.$column['header'].$r_spaces.'|';
-    }
-
-    echo "\n", $separator, "\n";
-    echo $header, "\n";
-    echo $separator, "\n";
-  }
-
-  //--------------------------------------------------------------------------------------------------------------------
-  /**
-   * Helper method for method executeTable. Shows table cell with data.
-   *
-   * @param array  $theColumn
-   * @param string $theValue
-   *
-   * @throws FallenException
-   */
-  private static function executeTableShowTableColumn($theColumn, $theValue)
-  {
-    $spaces = str_repeat(" ", $theColumn['length'] - strlen($theValue));
-
-    switch ($theColumn['type'])
-    {
-      case 1: // tinyint
-      case 2: // smallint
-      case 3: // int
-      case 4: // float
-      case 5: // double
-      case 8: // bigint
-      case 9: // mediumint
-
-        echo ' ', $spaces.$theValue, ' ';
-        break;
-
-      case 7: // timestamp
-      case 10: // date
-      case 11: // time
-      case 12: // datetime
-      case 13: // year
-      case 16: // bit
-      case 252: // is currently mapped to all text and blob types (MySQL 5.0.51a)
-      case 253: // varchar
-      case 254: // char
-
-        echo ' ', $theValue.$spaces, ' ';
-        break;
-
-      case 246: // decimal
-
-        echo ' ', $theValue.$spaces, ' ';
-        break;
-
-      default:
-        throw new FallenException('data type id', $theColumn['type']);
-    }
   }
 
   //--------------------------------------------------------------------------------------------------------------------
