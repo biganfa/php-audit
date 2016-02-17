@@ -19,6 +19,21 @@ foreach ($files as $file)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+/**
+ * Prints the synopsis of this program and terminates this program.
+ */
+function synopsis()
+{
+  echo "Synopsis: audit [-c] [--prune] -c <configuration file> \n";
+  echo "\n";
+  echo "Options:\n";
+  echo "  --prune : Clear all columns information from config file.\n";
+  echo "  -h --help : Print this help text.\n";
+
+  exit(1);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 
 /**
  * Parses the arguments of this program.
@@ -40,16 +55,25 @@ function getSetting($options)
         $setting['prune']  = true;
         $setting['config'] = array_shift($options);
         break;
+
+      case '-h':
+      case '--help':
+        synopsis();
+        break;
+
       case '-c':
       case '--config':
         $setting['prune']  = false;
         $setting['config'] = array_shift($options);
         break;
+
+      default:
+        synopsis();
+        break;
     }
   }
 
-  if (!isset($setting['config']))
-    print_r("Configuration file are empty.");
+  if (!isset($setting['config'])) synopsis();
 
   return $setting;
 }

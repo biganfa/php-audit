@@ -71,9 +71,9 @@ class Audit
 
     $this->listOfTables();
 
-    $this->compareTables();
+    $this->getUnknownTables();
 
-    $this->compareAuditTables();
+    $this->getKnownTables();
 
     $this->getColumns();
 
@@ -162,7 +162,7 @@ class Audit
   /**
    * Compares the tables listed in the config file and the tables found in the audit schema
    */
-  public function compareAuditTables()
+  public function getKnownTables()
   {
     foreach ($this->myConfig['tables'] as $table_name => $flag)
     {
@@ -208,7 +208,7 @@ class Audit
   /**
    * Compares the tables listed in the config file and the tables found in the data schema
    */
-  public function compareTables()
+  public function getUnknownTables()
   {
     foreach ($this->myDataSchemaTables as $key => $table)
     {
@@ -276,7 +276,7 @@ class Audit
    */
   private function rewriteConfig()
   {
-    Util::writeTwoPhases($this->myConfigFileName, json_encode($this->myConfig));
+    Util::writeTwoPhases($this->myConfigFileName, json_encode($this->myConfig,JSON_PRETTY_PRINT));
   }
 
   //--------------------------------------------------------------------------------------------------------------------
