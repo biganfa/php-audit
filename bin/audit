@@ -19,6 +19,23 @@ foreach ($files as $file)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+/**
+ * Prints the synopsis of this program and terminates this program.
+ */
+function synopsis()
+{
+  echo "Synopsis: audit [-c] <configuration file> [-v] [-d] [-p]\n";
+  echo "\n";
+  echo "Options:\n";
+  echo "  -p --prune   : Clear all columns information from config file.\n";
+  echo "  -h --help    : Print this help text.\n";
+  echo "  -v --verbose : Print verbose log.\n";
+  echo "  -d --debug   : Print debug log.\n";
+
+  exit(1);
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 
 /**
  * Parses the arguments of this program.
@@ -32,24 +49,47 @@ function getSetting($options)
 {
   // skip first key with current file name.
   array_shift($options);
+
+  $setting['prune']   = false;
+  $setting['debug']   = false;
+  $setting['verbose'] = false;
+
   while (($param = array_shift($options))!==null)
   {
     switch ($param)
     {
+      case '-p':
       case '--prune':
-        $setting['prune']  = true;
-        $setting['config'] = array_shift($options);
+        $setting['prune'] = true;
         break;
+
+      case '-d':
+      case '--debug':
+        $setting['debug'] = true;
+        break;
+
+      case '-v':
+      case '--verbose':
+        $setting['verbose'] = true;
+        break;
+
+      case '-h':
+      case '--help':
+        synopsis();
+        break;
+
       case '-c':
       case '--config':
-        $setting['prune']  = false;
         $setting['config'] = array_shift($options);
+        break;
+
+      default:
+        synopsis();
         break;
     }
   }
 
-  if (!isset($setting['config']))
-    print_r("Configuration file are empty.");
+  if (!isset($setting['config'])) synopsis();
 
   return $setting;
 }
@@ -89,7 +129,7 @@ function main($options)
   $setting = getSetting($options);
 
   $constants = new Audit();
-  $ret       = $constants->main($setting['config'], $setting['prune']);
+  $ret       = $constants->main($setting);
   if ($ret!=0) exit($ret);
 
   exit(0);

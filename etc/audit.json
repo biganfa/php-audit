@@ -1,56 +1,193 @@
 {
-  "database": {
-    "host_name": "localhost",
-    "user_name": "rank_owner",
-    "password": "rank_owner",
-    "database_name": "rank_data"
-  },
-  "audit_columns": [
-    {
-      "name": "audit_timestamp",
-      "type": "datetime not null",
-      "expression": "@audit_uuid"
+    "database": {
+        "host_name": "localhost",
+        "user_name": "rank_owner",
+        "password": "rank_owner",
+        "data_schema": "rank_data",
+        "audit_schema": "rank_audit"
     },
-    {
-      "name": "audit_type",
-      "type": "varchar(4)",
-      "expression": ""
+    "audit_columns": [
+        {
+            "name": "audit_timestamp",
+            "type": "datetime not null",
+            "expression": "@audit_uuid"
+        },
+        {
+            "name": "audit_type",
+            "type": "varchar(4)",
+            "expression": ""
+        },
+        {
+            "name": "audit_uuid",
+            "type": "bigint unsigned not null",
+            "expression": "@audit_uuid"
+        },
+        {
+            "name": "rownum",
+            "type": "int unsigned not null",
+            "expression": "@audit_rownum"
+        },
+        {
+            "name": "audit_ses_id",
+            "type": "int unsigned",
+            "expression": "@abc_g_ses_id"
+        },
+        {
+            "name": "audit_usr_id",
+            "type": "int unsigned",
+            "expression": "@abc_g_usr_id"
+        }
+    ],
+    "tables": {
+        "ABC_BLOB": true,
+        "ABC_BLOB_DATA": true,
+        "RNK_RELATION1": true,
+        "AUDIT_COLUMNS_TEMPLATE": true,
+        "AUDIT_TABLE": true,
+        "AUT_COMPANY": true,
+        "AUT_CONFIG": false,
+        "AUT_CONFIG_CLASS": true,
+        "AUT_CONFIG_VALUE": false,
+        "AUT_CROSS_DOMAIN_REDIRECT": false,
+        "AUT_FUNCTIONALITY": false,
+        "AUT_LOGIN_RESPONSE": false,
+        "AUT_MENU": true,
+        "AUT_MODULE": false,
+        "AUT_MODULE_COMPANY": false,
+        "AUT_PAGE": false,
+        "AUT_PAGE_COMPANY": true,
+        "AUT_PAGE_TAB": false,
+        "AUT_PAG_FUN": false,
+        "AUT_ROLE": false,
+        "AUT_ROL_FUN": false,
+        "AUT_SESSION": false,
+        "AUT_USER": false,
+        "AUT_USR_ROL": false,
+        "BBL_LANGUAGE": false,
+        "BBL_WORD": false,
+        "BBL_WORD_GROUP": false,
+        "BBL_WORD_TEXT": false,
+        "BBL_WORD_TRANSLATE_HISTORY": false,
+        "DEV_UUID_KEY": false,
+        "ELM_ATTRIBUTE": false,
+        "ELM_AUTHORIZED_DOMAIN": false,
+        "FOO": false,
+        "KNAS_PARTICIPANT_CONSTANT": false,
+        "KNAS_POINTS": false,
+        "KNAS_POINTS_SCHEME": false,
+        "KNAS_POINTS_SCHEME_POOL": false,
+        "KNAS_RANK_LIST_ENTRY": false,
+        "KNAS_RANK_LIST_NODE": false,
+        "KNAS_RANK_LIST_RELEASE": false,
+        "KNAS_RANK_LIST_RELEASE_REVISION": false,
+        "KNAS_RANK_LIST_WORLD_TOP": false,
+        "KNAS_RRL_TRN": false,
+        "KNAS_TOURNAMENT": false,
+        "KNAS_TOURNAMENT_ATTACHMENT": false,
+        "KNAS_TOURNAMENT_LINK": false,
+        "KNAS_TOURNAMENT_RESULT": false,
+        "KNAS_TOURNAMENT_SUPP": false,
+        "KNAS_TOURNAMENT_TYPE1": false,
+        "KNAS_TOURNAMENT_TYPE2": false,
+        "LOG_EVENT": false,
+        "LOG_EVENT_TYPE": false,
+        "LOG_LOGIN": false,
+        "LOG_REQUEST": false,
+        "LOG_REQUEST_COOKIE": false,
+        "LOG_REQUEST_POST": false,
+        "LOG_REQUEST_QUERY": false,
+        "LOG_SESSION": false,
+        "RNK_AGE_GROUP_CROSSING": false,
+        "RNK_COUNTRY": false,
+        "RNK_DOCUMENT": false,
+        "RNK_MEMBERSHIP1": false,
+        "RNK_MEMBERSHIP3": false,
+        "RNK_RANK_LIST": false,
+        "RNK_RANK_LIST_GROUP": false,
+        "RNK_RANK_LIST_PERIOD": false,
+        "RNK_RANK_LIST_SUB_GROUP1": false,
+        "RNK_RANK_LIST_SUB_GROUP2": false,
+        "RNK_RANK_LIST_SUB_GROUP3": false,
+        "RNK_RANK_LIST_SUB_GROUP4": false,
+        "RNK_RELATION2": false,
+        "RNK_RELATION3": false,
+        "RNK_SUBSYSTEM": false,
+        "RNK_SUBSYSTEM_COMPATIBILITY": false,
+        "RNK_SYSTEM": false
     },
-    {
-      "name": "audit_uuid",
-      "type": "bigint unsigned not null",
-      "expression": "@audit_uuid"
-    },
-    {
-      "name": "rownum",
-      "type": "int unsigned not null",
-      "expression": "@audit_rownum"
-    },
-    {
-      "name": "audit_ses_id",
-      "type": "int unsigned",
-      "expression": "@abc_g_ses_id"
-    },
-    {
-      "name": "audit_usr_id",
-      "type": "int unsigned",
-      "expression": "@abc_g_usr_id"
+    "table_columns": {
+        "ABC_BLOB": {
+            "bdt_id": "int(10) unsigned",
+            "blb_crc32": "int(10) unsigned",
+            "blb_file_name": "varchar(255)",
+            "blb_id": "int(10) unsigned",
+            "blb_inserted": "datetime",
+            "blb_mime_type": "varchar(48)",
+            "blb_size": "int(10) unsigned",
+            "cmp_id": "smallint(5) unsigned"
+        },
+        "ABC_BLOB_DATA": {
+            "bdt_crc32": "int(10) unsigned",
+            "bdt_data": "longblob",
+            "bdt_id": "int(10) unsigned",
+            "bdt_inserted": "datetime",
+            "bdt_mime_type": "varchar(48)",
+            "bdt_size": "int(10) unsigned",
+            "cmp_id": "smallint(5) unsigned"
+        },
+        "RNK_RELATION1": {
+            "cmp_id": "smallint(5) unsigned",
+            "cnt_id": "smallint(5) unsigned",
+            "rl1_birthday": "date",
+            "rl1_date_start": "date",
+            "rl1_date_stop": "date",
+            "rl1_first_name": "varchar(40)",
+            "rl1_gender": "varchar(1)",
+            "rl1_id": "mediumint(8) unsigned",
+            "rl1_name": "varchar(80)",
+            "rl1_prefix": "varchar(15)",
+            "rl1_registration_number_int": "varchar(12)",
+            "rl1_registration_number_nat": "varchar(12)",
+            "rl1_type_code": "varchar(5)",
+            "rl2_id": "mediumint(8) unsigned"
+        },
+        "AUDIT_COLUMNS_TEMPLATE": {
+            "audit_rownum": "int(10) unsigned",
+            "audit_ses_id": "int(10) unsigned",
+            "audit_statement": "enum('INSERT','DELETE','UPDATE')",
+            "audit_timestamp": "datetime",
+            "audit_type": "enum('OLD','NEW')",
+            "audit_usr_id": "int(10) unsigned",
+            "audit_uuid": "bigint(20) unsigned"
+        },
+        "AUDIT_TABLE": {
+            "audit_audit": "tinyint(1)",
+            "audit_id": "smallint(5) unsigned",
+            "audit_table_name": "varchar(64)"
+        },
+        "AUT_COMPANY": {
+            "cmp_abbr": "varchar(15)",
+            "cmp_id": "smallint(5) unsigned",
+            "cmp_label": "varchar(20)"
+        },
+        "AUT_CONFIG_CLASS": {
+            "ccl_class": "varchar(128)",
+            "ccl_id": "smallint(5) unsigned",
+            "ccl_type": "varchar(10)"
+        },
+        "AUT_MENU": {
+            "mnu_group": "smallint(6)",
+            "mnu_id": "smallint(5) unsigned",
+            "mnu_level": "tinyint(4)",
+            "mnu_link": "varchar(64)",
+            "mnu_weight": "smallint(6)",
+            "pag_id": "smallint(5) unsigned",
+            "wrd_id": "smallint(5) unsigned"
+        },
+        "AUT_PAGE_COMPANY": {
+            "cmp_id": "smallint(5) unsigned",
+            "pag_class": "varchar(128)",
+            "pag_id": "smallint(5) unsigned"
+        }
     }
-  ],
-  "tables": {
-    "ABC_BLOB": "True",
-    "ABC_BLOB_DATA": "False"
-  },
-  "table_columns": {
-    "ABC_BLOB": {
-      "bdt_id": "int",
-      "blb_crc32": "int",
-      "blb_file_name": "varchar",
-      "blb_id": "int",
-      "blb_inserted": "datetime",
-      "blb_mime_type": "varchar",
-      "blb_size": "int",
-      "cmp_id": "smallint"
-    }
-  }
 }

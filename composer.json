@@ -10,7 +10,8 @@
   },
   "require": {
     "php": ">=5.4.0",
-    "phpdocumentor/reflection-docblock": "2.*"
+    "phpdocumentor/reflection-docblock": "2.*",
+    "monolog/monolog": "^1.18"
   },
   "bin": [
     "bin/stratum"
