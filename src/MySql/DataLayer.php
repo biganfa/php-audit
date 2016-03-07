@@ -10,149 +10,231 @@
 //----------------------------------------------------------------------------------------------------------------------
 namespace SetBased\Audit\MySql;
 
+use Monolog\Logger;
 use SetBased\Audit\Exception\ResultException;
-use SetBased\Audit\Exception\RuntimeException;
 
 //----------------------------------------------------------------------------------------------------------------------
 /**
  * Supper class for a static stored routine wrapper class.
  */
-class DataLayer
+class DataLayer extends StaticDataLayer
 {
   //--------------------------------------------------------------------------------------------------------------------
   /**
-   * The default character set to be used when sending data from and to the MySQL instance.
+   * Logger.
    *
-   * @var string
+   * @var Logger
    */
-  public static $ourCharSet = 'utf8';
-
-  /**
-   * The SQL mode of the MySQL instance.
-   *
-   * @var string
-   */
-  public static $ourSqlMode = 'STRICT_ALL_TABLES,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_AUTO_VALUE_ON_ZERO,NO_ENGINE_SUBSTITUTION,NO_ZERO_DATE,NO_ZERO_IN_DATE,ONLY_FULL_GROUP_BY';
-
-  /**
-   * The transaction isolation level. Possible values are:
-   * <ul>
-   * <li> REPEATABLE-READ
-   * <li> READ-COMMITTED
-   * <li> READ-UNCOMMITTED
-   * <li> SERIALIZABLE
-   * </ul>
-   *
-   * @var string
-   */
-  public static $ourTransactionIsolationLevel = 'READ-COMMITTED';
-
-  /**
-   * Chunk size when transmitting LOB to the MySQL instance. Must be less than max_allowed_packet.
-   *
-   * @var int
-   */
-  protected static $ourChunkSize;
-
-  /**
-   * True if method mysqli_result::fetch_all exists (i.e. we are using MySQL native driver).
-   *
-   * @var bool
-   */
-  protected static $ourHaveFetchAll;
-
-  /**
-   * The connection between PHP and the MySQL instance.
-   *
-   * @var \mysqli
-   */
-  protected static $ourMySql;
+  private static $myLog;
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
-   * Starts a transaction.
+   * Setter for logger.
    *
-   * Wrapper around [mysqli::autocommit](http://php.net/manual/mysqli.autocommit.php), however on failure an exception
-   * is thrown.
+   * @param Logger $theLogger
    */
-  public static function begin()
+  public static function setLog($theLogger)
   {
-    $ret = self::$ourMySql->autocommit(false);
-    if (!$ret) self::mySqlError('mysqli::autocommit');
+    self::$myLog = $theLogger;
   }
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
-   * Commits the current transaction (and starts a new transaction).
+   * Create trigger for table.
    *
-   * Wrapper around [mysqli::commit](http://php.net/manual/mysqli.commit.php), however on failure an exception is
-   * thrown.
+   * @param string $theDataSchema  Database data schema
+   * @param string $theAuditSchema Database audit schema
+   * @param string $theTableName   Name of table
+   * @param string $theAction      Action for trigger {INSERT, UPDATE, DELETE}
+   * @param string $theTriggerName Name of trigger
+   *
+   * @return array
    */
-  public static function commit()
+  public static function createTrigger($theDataSchema, $theAuditSchema, $theTableName, $theAction, $theTriggerName)
   {
-    $ret = self::$ourMySql->commit();
-    if (!$ret) self::mySqlError('mysqli::commit');
+    if (strcmp($theAction, 'INSERT')!=0)
+    {
+      if (strcmp($theAction, 'DELETE')!=0)
+      {
+        $row_state[] = 'OLD';
+        $row_state[] = 'NEW';
+      }
+      else
+      {
+        $row_state[] = 'OLD';
+      }
+    }
+    else
+    {
+      $row_state[] = 'NEW';
+    }
+    $sql     = "
+CREATE TRIGGER {$theTriggerName}
+AFTER {$theAction} ON `{$theDataSchema}`.`{$theTableName}`
+FOR EACH ROW BEGIN
+  if (@audit_uuid is null) then
+    set @audit_uuid = uuid_short();
+  end if;
+
+  if (@abc_g_skip{$theTableName} is null) then
+    set @audit_rownum = ifnull(@audit_rownum,0) + 1;
+
+    INSERT INTO `{$theAuditSchema}`.`{$theTableName}`
+    VALUES( now()
+    ,       ".self::quoteString($theAction)."
+    ,       ".self::quoteString($row_state[0])."
+    ,       @audit_uuid
+    ,       @audit_rownum
+    ,       @abc_g_ses_id
+    ,       @abc_g_usr_id";
+    $columns = self::getTableColumns($theDataSchema, $theTableName);
+    foreach ($columns as $column)
+    {
+      $sql .= ",{$row_state[0]}.{$column['column_name']}";
+    }
+    $sql .= ");";
+    if (strcmp($theAction, "UPDATE")==0)
+    {
+      $sql .= "
+    INSERT INTO `{$theAuditSchema}`.`{$theTableName}`
+    VALUES( now()
+    ,       ".self::quoteString($theAction)."
+    ,       ".self::quoteString($row_state[1])."
+    ,       @audit_uuid
+    ,       @audit_rownum
+    ,       @abc_g_ses_id
+    ,       @abc_g_usr_id";
+      foreach ($columns as $column)
+      {
+        $sql .= ",{$row_state[1]}.{$column['column_name']}";
+      }
+      $sql .= ");";
+    }
+    $sql .= "end if;
+END;
+";
+
+    return self::executeNone($sql);
   }
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
-   * Connects to a MySQL instance.
+   * Select all trigger for table.
    *
-   * Wrapper around [mysqli::__construct](http://php.net/manual/mysqli.construct.php), however on failure an exception
-   * is thrown.
+   * @param string $theTriggerName Name of trigger
    *
-   * @param string $theHostName The hostname.
-   * @param string $theUserName The MySQL user name.
-   * @param string $thePassWord The password.
-   * @param string $theDatabase The default database.
-   * @param int    $thePort     The port number.
+   * @return array
    */
-  public static function connect($theHostName, $theUserName, $thePassWord, $theDatabase, $thePort = 3306)
+  public static function dropTrigger($theTriggerName)
   {
-    self::$ourMySql = new \mysqli($theHostName, $theUserName, $thePassWord, $theDatabase, $thePort);
-    if (self::$ourMySql->connect_errno)
-    {
-      $message = "MySQL Error no: ".self::$ourMySql->connect_errno."\n";
-      $message .= str_replace('%', '%%', self::$ourMySql->connect_error);
-      $message .= "\n";
+    $sql = "DROP TRIGGER {$theTriggerName}";
 
-      throw new RuntimeException($message);
-    }
-
-    // Set the default character set.
-    if (self::$ourCharSet)
-    {
-      $ret = self::$ourMySql->set_charset(self::$ourCharSet);
-      if (!$ret) self::mySqlError('mysqli::set_charset');
-    }
-
-    // Set the SQL mode.
-    if (self::$ourSqlMode)
-    {
-      self::executeNone("SET sql_mode = '".self::$ourSqlMode."'");
-    }
-
-    // Set transaction isolation level.
-    if (self::$ourTransactionIsolationLevel)
-    {
-      self::executeNone("SET SESSION tx_isolation = '".self::$ourTransactionIsolationLevel."'");
-    }
-
-    // Set flag to use method mysqli_result::fetch_all if we are using MySQL native driver.
-    self::$ourHaveFetchAll = method_exists('mysqli_result', 'fetch_all');
+    return self::executeNone($sql);
   }
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
-   * Closes the connection to the MySQL instance, if connected.
+   * Generate SQL code for creating table and execute it
+   *
+   * @param string $theAuditSchema   Database audit schema
+   * @param string $theTableName     Name of table
+   * @param array  $theMergedColumns Merged columns from table in data schema and columns for audit schema
+   *
+   * @return string SQL code for creating table
    */
-  public static function disconnect()
+  public static function generateSqlCreateStatement($theAuditSchema, $theTableName, $theMergedColumns)
   {
-    if (self::$ourMySql)
+    $sql_create = "CREATE TABLE `{$theAuditSchema}`.`{$theTableName}` (";
+    foreach ($theMergedColumns as $column)
     {
-      self::$ourMySql->close();
-      self::$ourMySql = null;
+      $sql_create .= $column['name'].' '.$column['type'];
+      if (end($theMergedColumns)!==$column)
+      {
+        $sql_create .= ",";
+      }
     }
+    $sql_create .= ");";
+
+    self::executeNone($sql_create);
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
+   * Select all trigger for table.
+   *
+   * @param $theDataSchema
+   * @param $theTableName
+   *
+   * @return array
+   */
+  public static function getTableTriggers($theDataSchema, $theTableName)
+  {
+    $sql = '
+SELECT
+  Trigger_Name
+FROM
+	information_schema.TRIGGERS
+WHERE
+	TRIGGER_SCHEMA = '.self::quoteString($theDataSchema).'
+  AND
+  EVENT_OBJECT_TABLE = '.self::quoteString($theTableName);
+
+    return self::executeRows($sql);
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
+   * Select all table names in a schema.
+   *
+   * @param $theSchemaName string name of database
+   *
+   * @return array
+   */
+  public static function getTablesNames($theSchemaName)
+  {
+    $sql = '
+select TABLE_NAME AS table_name
+from   information_schema.TABLES
+where  TABLE_SCHEMA = '.self::quoteString($theSchemaName).'
+and    TABLE_TYPE   = "BASE TABLE"
+ORDER BY TABLE_NAME';
+
+    return self::executeRows($sql);
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
+   * @param string $theQuery The SQL statement.
+   *
+   * @return int The number of affected rows (if any).
+   */
+  public static function executeNone($theQuery)
+  {
+    self::$myLog->addDebug("Executing query: $theQuery");
+
+    return parent::executeNone($theQuery);
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
+   * Select all columns from table in a schema.
+   *
+   * @param $theSchemaName string name of database
+   * @param $theTableName  string name of table
+   *
+   * @return array
+   */
+  public static function getTableColumns($theSchemaName, $theTableName)
+  {
+    $sql = '
+select COLUMN_NAME AS column_name
+,      COLUMN_TYPE AS data_type
+from   information_schema.COLUMNS
+where  TABLE_SCHEMA = '.self::quoteString($theSchemaName).'
+and    TABLE_NAME   = '.self::quoteString($theTableName).'
+ORDER BY COLUMN_NAME';
+
+    return self::executeRows($sql);
   }
 
   //--------------------------------------------------------------------------------------------------------------------
@@ -165,59 +247,9 @@ class DataLayer
    */
   public static function executeLog($theQuery)
   {
-    // Counter for the number of rows written/logged.
-    $n = 0;
+    self::$myLog->addDebug("Executing query: $theQuery");
 
-    self::multi_query($theQuery);
-    do
-    {
-      $result = self::$ourMySql->store_result();
-      if (self::$ourMySql->errno) self::mySqlError('mysqli::store_result');
-      if ($result)
-      {
-        $fields = $result->fetch_fields();
-        while ($row = $result->fetch_row())
-        {
-          $line = '';
-          foreach ($row as $i => $field)
-          {
-            if ($i>0) $line .= ' ';
-            $line .= str_pad($field, $fields[$i]->max_length);
-          }
-          echo date('Y-m-d H:i:s'), ' ', $line, "\n";
-          $n++;
-        }
-        $result->free();
-      }
-
-      $continue = self::$ourMySql->more_results();
-      if ($continue)
-      {
-        $tmp = self::$ourMySql->next_result();
-        if ($tmp===false) self::mySqlError('mysqli::next_result');
-      }
-    } while ($continue);
-
-    return $n;
-  }
-
-  //--------------------------------------------------------------------------------------------------------------------
-  /**
-   * Executes a query that does not select any rows.
-   *
-   * @param string $theQuery The SQL statement.
-   *
-   * @return int The number of affected rows (if any).
-   */
-  public static function executeNone($theQuery)
-  {
-    self::query($theQuery);
-
-    $n = self::$ourMySql->affected_rows;
-
-    if (self::$ourMySql->more_results()) self::$ourMySql->next_result();
-
-    return $n;
+    return parent::executeLog($theQuery);
   }
 
   //--------------------------------------------------------------------------------------------------------------------
@@ -232,19 +264,9 @@ class DataLayer
    */
   public static function executeRow0($theQuery)
   {
-    $result = self::query($theQuery);
-    $row    = $result->fetch_assoc();
-    $n      = $result->num_rows;
-    $result->free();
+    self::$myLog->addDebug("Executing query: $theQuery");
 
-    if (self::$ourMySql->more_results()) self::$ourMySql->next_result();
-
-    if (!($n==0 || $n==1))
-    {
-      throw new ResultException('0 or 1', $n, $theQuery);
-    }
-
-    return $row;
+    return parent::executeRow0($theQuery);
   }
 
   //--------------------------------------------------------------------------------------------------------------------
@@ -259,19 +281,9 @@ class DataLayer
    */
   public static function executeRow1($theQuery)
   {
-    $result = self::query($theQuery);
-    $row    = $result->fetch_assoc();
-    $n      = $result->num_rows;
-    $result->free();
+    self::$myLog->addDebug("Executing query: $theQuery");
 
-    if (self::$ourMySql->more_results()) self::$ourMySql->next_result();
-
-    if ($n!=1)
-    {
-      throw new ResultException('1', $n, $theQuery);
-    }
-
-    return $row;
+    return parent::executeRow1($theQuery);
   }
 
   //--------------------------------------------------------------------------------------------------------------------
@@ -284,97 +296,25 @@ class DataLayer
    */
   public static function executeRows($theQuery)
   {
-    $result = self::query($theQuery);
-    if (self::$ourHaveFetchAll)
-    {
-      $ret = $result->fetch_all(MYSQLI_ASSOC);
-    }
-    else
-    {
-      $ret = [];
-      while ($row = $result->fetch_assoc())
-      {
-        $ret[] = $row;
-      }
-    }
-    $result->free();
+    self::$myLog->addDebug("Executing query: $theQuery");
 
-    if (self::$ourMySql->more_results()) self::$ourMySql->next_result();
-
-    return $ret;
+    return parent::executeRows($theQuery);
   }
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
-   * Returns the first row in a row set for which a column has a specific value.
+   * Executes a query and shows the data in a formatted in a table (like mysql's default pager) of in multiple tables
+   * (in case of a multi query).
    *
-   * Throws an exception if now row is found.
+   * @param string $theQuery The query.
    *
-   * @param string  $theColumnName The column name (or in PHP terms the key in an row (i.e. array) in the row set).
-   * @param mixed   $theValue      The value to be found.
-   * @param array[] $theRowSet     The row set.
-   *
-   * @return mixed
+   * @return int The total number of rows in the tables.
    */
-  public static function getRowInRowSet($theColumnName, $theValue, $theRowSet)
+  public static function executeTable($theQuery)
   {
-    if (is_array($theRowSet))
-    {
-      foreach ($theRowSet as $key => $row)
-      {
-        if ((string)$row[$theColumnName]==(string)$theValue)
-        {
-          return $row;
-        }
-      }
-    }
+    self::$myLog->addDebug("Executing query: $theQuery");
 
-    throw new RuntimeException("Value '%s' for column '%s' not found in row set.", $theValue, $theColumnName);
-  }
-
-  //--------------------------------------------------------------------------------------------------------------------
-  /**
-   * Select all columns from table in a schema.
-   *
-   * @param $theSchemaName string name of database
-   *
-   * @param $theTableName  string name of table
-   *
-   * @return array
-   */
-  public static function getTableColumns($theSchemaName, $theTableName)
-  {
-    $sql = '
-select COLUMN_NAME AS column_name
-,      DATA_TYPE AS data_type
-from   information_schema.COLUMNS
-where  TABLE_SCHEMA = "'.$theSchemaName.'"
-and    TABLE_NAME = "'.$theTableName.'"
-ORDER BY COLUMN_NAME';
-
-    return self::executeRows($sql);
-  }
-
-  //--------------------------------------------------------------------------------------------------------------------
-  /**
-   * Select all table names in a schema.
-   *
-   * @param string $theSchemaName name of database
-   *
-   * @return array[]
-   */
-  public static function getTables($theSchemaName)
-  {
-    $sql = "
-select TABLE_NAME AS table_name
-from   information_schema.TABLES
-where  TABLE_SCHEMA = '%s'
-and    TABLE_TYPE   = 'BASE TABLE'
-ORDER BY TABLE_NAME";
-
-    $sql = sprintf($sql, self::$ourMySql->real_escape_string($theSchemaName));
-
-    return self::executeRows($sql);
+    return parent::executeTable($theQuery);
   }
 
   //--------------------------------------------------------------------------------------------------------------------
@@ -390,10 +330,9 @@ ORDER BY TABLE_NAME";
    */
   public static function multi_query($theQueries)
   {
-    $ret = self::$ourMySql->multi_query($theQueries);
-    if ($ret===false) self::mySqlError($theQueries);
+    self::$myLog->addDebug("Executing query: $theQueries");
 
-    return $ret;
+    return parent::multi_query($theQueries);
   }
 
   //--------------------------------------------------------------------------------------------------------------------
@@ -408,171 +347,9 @@ ORDER BY TABLE_NAME";
    */
   public static function query($theQuery)
   {
-    $ret = self::$ourMySql->query($theQuery);
-    if ($ret===false) self::mySqlError($theQuery);
+    self::$myLog->addDebug("Executing query: $theQuery");
 
-    return $ret;
-  }
-
-  //--------------------------------------------------------------------------------------------------------------------
-  /**
-   * Returns a literal for a bit field that can be safely used in SQL statements.
-   *
-   * @param string $theBits The bit field.
-   *
-   * @return string
-   */
-  public static function quoteBit($theBits)
-  {
-    if ($theBits===null || $theBits===false || $theBits==='')
-    {
-      return 'NULL';
-    }
-    else
-    {
-      return "b'".self::$ourMySql->real_escape_string($theBits)."'";
-    }
-  }
-
-  //--------------------------------------------------------------------------------------------------------------------
-  /**
-   * Returns a literal for a numerical field that can be safely used in SQL statements.
-   * Throws an exception if the value is not numeric.
-   *
-   * @param string $theValue The number.
-   *
-   * @return string
-   */
-  public static function quoteNum($theValue)
-  {
-    if (is_numeric($theValue)) return $theValue;
-    if ($theValue===null || $theValue==='' || $theValue===false) return 'NULL';
-    if ($theValue===true) return 1;
-
-    throw new RuntimeException("Value '%s' is not a number.", $theValue);
-  }
-
-  //--------------------------------------------------------------------------------------------------------------------
-  /**
-   * Returns a literal for a string field that can be safely used in SQL statements.
-   *
-   * @param string $theString The string.
-   *
-   * @return string
-   */
-  public static function quoteString($theString)
-  {
-    if ($theString===null || $theString===false || $theString==='')
-    {
-      return 'NULL';
-    }
-    else
-    {
-      return "'".self::$ourMySql->real_escape_string($theString)."'";
-    }
-  }
-
-  //--------------------------------------------------------------------------------------------------------------------
-  /**
-   * Escapes special characters in a string such that it can be safely used in SQL statements.
-   *
-   * Wrapper around [mysqli::real_escape_string](http://php.net/manual/mysqli.real-escape-string.php).
-   *
-   * @param string $theString The string.
-   *
-   * @return string
-   */
-  public static function realEscapeString($theString)
-  {
-    return self::$ourMySql->real_escape_string($theString);
-  }
-
-  //--------------------------------------------------------------------------------------------------------------------
-  /**
-   * Execute an SQL query.
-   *
-   * Wrapper around [mysqli::real_query](http://php.net/manual/en/mysqli.real-query.php), however on failure an
-   * exception is thrown.
-   *
-   * @param string $theQuery The SQL statement.
-   */
-  public static function realQuery($theQuery)
-  {
-    $ret = self::$ourMySql->real_query($theQuery);
-    if ($ret===false) self::mySqlError($theQuery);
-  }
-
-  //--------------------------------------------------------------------------------------------------------------------
-  /**
-   * Rollbacks the current transaction (and starts a new transaction).
-   *
-   * Wrapper around [mysqli::rollback](http://php.net/manual/en/mysqli.rollback.php), however on failure an exception
-   * is thrown.
-   */
-  public static function rollback()
-  {
-    $ret = self::$ourMySql->rollback();
-    if (!$ret) self::mySqlError('mysqli::rollback');
-  }
-
-  //--------------------------------------------------------------------------------------------------------------------
-  /**
-   * Returns the key of the first row in a row set for which a column has a specific value. Returns null if no row is
-   * found.
-   *
-   * @param string  $theColumnName The column name (or in PHP terms the key in an row (i.e. array) in the row set).
-   * @param string  $theValue      The value to be found.
-   * @param array[] $theRowSet     The row set.
-   *
-   * @return int|null|string
-   */
-  public static function searchInRowSet($theColumnName, $theValue, $theRowSet)
-  {
-    if (is_array($theRowSet))
-    {
-      foreach ($theRowSet as $key => $row)
-      {
-        if ((string)$row[$theColumnName]==(string)$theValue)
-        {
-          return $key;
-        }
-      }
-    }
-
-    return null;
-  }
-
-  //--------------------------------------------------------------------------------------------------------------------
-  /**
-   * Logs the warnings of the last executed SQL statement.
-   *
-   * Wrapper around the SQL statement [show warnings](https://dev.mysql.com/doc/refman/5.6/en/show-warnings.html).
-   */
-  public static function showWarnings()
-  {
-    self::executeLog('show warnings');
-  }
-
-  //--------------------------------------------------------------------------------------------------------------------
-  /**
-   * Throws an exception with error information provided by MySQL/[mysqli](http://php.net/manual/en/class.mysqli.php).
-   *
-   * This method must called after a method of [mysqli](http://php.net/manual/en/class.mysqli.php) returns an
-   * error only.
-   *
-   * @param string $theText Additional text for the exception message.
-   *
-   * @throws \RuntimeException
-   */
-  protected static function mySqlError($theText)
-  {
-    $message = "MySQL Error no: ".self::$ourMySql->errno."\n";
-    $message .= str_replace('%', '%%', self::$ourMySql->error);
-    $message .= "\n";
-    $message .= str_replace('%', '%%', $theText);
-    $message .= "\n";
-
-    throw new RuntimeException($message);
+    return parent::query($theQuery);
   }
 
   //--------------------------------------------------------------------------------------------------------------------
