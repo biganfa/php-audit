@@ -125,11 +125,13 @@ class Audit
   {
     $this->logVerbose("Create {$theAction} trigger for table {$theTableName}.");
     $trigger_name = $this->getTriggerName($this->myConfig['database']['data_schema'], $theAction);
+    $this->lockTable($theTableName);
     DataLayer::createTrigger($this->myConfig['database']['data_schema'],
                              $this->myConfig['database']['audit_schema'],
                              $theTableName,
                              $theAction,
                              $trigger_name);
+    $this->unlockTables();
   }
 
   //--------------------------------------------------------------------------------------------------------------------
@@ -156,6 +158,26 @@ class Audit
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
+   * Lock table for work.
+   *
+   * @param string $theTableName Name of table
+   */
+  public function lockTable($theTableName)
+  {
+    DataLayer::lockTable($theTableName);
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
+   * Unlock table for work.
+   */
+  public function unlockTables()
+  {
+    DataLayer::unlockTables();
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
    * Drop trigger from table.
    *
    * @param string $theDataSchema Database data schema
@@ -168,7 +190,9 @@ class Audit
     foreach ($old_triggers as $trigger)
     {
       $this->logVerbose("Drop trigger {$trigger['Trigger_Name']} for table {$theTableName}.");
+      $this->lockTable($theTableName);
       DataLayer::dropTrigger($trigger['Trigger_Name']);
+      $this->unlockTables();
     }
   }
 
@@ -342,7 +366,7 @@ class Audit
    * @param string  $theTableName        Name of table
    * @param boolean $theMissingTableFlag Check if table is missing in audit
    *
-   * @param $flagDefault   boolean flag for add or not 'DEFAULT NULL' to data_type
+   * @param         $flagDefault         boolean flag for add or not 'DEFAULT NULL' to data_type
    *
    * @return array
    */

@@ -119,6 +119,34 @@ END;
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
+   * Lock table for work.
+   *
+   * @param string $theTableName Name of table
+   *
+   * @return int The number of affected rows (if any).
+   */
+  public static function lockTable($theTableName)
+  {
+    $sql = "LOCK TABLES {$theTableName} WRITE";
+
+    return self::executeNone($sql);
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
+   * Unlock tables for work.
+   *
+   * @return int The number of affected rows (if any).
+   */
+  public static function unlockTables()
+  {
+    $sql = "UNLOCK TABLES";
+
+    return self::executeNone($sql);
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
    * Select all trigger for table.
    *
    * @param string $theTriggerName Name of trigger

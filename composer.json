@@ -6,7 +6,8 @@
   "license": "MIT",
   "require-dev": {
     "phpunit/phpunit": "*",
-    "setbased/phing-extensions": "2.*"
+    "setbased/phing-extensions": "2.*",
+    "phpunit/dbunit": ">=1.2"
   },
   "require": {
     "php": ">=5.4.0",
