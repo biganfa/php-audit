@@ -1,6 +1,6 @@
 {
-  "name": "setbased/audit",
-  "description": "A tool for creating audit tables and triggers for logging data changes.",
+  "name": "setbased/php-audit",
+  "description": "A tool for creating audit tables and triggers for logging data changes in a MySQL database.",
   "keywords": [
     "MySQL",
     "audit",
@@ -22,7 +22,7 @@
   "autoload": {
     "psr-4": {
       "SetBased\\Audit\\": "src/"
-    },
+    }
   },
   "config": {
     "bin-dir": "bin"
