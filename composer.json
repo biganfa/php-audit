@@ -1,6 +1,6 @@
 {
   "name": "setbased/php-audit",
-  "description": "A tool for creating audit tables and triggers for logging data changes in MySQL databases.",
+  "description": "A tool for creating audit tables and triggers for logging data changes in a MySQL database.",
   "keywords": [
     "MySQL",
     "audit",
