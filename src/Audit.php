@@ -10,7 +10,7 @@ use Monolog\Handler\StreamHandler;
 
 //----------------------------------------------------------------------------------------------------------------------
 /**
- * Class.
+ * The PhpAudit program.
  */
 class Audit
 {
@@ -64,7 +64,6 @@ class Audit
    * @param string[] $theOptions Option from console on running script
    *
    * @return int
-   *
    */
   public function main($theOptions)
   {
@@ -156,6 +155,26 @@ class Audit
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
+   * Lock the table to prevent insert, updates, or deletes between dropping and creating triggers.
+   *
+   * @param string $theTableName Name of table
+   */
+  public function lockTable($theTableName)
+  {
+    DataLayer::lockTable($theTableName);
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
+   * Insert, updates, and deletes are no audited again. So, release lock on the table.
+   */
+  public function unlockTables()
+  {
+    DataLayer::unlockTables();
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
    * Drop trigger from table.
    *
    * @param string $theDataSchema Database data schema
@@ -190,7 +209,7 @@ class Audit
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
-   * Call function for creating triggers for all tables in rank_data schema
+   * Creates triggers for all tables in data schema if need audit this tables in config file.
    */
   public function createTriggers()
   {
@@ -198,10 +217,19 @@ class Audit
     {
       if ($this->myConfig['tables'][$table['table_name']])
       {
+        // Lock the table to prevent insert, updates, or deletes between dropping and creating triggers.
+        $this->lockTable($table['table_name']);
+
+        // Drop all triggers, if any.
         $this->dropTriggers($this->myConfig['database']['data_schema'], $table['table_name']);
+
+        // Create or recreate the audit triggers.
         $this->createTableTrigger($table['table_name'], 'INSERT');
         $this->createTableTrigger($table['table_name'], 'UPDATE');
         $this->createTableTrigger($table['table_name'], 'DELETE');
+
+        // Insert, updates, and deletes are no audited again. So, release lock on the table.
+        $this->unlockTables();
       }
     }
   }
@@ -342,8 +370,6 @@ class Audit
    * @param string  $theTableName        Name of table
    * @param boolean $theMissingTableFlag Check if table is missing in audit
    *
-   * @param $flagDefault   boolean flag for add or not 'DEFAULT NULL' to data_type
-   *
    * @return array
    */
   public function getMergeColumns($theTableName, $theMissingTableFlag)
@@ -464,7 +490,7 @@ class Audit
    *
    * @param string $theConfigFilename
    *
-   * @throws \SetBased\Audit\Exception\RuntimeException
+   * @throws RuntimeException
    */
   public function readConfigFile($theConfigFilename)
   {

@@ -1,17 +1,10 @@
 <?php
 //----------------------------------------------------------------------------------------------------------------------
-/**
- * PphpStratum
- *
- * @copyright 2005-2015 Paul Water / Set Based IT Consultancy (https://www.setbased.nl)
- * @license   http://www.opensource.org/licenses/mit-license.php MIT
- * @link
- */
-//----------------------------------------------------------------------------------------------------------------------
 namespace SetBased\Audit\MySql;
 
 use Monolog\Logger;
 use SetBased\Audit\Exception\ResultException;
+use SetBased\Stratum\MySql\StaticDataLayer;
 
 //----------------------------------------------------------------------------------------------------------------------
 /**
@@ -90,7 +83,7 @@ FOR EACH ROW BEGIN
     $columns = self::getTableColumns($theDataSchema, $theTableName);
     foreach ($columns as $column)
     {
-      $sql .= ",{$row_state[0]}.{$column['column_name']}";
+      $sql .= ",{$row_state[0]}.`{$column['column_name']}`";
     }
     $sql .= ");";
     if (strcmp($theAction, "UPDATE")==0)
@@ -106,7 +99,7 @@ FOR EACH ROW BEGIN
     ,       @abc_g_usr_id";
       foreach ($columns as $column)
       {
-        $sql .= ",{$row_state[1]}.{$column['column_name']}";
+        $sql .= ",{$row_state[1]}.`{$column['column_name']}`";
       }
       $sql .= ");";
     }
@@ -119,6 +112,30 @@ END;
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
+   * Acquires a write lock on a table.
+   *
+   * @param string $theTableName The table name.
+   */
+  public static function lockTable($theTableName)
+  {
+    $sql = "LOCK TABLES `{$theTableName}` WRITE";
+
+    self::executeNone($sql);
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
+   * Releases all table locks.
+   */
+  public static function unlockTables()
+  {
+    $sql = "UNLOCK TABLES";
+
+    self::executeNone($sql);
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
    * Select all trigger for table.
    *
    * @param string $theTriggerName Name of trigger
@@ -127,7 +144,7 @@ END;
    */
   public static function dropTrigger($theTriggerName)
   {
-    $sql = "DROP TRIGGER {$theTriggerName}";
+    $sql = "DROP TRIGGER `{$theTriggerName}`";
 
     return self::executeNone($sql);
   }
@@ -147,7 +164,7 @@ END;
     $sql_create = "CREATE TABLE `{$theAuditSchema}`.`{$theTableName}` (";
     foreach ($theMergedColumns as $column)
     {
-      $sql_create .= $column['name'].' '.$column['type'];
+      $sql_create .= '`'.$column['name'].'` '.$column['type'];
       if (end($theMergedColumns)!==$column)
       {
         $sql_create .= ",";
@@ -160,10 +177,10 @@ END;
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
-   * Select all trigger for table.
+   * Selects all triggers on a table.
    *
-   * @param $theDataSchema
-   * @param $theTableName
+   * @param string $theDataSchema The table schema.
+   * @param string $theTableName  The table name.
    *
    * @return array
    */
@@ -186,7 +203,7 @@ WHERE
   /**
    * Select all table names in a schema.
    *
-   * @param $theSchemaName string name of database
+   * @param string $theSchemaName Name of database
    *
    * @return array
    */
@@ -219,20 +236,20 @@ ORDER BY TABLE_NAME';
   /**
    * Select all columns from table in a schema.
    *
-   * @param $theSchemaName string name of database
-   * @param $theTableName  string name of table
+   * @param string $theSchemaName Name of database
+   * @param string $theTableName  Name of table
    *
    * @return array
    */
   public static function getTableColumns($theSchemaName, $theTableName)
   {
     $sql = '
-select COLUMN_NAME AS column_name
-,      COLUMN_TYPE AS data_type
+select COLUMN_NAME as column_name
+,      COLUMN_TYPE as data_type
 from   information_schema.COLUMNS
 where  TABLE_SCHEMA = '.self::quoteString($theSchemaName).'
 and    TABLE_NAME   = '.self::quoteString($theTableName).'
-ORDER BY COLUMN_NAME';
+order by COLUMN_NAME';
 
     return self::executeRows($sql);
   }
