@@ -1,6 +1,5 @@
 .idea
 bin/phing
-bin/dbunit
 bin/phpunit
 bin/stratum
 etc/audit.json

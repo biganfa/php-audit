@@ -1,0 +1,30 @@
+language: php
+php:
+  - '5.4'
+  - '5.5'
+  - '5.6'
+  - '7.0'
+  - hhvm
+  - nightly
+  
+sudo: true
+
+addons:
+  mariadb: 10.1
+
+before_install:
+  - mysql --version
+  - mysql -u root -e "create database if not exists test_audit;"
+  - mysql -u root -e "create database if not exists test_data;"
+  - mysql -u root -e "create user 'test'@'localhost' identified by 'test';"
+  - mysql -u root -e "grant all on test_audit.* to 'test'@'localhost';"
+  - mysql -u root -e "grant all on test_data.*  to 'test'@'localhost';"
+  
+install:
+  - composer self-update
+  - composer install
+    
+script: 
+  - ./bin/phing unit
+  
+
