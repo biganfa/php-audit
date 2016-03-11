@@ -90,7 +90,7 @@ FOR EACH ROW BEGIN
     $columns = self::getTableColumns($theDataSchema, $theTableName);
     foreach ($columns as $column)
     {
-      $sql .= ",{$row_state[0]}.{$column['column_name']}";
+      $sql .= ",{$row_state[0]}.`{$column['column_name']}`";
     }
     $sql .= ");";
     if (strcmp($theAction, "UPDATE")==0)
@@ -106,7 +106,7 @@ FOR EACH ROW BEGIN
     ,       @abc_g_usr_id";
       foreach ($columns as $column)
       {
-        $sql .= ",{$row_state[1]}.{$column['column_name']}";
+        $sql .= ",{$row_state[1]}.`{$column['column_name']}`";
       }
       $sql .= ");";
     }
@@ -119,7 +119,7 @@ END;
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
-   * Lock table for work.
+   * Lock the table to prevent insert, updates, or deletes between dropping and creating triggers.
    *
    * @param string $theTableName Name of table
    *
@@ -134,7 +134,7 @@ END;
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
-   * Unlock tables for work.
+   * Insert, updates, and deletes are no audited again. So, release lock on the table.
    *
    * @return int The number of affected rows (if any).
    */
@@ -175,7 +175,7 @@ END;
     $sql_create = "CREATE TABLE `{$theAuditSchema}`.`{$theTableName}` (";
     foreach ($theMergedColumns as $column)
     {
-      $sql_create .= $column['name'].' '.$column['type'];
+      $sql_create .= '`'.$column['name'].'` '.$column['type'];
       if (end($theMergedColumns)!==$column)
       {
         $sql_create .= ",";
@@ -190,8 +190,8 @@ END;
   /**
    * Select all trigger for table.
    *
-   * @param $theDataSchema
-   * @param $theTableName
+   * @param string $theDataSchema Database data schema
+   * @param string $theTableName  Name of tables
    *
    * @return array
    */
@@ -214,7 +214,7 @@ WHERE
   /**
    * Select all table names in a schema.
    *
-   * @param $theSchemaName string name of database
+   * @param string $theSchemaName Name of database
    *
    * @return array
    */
@@ -247,8 +247,8 @@ ORDER BY TABLE_NAME';
   /**
    * Select all columns from table in a schema.
    *
-   * @param $theSchemaName string name of database
-   * @param $theTableName  string name of table
+   * @param string $theSchemaName Name of database
+   * @param string $theTableName  Name of table
    *
    * @return array
    */

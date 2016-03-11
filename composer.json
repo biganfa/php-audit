@@ -1,9 +1,11 @@
 {
-  "name": "setbased/php-stratum",
+  "name": "setbased/php-audit",
   "description": "A stored procedure and function loader, wrapper generator for MySQL in PHP.",
   "keywords": ["MySQL","Stored Routines","Stored Procedures","Stored Functions","Wrapper","Loader","PHP"],
   "type": "tool",
   "license": "MIT",
+  "minimum-stability": "dev",
+  "prefer-stable": true,
   "require-dev": {
     "phpunit/phpunit": "*",
     "setbased/phing-extensions": "2.*",
@@ -12,11 +14,9 @@
   "require": {
     "php": ">=5.4.0",
     "phpdocumentor/reflection-docblock": "2.*",
-    "monolog/monolog": "^1.18"
+    "monolog/monolog": "^1.18",
+    "setbased/php-stratum": "*"
   },
-  "bin": [
-    "bin/stratum"
-  ],
   "autoload": {
     "psr-4": {
       "SetBased\\Audit\\": "src/"

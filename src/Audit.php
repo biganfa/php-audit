@@ -125,13 +125,11 @@ class Audit
   {
     $this->logVerbose("Create {$theAction} trigger for table {$theTableName}.");
     $trigger_name = $this->getTriggerName($this->myConfig['database']['data_schema'], $theAction);
-    $this->lockTable($theTableName);
     DataLayer::createTrigger($this->myConfig['database']['data_schema'],
                              $this->myConfig['database']['audit_schema'],
                              $theTableName,
                              $theAction,
                              $trigger_name);
-    $this->unlockTables();
   }
 
   //--------------------------------------------------------------------------------------------------------------------
@@ -158,7 +156,7 @@ class Audit
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
-   * Lock table for work.
+   * Lock the table to prevent insert, updates, or deletes between dropping and creating triggers.
    *
    * @param string $theTableName Name of table
    */
@@ -169,7 +167,7 @@ class Audit
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
-   * Unlock table for work.
+   * Insert, updates, and deletes are no audited again. So, release lock on the table.
    */
   public function unlockTables()
   {
@@ -190,9 +188,7 @@ class Audit
     foreach ($old_triggers as $trigger)
     {
       $this->logVerbose("Drop trigger {$trigger['Trigger_Name']} for table {$theTableName}.");
-      $this->lockTable($theTableName);
       DataLayer::dropTrigger($trigger['Trigger_Name']);
-      $this->unlockTables();
     }
   }
 
@@ -214,7 +210,7 @@ class Audit
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
-   * Call function for creating triggers for all tables in rank_data schema
+   * Creates triggers for all tables in data schema if need audit this tables in config file.
    */
   public function createTriggers()
   {
@@ -222,10 +218,19 @@ class Audit
     {
       if ($this->myConfig['tables'][$table['table_name']])
       {
+        // Lock the table to prevent insert, updates, or deletes between dropping and creating triggers.
+        $this->lockTable($table['table_name']);
+
+        // Drop all triggers, if any.
         $this->dropTriggers($this->myConfig['database']['data_schema'], $table['table_name']);
+
+        // Create or recreate the audit triggers.
         $this->createTableTrigger($table['table_name'], 'INSERT');
         $this->createTableTrigger($table['table_name'], 'UPDATE');
         $this->createTableTrigger($table['table_name'], 'DELETE');
+
+        // Insert, updates, and deletes are no audited again. So, release lock on the table.
+        $this->unlockTables();
       }
     }
   }
