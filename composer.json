@@ -1,6 +1,6 @@
 {
   "name": "setbased/audit",
-  "description": "A tool creating audit table and triggers for logging data changes.",
+  "description": "A tool for creating audit tables and triggers for logging data changes.",
   "keywords": [
     "MySQL",
     "audit",
