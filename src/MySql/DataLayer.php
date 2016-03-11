@@ -4,6 +4,7 @@ namespace SetBased\Audit\MySql;
 
 use Monolog\Logger;
 use SetBased\Audit\Exception\ResultException;
+use SetBased\Stratum\MySql\StaticDataLayer;
 
 //----------------------------------------------------------------------------------------------------------------------
 /**
