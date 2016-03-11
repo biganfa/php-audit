@@ -10,7 +10,7 @@ use Monolog\Handler\StreamHandler;
 
 //----------------------------------------------------------------------------------------------------------------------
 /**
- * Class.
+ * The PhpAudit program.
  */
 class Audit
 {
@@ -64,7 +64,6 @@ class Audit
    * @param string[] $theOptions Option from console on running script
    *
    * @return int
-   *
    */
   public function main($theOptions)
   {
@@ -371,8 +370,6 @@ class Audit
    * @param string  $theTableName        Name of table
    * @param boolean $theMissingTableFlag Check if table is missing in audit
    *
-   * @param         $flagDefault         boolean flag for add or not 'DEFAULT NULL' to data_type
-   *
    * @return array
    */
   public function getMergeColumns($theTableName, $theMissingTableFlag)
@@ -493,7 +490,7 @@ class Audit
    *
    * @param string $theConfigFilename
    *
-   * @throws \SetBased\Audit\Exception\RuntimeException
+   * @throws RuntimeException
    */
   public function readConfigFile($theConfigFilename)
   {

@@ -1,13 +1,5 @@
 <?php
 //----------------------------------------------------------------------------------------------------------------------
-/**
- * PphpStratum
- *
- * @copyright 2005-2015 Paul Water / Set Based IT Consultancy (https://www.setbased.nl)
- * @license   http://www.opensource.org/licenses/mit-license.php MIT
- * @link
- */
-//----------------------------------------------------------------------------------------------------------------------
 namespace SetBased\Audit\MySql;
 
 use Monolog\Logger;
@@ -119,30 +111,26 @@ END;
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
-   * Lock the table to prevent insert, updates, or deletes between dropping and creating triggers.
+   * Acquires a write lock on a table.
    *
-   * @param string $theTableName Name of table
-   *
-   * @return int The number of affected rows (if any).
+   * @param string $theTableName The table name.
    */
   public static function lockTable($theTableName)
   {
-    $sql = "LOCK TABLES {$theTableName} WRITE";
+    $sql = "LOCK TABLES `{$theTableName}` WRITE";
 
-    return self::executeNone($sql);
+    self::executeNone($sql);
   }
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
-   * Insert, updates, and deletes are no audited again. So, release lock on the table.
-   *
-   * @return int The number of affected rows (if any).
+   * Releases all table locks.
    */
   public static function unlockTables()
   {
     $sql = "UNLOCK TABLES";
 
-    return self::executeNone($sql);
+    self::executeNone($sql);
   }
 
   //--------------------------------------------------------------------------------------------------------------------
@@ -155,7 +143,7 @@ END;
    */
   public static function dropTrigger($theTriggerName)
   {
-    $sql = "DROP TRIGGER {$theTriggerName}";
+    $sql = "DROP TRIGGER `{$theTriggerName}`";
 
     return self::executeNone($sql);
   }
@@ -188,10 +176,10 @@ END;
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
-   * Select all trigger for table.
+   * Selects all triggers on a table.
    *
-   * @param string $theDataSchema Database data schema
-   * @param string $theTableName  Name of tables
+   * @param string $theDataSchema The table schema.
+   * @param string $theTableName  The table name.
    *
    * @return array
    */
@@ -255,12 +243,12 @@ ORDER BY TABLE_NAME';
   public static function getTableColumns($theSchemaName, $theTableName)
   {
     $sql = '
-select COLUMN_NAME AS column_name
-,      COLUMN_TYPE AS data_type
+select COLUMN_NAME as column_name
+,      COLUMN_TYPE as data_type
 from   information_schema.COLUMNS
 where  TABLE_SCHEMA = '.self::quoteString($theSchemaName).'
 and    TABLE_NAME   = '.self::quoteString($theTableName).'
-ORDER BY COLUMN_NAME';
+order by COLUMN_NAME';
 
     return self::executeRows($sql);
   }
