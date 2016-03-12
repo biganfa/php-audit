@@ -9,5 +9,6 @@
 [![Build Status](https://travis-ci.org/SetBased/php-audit.svg?branch=master)](https://travis-ci.org/SetBased/php-audit)
 [![Dependency Status](https://www.versioneye.com/user/projects/56e2e5a3df573d00472cd2ad/badge.svg?style=flat)](https://www.versioneye.com/user/projects/56e2e5a3df573d00472cd2ad)
 [![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/SetBased/php-audit/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/SetBased/php-audit/?branch=master)
+[![Codacy Badge](https://api.codacy.com/project/badge/grade/c0510d398830476689de3bb52ec2daff)](https://www.codacy.com/app/p-r-water/php-audit)
 [![PHP 7 ready](http://php7ready.timesplinter.ch/SetBased/php-audit/badge.svg)](https://travis-ci.org/SetBased/php-audit)
 
