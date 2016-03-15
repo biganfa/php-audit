@@ -62,7 +62,7 @@ class DataLayer extends StaticDataLayer
         break;
 
       default:
-        throw new FallenException('Wrong trigger ACTION', $theAction);
+        throw new FallenException('$theAction', $theAction);
     }
 
     $sql     = "
@@ -90,7 +90,8 @@ FOR EACH ROW BEGIN
       $sql .= ",{$row_state[0]}.`{$column['column_name']}`";
     }
     $sql .= ");";
-    if (strcmp($theAction, "UPDATE")==0)
+
+    if ($theAction=="UPDATE")
     {
       $sql .= "
     INSERT INTO `{$theAuditSchema}`.`{$theTableName}`
@@ -107,6 +108,7 @@ FOR EACH ROW BEGIN
       }
       $sql .= ");";
     }
+
     $sql .= "end if;
 END;
 ";
