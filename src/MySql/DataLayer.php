@@ -4,12 +4,11 @@ namespace SetBased\Audit\MySql;
 
 use Monolog\Logger;
 use SetBased\Audit\Exception\FallenException;
-use SetBased\Audit\Exception\ResultException;
 use SetBased\Stratum\MySql\StaticDataLayer;
 
 //----------------------------------------------------------------------------------------------------------------------
 /**
- * Supper class for a static stored routine wrapper class.
+ * CLass for generating dynamically abd executing SQL statements.
  */
 class DataLayer extends StaticDataLayer
 {
@@ -19,18 +18,7 @@ class DataLayer extends StaticDataLayer
    *
    * @var Logger
    */
-  private static $myLog;
-
-  //--------------------------------------------------------------------------------------------------------------------
-  /**
-   * Setter for logger.
-   *
-   * @param Logger $theLogger
-   */
-  public static function setLog($theLogger)
-  {
-    self::$myLog = $theLogger;
-  }
+  private static $ourLogger;
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
@@ -118,30 +106,6 @@ END;
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
-   * Acquires a write lock on a table.
-   *
-   * @param string $theTableName The table name.
-   */
-  public static function lockTable($theTableName)
-  {
-    $sql = "LOCK TABLES `{$theTableName}` WRITE";
-
-    self::executeNone($sql);
-  }
-
-  //--------------------------------------------------------------------------------------------------------------------
-  /**
-   * Releases all table locks.
-   */
-  public static function unlockTables()
-  {
-    $sql = "UNLOCK TABLES";
-
-    self::executeNone($sql);
-  }
-
-  //--------------------------------------------------------------------------------------------------------------------
-  /**
    * Select all trigger for table.
    *
    * @param string $theTriggerName Name of trigger
@@ -153,6 +117,61 @@ END;
     $sql = "DROP TRIGGER `{$theTriggerName}`";
 
     return self::executeNone($sql);
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
+   * {@inheritdoc}
+   */
+  public static function executeLog($theQuery)
+  {
+    self::$ourLogger->addDebug("Executing query: $theQuery");
+
+    return parent::executeLog($theQuery);
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
+   * {@inheritdoc}
+   */
+  public static function executeNone($theQuery)
+  {
+    self::$ourLogger->addDebug("Executing query: $theQuery");
+
+    return parent::executeNone($theQuery);
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
+   * {@inheritdoc}
+   */
+  public static function executeRow0($theQuery)
+  {
+    self::$ourLogger->addDebug("Executing query: $theQuery");
+
+    return parent::executeRow0($theQuery);
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
+   * {@inheritdoc}
+   */
+  public static function executeRow1($theQuery)
+  {
+    self::$ourLogger->addDebug("Executing query: $theQuery");
+
+    return parent::executeRow1($theQuery);
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
+   * {@inheritdoc}
+   */
+  public static function executeRows($theQuery)
+  {
+    self::$ourLogger->addDebug("Executing query: $theQuery");
+
+    return parent::executeRows($theQuery);
   }
 
   //--------------------------------------------------------------------------------------------------------------------
@@ -179,6 +198,28 @@ END;
     $sql_create .= ");";
 
     self::executeNone($sql_create);
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
+   * Select all columns from table in a schema.
+   *
+   * @param string $theSchemaName Name of database
+   * @param string $theTableName  Name of table
+   *
+   * @return array
+   */
+  public static function getTableColumns($theSchemaName, $theTableName)
+  {
+    $sql = '
+SELECT COLUMN_NAME AS column_name
+,      COLUMN_TYPE AS data_type
+FROM   information_schema.COLUMNS
+WHERE  TABLE_SCHEMA = '.self::quoteString($theSchemaName).'
+AND    TABLE_NAME   = '.self::quoteString($theTableName).'
+ORDER BY COLUMN_NAME';
+
+    return self::executeRows($sql);
   }
 
   //--------------------------------------------------------------------------------------------------------------------
@@ -216,10 +257,10 @@ WHERE
   public static function getTablesNames($theSchemaName)
   {
     $sql = '
-select TABLE_NAME AS table_name
-from   information_schema.TABLES
-where  TABLE_SCHEMA = '.self::quoteString($theSchemaName).'
-and    TABLE_TYPE   = "BASE TABLE"
+SELECT TABLE_NAME AS table_name
+FROM   information_schema.TABLES
+WHERE  TABLE_SCHEMA = '.self::quoteString($theSchemaName).'
+AND    TABLE_TYPE   = "BASE TABLE"
 ORDER BY TABLE_NAME';
 
     return self::executeRows($sql);
@@ -227,152 +268,37 @@ ORDER BY TABLE_NAME';
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
-   * @param string $theQuery The SQL statement.
+   * Acquires a write lock on a table.
    *
-   * @return int The number of affected rows (if any).
+   * @param string $theTableName The table name.
    */
-  public static function executeNone($theQuery)
+  public static function lockTable($theTableName)
   {
-    self::$myLog->addDebug("Executing query: $theQuery");
+    $sql = "LOCK TABLES `{$theTableName}` WRITE";
 
-    return parent::executeNone($theQuery);
+    self::executeNone($sql);
   }
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
-   * Select all columns from table in a schema.
+   * Setter for logger.
    *
-   * @param string $theSchemaName Name of database
-   * @param string $theTableName  Name of table
-   *
-   * @return array
+   * @param Logger $theLogger
    */
-  public static function getTableColumns($theSchemaName, $theTableName)
+  public static function setLog($theLogger)
   {
-    $sql = '
-select COLUMN_NAME as column_name
-,      COLUMN_TYPE as data_type
-from   information_schema.COLUMNS
-where  TABLE_SCHEMA = '.self::quoteString($theSchemaName).'
-and    TABLE_NAME   = '.self::quoteString($theTableName).'
-order by COLUMN_NAME';
-
-    return self::executeRows($sql);
+    self::$ourLogger = $theLogger;
   }
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
-   * Executes a query and logs the result set.
-   *
-   * @param string $theQuery The query or multi query.
-   *
-   * @return int The total number of rows selected/logged.
+   * Releases all table locks.
    */
-  public static function executeLog($theQuery)
+  public static function unlockTables()
   {
-    self::$myLog->addDebug("Executing query: $theQuery");
+    $sql = "UNLOCK TABLES";
 
-    return parent::executeLog($theQuery);
-  }
-
-  //--------------------------------------------------------------------------------------------------------------------
-  /**
-   * Executes a query that returns 0 or 1 row.
-   * Throws an exception if the query selects 2 or more rows.
-   *
-   * @param string $theQuery The SQL statement.
-   *
-   * @return array|null The selected row.
-   * @throws ResultException
-   */
-  public static function executeRow0($theQuery)
-  {
-    self::$myLog->addDebug("Executing query: $theQuery");
-
-    return parent::executeRow0($theQuery);
-  }
-
-  //--------------------------------------------------------------------------------------------------------------------
-  /**
-   * Executes a query that returns 1 and only 1 row.
-   * Throws an exception if the query selects none, 2 or more rows.
-   *
-   * @param string $theQuery The SQL statement.
-   *
-   * @return array The selected row.
-   * @throws ResultException
-   */
-  public static function executeRow1($theQuery)
-  {
-    self::$myLog->addDebug("Executing query: $theQuery");
-
-    return parent::executeRow1($theQuery);
-  }
-
-  //--------------------------------------------------------------------------------------------------------------------
-  /**
-   * Executes a query that returns 0 or more rows.
-   *
-   * @param string $theQuery The SQL statement.
-   *
-   * @return array[] The selected rows.
-   */
-  public static function executeRows($theQuery)
-  {
-    self::$myLog->addDebug("Executing query: $theQuery");
-
-    return parent::executeRows($theQuery);
-  }
-
-  //--------------------------------------------------------------------------------------------------------------------
-  /**
-   * Executes a query and shows the data in a formatted in a table (like mysql's default pager) of in multiple tables
-   * (in case of a multi query).
-   *
-   * @param string $theQuery The query.
-   *
-   * @return int The total number of rows in the tables.
-   */
-  public static function executeTable($theQuery)
-  {
-    self::$myLog->addDebug("Executing query: $theQuery");
-
-    return parent::executeTable($theQuery);
-  }
-
-  //--------------------------------------------------------------------------------------------------------------------
-  /**
-   * Executes multiple SQL statements.
-   *
-   * Wrapper around [multi_mysqli::query](http://php.net/manual/mysqli.multi-query.php), however on failure an exception
-   * is thrown.
-   *
-   * @param string $theQueries The SQL statements.
-   *
-   * @return \mysqli_result
-   */
-  public static function multi_query($theQueries)
-  {
-    self::$myLog->addDebug("Executing query: $theQueries");
-
-    return parent::multi_query($theQueries);
-  }
-
-  //--------------------------------------------------------------------------------------------------------------------
-  /**
-   * Executes an SQL statement.
-   *
-   * Wrapper around [mysqli::query](http://php.net/manual/mysqli.query.php), however on failure an exception is thrown.
-   *
-   * @param string $theQuery The SQL statement.
-   *
-   * @return \mysqli_result
-   */
-  public static function query($theQuery)
-  {
-    self::$myLog->addDebug("Executing query: $theQuery");
-
-    return parent::query($theQuery);
+    self::executeNone($sql);
   }
 
   //--------------------------------------------------------------------------------------------------------------------
