@@ -128,7 +128,8 @@ class Audit
                              $this->myConfig['database']['audit_schema'],
                              $theTableName,
                              $theAction,
-                             $trigger_name);
+                             $trigger_name,
+                             $this->myConfig['audit_columns']);
   }
 
   //--------------------------------------------------------------------------------------------------------------------
@@ -377,7 +378,7 @@ class Audit
     $columns = [];
     foreach ($this->myConfig['audit_columns'] as $column)
     {
-      $columns[] = ['column_name' => $column['name'], 'data_type' => $column['type']];
+      $columns[] = ['column_name' => $column['column_name'], 'column_type' => $column['column_type']];
     }
     if ($theMissingTableFlag)
     {
@@ -386,11 +387,11 @@ class Audit
       {
         if ($column['data_type']!='timestamp')
         {
-          $columns[] = ['name' => $column['column_name'], 'type' => $column['data_type'].' DEFAULT NULL'];
+          $columns[] = ['column_name' => $column['column_name'], 'column_type' => $column['data_type'].' DEFAULT NULL'];
         }
         else
         {
-          $columns[] = ['name' => $column['column_name'], 'type' => $column['data_type'].' NULL'];
+          $columns[] = ['column_name' => $column['column_name'], 'column_type' => $column['data_type'].' NULL'];
         }
       }
     }
@@ -400,11 +401,11 @@ class Audit
       {
         if ($type!='timestamp')
         {
-          $columns[] = ['name' => $name, 'type' => $type.' DEFAULT NULL'];
+          $columns[] = ['column_name' => $name, 'column_type' => $type.' DEFAULT NULL'];
         }
         else
         {
-          $columns[] = ['name' => $name, 'type' => $type.' NULL'];
+          $columns[] = ['column_name' => $name, 'column_type' => $type.' NULL'];
         }
       }
     }
@@ -500,6 +501,11 @@ class Audit
       throw new RuntimeException("Unable to read file '%s'.", $theConfigFilename);
     }
     $this->myConfig = json_decode($content, true);
+
+    if (!isset($this->myConfig['audit_columns']))
+    {
+      $this->myConfig['audit_columns'] = [];
+    }
 
     foreach ($this->myConfig['tables'] as $table_name => $flag)
     {

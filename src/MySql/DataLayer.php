@@ -24,15 +24,16 @@ class DataLayer extends StaticDataLayer
   /**
    * Create trigger for table.
    *
-   * @param string $theDataSchema  Database data schema
-   * @param string $theAuditSchema Database audit schema
-   * @param string $theTableName   Name of table
-   * @param string $theAction      Action for trigger {INSERT, UPDATE, DELETE}
-   * @param string $theTriggerName Name of trigger
+   * @param string $theDataSchema   Database data schema
+   * @param string $theAuditSchema  Database audit schema
+   * @param string $theTableName    Name of table
+   * @param string $theAction       Action for trigger {INSERT, UPDATE, DELETE}
+   * @param string $theTriggerName  Name of trigger
+   * @param array  $theAuditColumns Audit  columns
    *
    * @return array
    */
-  public static function createTrigger($theDataSchema, $theAuditSchema, $theTableName, $theAction, $theTriggerName)
+  public static function createTrigger($theDataSchema, $theAuditSchema, $theTableName, $theAction, $theTriggerName, $theAuditColumns)
   {
     switch ($theAction)
     {
@@ -53,25 +54,35 @@ class DataLayer extends StaticDataLayer
         throw new FallenException('$theAction', $theAction);
     }
 
-    $sql     = "
+    $sql = "
 CREATE TRIGGER {$theTriggerName}
 AFTER {$theAction} ON `{$theDataSchema}`.`{$theTableName}`
 FOR EACH ROW BEGIN
-  if (@audit_uuid is null) then
-    set @audit_uuid = uuid_short();
-  end if;
-
-  if (@abc_g_skip{$theTableName} is null) then
-    set @audit_rownum = ifnull(@audit_rownum,0) + 1;
-
     INSERT INTO `{$theAuditSchema}`.`{$theTableName}`
-    VALUES( now()
-    ,       ".self::quoteString($theAction)."
-    ,       ".self::quoteString($row_state[0])."
-    ,       @audit_uuid
-    ,       @audit_rownum
-    ,       @abc_g_ses_id
-    ,       @abc_g_usr_id";
+    VALUES( ";
+    foreach ($theAuditColumns as $audit_column)
+    {
+      if (isset($audit_column['expression']))
+      {
+        $sql .= ','.$audit_column['expression'];
+      }
+      elseif (isset($audit_column['value_type']))
+      {
+        switch ($audit_column['value_type'])
+        {
+          case 'STATE':
+            $sql .= ','.self::quoteString($row_state[0]);
+            break;
+
+          case 'ACTION':
+            $sql .= self::quoteString($theAction);
+            break;
+
+          default:
+            throw new FallenException('$theState', $audit_column['value_type']);
+        }
+      }
+    }
     $columns = self::getTableColumns($theDataSchema, $theTableName);
     foreach ($columns as $column)
     {
@@ -79,26 +90,41 @@ FOR EACH ROW BEGIN
     }
     $sql .= ");";
 
-    if ($theAction=="UPDATE")
+    if ($theAction=='UPDATE')
     {
       $sql .= "
     INSERT INTO `{$theAuditSchema}`.`{$theTableName}`
-    VALUES( now()
-    ,       ".self::quoteString($theAction)."
-    ,       ".self::quoteString($row_state[1])."
-    ,       @audit_uuid
-    ,       @audit_rownum
-    ,       @abc_g_ses_id
-    ,       @abc_g_usr_id";
+    VALUES( ";
+      foreach ($theAuditColumns as $audit_column)
+      {
+        if (isset($audit_column['expression']))
+        {
+          $sql .= ','.$audit_column['expression'];
+        }
+        elseif (isset($audit_column['value_type']))
+        {
+          switch ($audit_column['value_type'])
+          {
+            case 'STATE':
+              $sql .= ','.self::quoteString($row_state[1]);
+              break;
+
+            case 'ACTION':
+              $sql .= self::quoteString($theAction);
+              break;
+
+            default:
+              throw new FallenException('$theState', $audit_column['value_type']);
+          }
+        }
+      }
       foreach ($columns as $column)
       {
         $sql .= ",{$row_state[1]}.`{$column['column_name']}`";
       }
       $sql .= ");";
     }
-
-    $sql .= "end if;
-END;
+    $sql .= "END;
 ";
 
     return self::executeNone($sql);
@@ -189,7 +215,7 @@ END;
     $sql_create = "CREATE TABLE `{$theAuditSchema}`.`{$theTableName}` (";
     foreach ($theMergedColumns as $column)
     {
-      $sql_create .= '`'.$column['name'].'` '.$column['type'];
+      $sql_create .= '`'.$column['column_name'].'` '.$column['column_type'];
       if (end($theMergedColumns)!==$column)
       {
         $sql_create .= ",";
