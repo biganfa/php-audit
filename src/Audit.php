@@ -377,7 +377,7 @@ class Audit
     $columns = [];
     foreach ($this->myConfig['audit_columns'] as $column)
     {
-      $columns[] = ['column_name' => $column['name'], 'data_type' => $column['type']];
+      $columns[] = ['column_name' => $column['column_name'], 'data_type' => $column['column_type']];
     }
     if ($theMissingTableFlag)
     {
