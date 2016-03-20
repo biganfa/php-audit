@@ -247,7 +247,7 @@ END;
     $sql_create = "CREATE TABLE `{$theAuditSchemaName}`.`{$theTableName}` (";
     foreach ($theMergedColumns as $column)
     {
-      $sql_create .= '`'.$column['name'].'` '.$column['type'];
+      $sql_create .= '`'.$column['column_name'].'` '.$column['column_type'];
       if (end($theMergedColumns)!==$column)
       {
         $sql_create .= ",";
