@@ -91,12 +91,12 @@ FOR EACH ROW BEGIN
 
     INSERT INTO `{$theAuditSchemaName}`.`{$theTableName}`
     VALUES( now()
-    ,       ".self::quoteString($theAction)."
-    ,       ".self::quoteString($row_state[0])."
+    ,       ".self::quoteString($theAction).'
+    ,       '.self::quoteString($row_state[0]).'
     ,       @audit_uuid
     ,       @audit_rownum
     ,       @abc_g_ses_id
-    ,       @abc_g_usr_id";
+    ,       @abc_g_usr_id';
     $columns = self::getTableColumns($theDataSchema, $theTableName);
     foreach ($columns as $column)
     {
@@ -108,21 +108,21 @@ FOR EACH ROW BEGIN
       $sql .= "
     INSERT INTO `{$theAuditSchemaName}`.`{$theTableName}`
     VALUES( now()
-    ,       ".self::quoteString($theAction)."
-    ,       ".self::quoteString($row_state[1])."
+    ,       ".self::quoteString($theAction).'
+    ,       '.self::quoteString($row_state[1]).'
     ,       @audit_uuid
     ,       @audit_rownum
     ,       @abc_g_ses_id
-    ,       @abc_g_usr_id";
+    ,       @abc_g_usr_id';
       foreach ($columns as $column)
       {
         $sql .= ",{$row_state[1]}.`{$column['column_name']}`";
       }
-      $sql .= ");";
+      $sql .= ');';
     }
-    $sql .= "end if;
+    $sql .= 'end if;
 END;
-";
+';
 
     self::executeNone($sql);
   }
@@ -250,10 +250,10 @@ END;
       $sql_create .= '`'.$column['column_name'].'` '.$column['column_type'];
       if (end($theMergedColumns)!==$column)
       {
-        $sql_create .= ",";
+        $sql_create .= ',';
       }
     }
-    $sql_create .= ");";
+    $sql_create .= ');';
 
     self::executeNone($sql_create);
   }
@@ -389,7 +389,7 @@ ORDER BY TABLE_NAME';
    */
   public static function unlockTables()
   {
-    $sql = "UNLOCK TABLES";
+    $sql = 'UNLOCK TABLES';
 
     self::executeNone($sql);
   }
