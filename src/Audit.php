@@ -354,57 +354,12 @@ class Audit
   {
     foreach ($this->myConfig['tables'] as $table_name => $flag)
     {
-      if (filter_var($flag, FILTER_VALIDATE_BOOLEAN))
+      if ($flag)
       {
         $new_columns      = $this->getMergeColumns($table_name, false);
         $existing_columns = DataLayer::getTableColumns('rank_audit', 'ABC_BLOB');
-        $diff_columns     = $this->array_diff_assoc_recursive($new_columns, $existing_columns);
-//        print_r($new_columns);
-//        print_r($existing_columns);
-//        print_r($diff_columns);
       }
     }
-  }
-
-  //--------------------------------------------------------------------------------------------------------------------
-  /**
-   * Return different values from two multidimensional arrays.
-   *
-   * @param $array1
-   * @param $array2
-   *
-   * @return array
-   */
-  function array_diff_assoc_recursive($array1, $array2)
-  {
-    foreach ($array1 as $key => $value)
-    {
-      if (is_array($value))
-      {
-        if (!isset($array2[$key]))
-        {
-          $difference[$key] = $value;
-        }
-        elseif (!is_array($array2[$key]))
-        {
-          $difference[$key] = $value;
-        }
-        else
-        {
-          $new_diff = $this->array_diff_assoc_recursive($value, $array2[$key]);
-          if ($new_diff!=false)
-          {
-            $difference[$key] = $new_diff;
-          }
-        }
-      }
-      elseif (!isset($array2[$key]) || $array2[$key]!=$value)
-      {
-        $difference[$key] = $value;
-      }
-    }
-
-    return !isset($difference) ? 0 : $difference;
   }
 
   //--------------------------------------------------------------------------------------------------------------------
