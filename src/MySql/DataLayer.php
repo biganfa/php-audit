@@ -3,6 +3,7 @@
 namespace SetBased\Audit\MySql;
 
 use Monolog\Logger;
+use SetBased\Audit\Exception\FallenException;
 use SetBased\Audit\Exception\ResultException;
 use SetBased\Stratum\MySql\StaticDataLayer;
 
@@ -58,22 +59,25 @@ alter table `{$theAuditSchemaName}`.`{$theTableName}`
    */
   public static function createTrigger($theDataSchema, $theAuditSchemaName, $theTableName, $theAction, $theTriggerName)
   {
-    if (strcmp($theAction, 'INSERT')!=0)
+    switch ($theAction)
     {
-      if (strcmp($theAction, 'DELETE')!=0)
-      {
+      case 'INSERT':
+        $row_state[] = 'NEW';
+        break;
+
+      case 'DELETE':
+        $row_state[] = 'OLD';
+        break;
+
+      case 'UPDATE':
         $row_state[] = 'OLD';
         $row_state[] = 'NEW';
-      }
-      else
-      {
-        $row_state[] = 'OLD';
-      }
+        break;
+
+      default:
+        throw new FallenException('Wrong trigger ACTION', $theAction);
     }
-    else
-    {
-      $row_state[] = 'NEW';
-    }
+
     $sql     = "
 CREATE TRIGGER {$theTriggerName}
 AFTER {$theAction} ON `{$theDataSchema}`.`{$theTableName}`
