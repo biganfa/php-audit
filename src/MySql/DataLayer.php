@@ -22,7 +22,7 @@ class DataLayer extends StaticDataLayer
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
-   * Adds new columns to a audit table.
+   * Adds new columns to an audit table.
    *
    * @param string $theAuditSchemaName The name of audit schema.
    * @param string $theTableName       The name of the table.
