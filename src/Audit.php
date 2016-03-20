@@ -7,6 +7,7 @@ use SetBased\Audit\Exception\RuntimeException;
 use SetBased\Audit\MySql\DataLayer;
 use Monolog\Logger;
 use Monolog\Handler\StreamHandler;
+use SetBased\Stratum\MySql\StaticDataLayer;
 
 //----------------------------------------------------------------------------------------------------------------------
 /**
@@ -104,6 +105,8 @@ class Audit
     $this->createMissingAuditTables();
 
     $this->createTriggers();
+
+    $this->compareColumns();
 
     $this->findDifferentColumns();
 
@@ -257,6 +260,46 @@ class Audit
     }
 
     return $missing_tables;
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
+   * Add new columns to audit table if table does not have
+   *
+   * @param string $theDataSchema  The table schema.
+   * @param string $theTableName   The table name.
+   * @param array  $theColumns     Columns array
+   * @param string $theAfterColumn After which column add new columns
+   */
+  public function addNewColumns($theDataSchema, $theTableName, $theColumns, $theAfterColumn)
+  {
+    DataLayer::addNewColumns($theDataSchema, $theTableName, $theColumns, $theAfterColumn);
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
+   * Compare table columns in audit and data schemas
+   */
+  public function compareColumns()
+  {
+    foreach ($this->myConfig['tables'] as $table_name => $flag)
+    {
+      if ($flag)
+      {
+        $audit_columns = DataLayer::getTableColumns($this->myConfig['database']['audit_schema'], $table_name);
+        $new_columns   = [];
+        foreach ($this->myConfig['table_columns'][$table_name] as $column_name => $column_type)
+        {
+          $exist_column = StaticDataLayer::searchInRowSet('column_name', $column_name, $audit_columns);
+          if (!$exist_column)
+          {
+            $this->logInfo("Find new column '{$column_name}' in table '{$table_name}'");
+            $new_columns[] = ['column_name' => $column_name, 'column_type' => $column_type];
+          }
+        }
+        $this->addNewColumns($this->myConfig['database']['audit_schema'], $table_name, $new_columns, 'audit_usr_id');
+      }
+    }
   }
 
   //--------------------------------------------------------------------------------------------------------------------

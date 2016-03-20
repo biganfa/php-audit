@@ -177,6 +177,34 @@ END;
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
+   * Add new columns to table
+   *
+   * @param string $theDataSchema  The table schema.
+   * @param string $theTableName   The table name.
+   * @param array  $theColumns     Columns array
+   * @param string $theAfterColumn After which column add new columns
+   *
+   * @return array
+   */
+  public static function addNewColumns($theDataSchema, $theTableName, $theColumns, $theAfterColumn)
+  {
+    $sql = "
+alter table `{$theDataSchema}`.`{$theTableName}`
+";
+    foreach ($theColumns as $column)
+    {
+      $sql .= 'add `'.$column['column_name'].'` '.$column['column_type'].' after `'.$theAfterColumn.'`';
+      if (end($theColumns)!==$column)
+      {
+        $sql .= ",";
+      }
+    }
+
+    return self::executeNone($sql);
+  }
+
+//--------------------------------------------------------------------------------------------------------------------
+  /**
    * Selects all triggers on a table.
    *
    * @param string $theDataSchema The table schema.
@@ -184,7 +212,8 @@ END;
    *
    * @return array
    */
-  public static function getTableTriggers($theDataSchema, $theTableName)
+  public
+  static function getTableTriggers($theDataSchema, $theTableName)
   {
     $sql = '
 SELECT
@@ -199,7 +228,7 @@ WHERE
     return self::executeRows($sql);
   }
 
-  //--------------------------------------------------------------------------------------------------------------------
+//--------------------------------------------------------------------------------------------------------------------
   /**
    * Select all table names in a schema.
    *
@@ -207,7 +236,8 @@ WHERE
    *
    * @return array
    */
-  public static function getTablesNames($theSchemaName)
+  public
+  static function getTablesNames($theSchemaName)
   {
     $sql = '
 select TABLE_NAME AS table_name
@@ -219,20 +249,21 @@ ORDER BY TABLE_NAME';
     return self::executeRows($sql);
   }
 
-  //--------------------------------------------------------------------------------------------------------------------
+//--------------------------------------------------------------------------------------------------------------------
   /**
    * @param string $theQuery The SQL statement.
    *
    * @return int The number of affected rows (if any).
    */
-  public static function executeNone($theQuery)
+  public
+  static function executeNone($theQuery)
   {
     self::$myLog->addDebug("Executing query: $theQuery");
 
     return parent::executeNone($theQuery);
   }
 
-  //--------------------------------------------------------------------------------------------------------------------
+//--------------------------------------------------------------------------------------------------------------------
   /**
    * Select all columns from table in a schema.
    *
@@ -241,7 +272,8 @@ ORDER BY TABLE_NAME';
    *
    * @return array
    */
-  public static function getTableColumns($theSchemaName, $theTableName)
+  public
+  static function getTableColumns($theSchemaName, $theTableName)
   {
     $sql = '
 select COLUMN_NAME as column_name
@@ -254,7 +286,7 @@ order by COLUMN_NAME';
     return self::executeRows($sql);
   }
 
-  //--------------------------------------------------------------------------------------------------------------------
+//--------------------------------------------------------------------------------------------------------------------
   /**
    * Executes a query and logs the result set.
    *
@@ -262,14 +294,15 @@ order by COLUMN_NAME';
    *
    * @return int The total number of rows selected/logged.
    */
-  public static function executeLog($theQuery)
+  public
+  static function executeLog($theQuery)
   {
     self::$myLog->addDebug("Executing query: $theQuery");
 
     return parent::executeLog($theQuery);
   }
 
-  //--------------------------------------------------------------------------------------------------------------------
+//--------------------------------------------------------------------------------------------------------------------
   /**
    * Executes a query that returns 0 or 1 row.
    * Throws an exception if the query selects 2 or more rows.
@@ -279,14 +312,15 @@ order by COLUMN_NAME';
    * @return array|null The selected row.
    * @throws ResultException
    */
-  public static function executeRow0($theQuery)
+  public
+  static function executeRow0($theQuery)
   {
     self::$myLog->addDebug("Executing query: $theQuery");
 
     return parent::executeRow0($theQuery);
   }
 
-  //--------------------------------------------------------------------------------------------------------------------
+//--------------------------------------------------------------------------------------------------------------------
   /**
    * Executes a query that returns 1 and only 1 row.
    * Throws an exception if the query selects none, 2 or more rows.
@@ -296,14 +330,15 @@ order by COLUMN_NAME';
    * @return array The selected row.
    * @throws ResultException
    */
-  public static function executeRow1($theQuery)
+  public
+  static function executeRow1($theQuery)
   {
     self::$myLog->addDebug("Executing query: $theQuery");
 
     return parent::executeRow1($theQuery);
   }
 
-  //--------------------------------------------------------------------------------------------------------------------
+//--------------------------------------------------------------------------------------------------------------------
   /**
    * Executes a query that returns 0 or more rows.
    *
@@ -311,14 +346,15 @@ order by COLUMN_NAME';
    *
    * @return array[] The selected rows.
    */
-  public static function executeRows($theQuery)
+  public
+  static function executeRows($theQuery)
   {
     self::$myLog->addDebug("Executing query: $theQuery");
 
     return parent::executeRows($theQuery);
   }
 
-  //--------------------------------------------------------------------------------------------------------------------
+//--------------------------------------------------------------------------------------------------------------------
   /**
    * Executes a query and shows the data in a formatted in a table (like mysql's default pager) of in multiple tables
    * (in case of a multi query).
@@ -327,14 +363,15 @@ order by COLUMN_NAME';
    *
    * @return int The total number of rows in the tables.
    */
-  public static function executeTable($theQuery)
+  public
+  static function executeTable($theQuery)
   {
     self::$myLog->addDebug("Executing query: $theQuery");
 
     return parent::executeTable($theQuery);
   }
 
-  //--------------------------------------------------------------------------------------------------------------------
+//--------------------------------------------------------------------------------------------------------------------
   /**
    * Executes multiple SQL statements.
    *
@@ -345,14 +382,15 @@ order by COLUMN_NAME';
    *
    * @return \mysqli_result
    */
-  public static function multi_query($theQueries)
+  public
+  static function multi_query($theQueries)
   {
     self::$myLog->addDebug("Executing query: $theQueries");
 
     return parent::multi_query($theQueries);
   }
 
-  //--------------------------------------------------------------------------------------------------------------------
+//--------------------------------------------------------------------------------------------------------------------
   /**
    * Executes an SQL statement.
    *
@@ -362,14 +400,15 @@ order by COLUMN_NAME';
    *
    * @return \mysqli_result
    */
-  public static function query($theQuery)
+  public
+  static function query($theQuery)
   {
     self::$myLog->addDebug("Executing query: $theQuery");
 
     return parent::query($theQuery);
   }
 
-  //--------------------------------------------------------------------------------------------------------------------
+//--------------------------------------------------------------------------------------------------------------------
 }
 
 //----------------------------------------------------------------------------------------------------------------------
