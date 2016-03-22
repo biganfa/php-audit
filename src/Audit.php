@@ -68,7 +68,7 @@ class Audit
    */
   public function main($theOptions)
   {
-    $this->myPruneOption = $theOptions['prune'];
+    $this->myPruneOption = (boolean)$theOptions['prune'];
 
     // Initialize monolog, set custom output for LineFormatter
     // Set Logger levels from console commands {-v, -d}
@@ -125,14 +125,13 @@ class Audit
    */
   public function createTableTrigger($theTableName, $theAction)
   {
-    $this->logVerbose("Create {$theAction} trigger for table {$theTableName}.");
+    $this->logVerbose(sprintf('Create %s trigger for table %s.', $theAction, $theTableName));
     $trigger_name = $this->getTriggerName($this->myConfig['database']['data_schema'], $theAction);
     DataLayer::createTrigger($this->myConfig['database']['data_schema'],
                              $this->myConfig['database']['audit_schema'],
                              $theTableName,
                              $theAction,
-                             $trigger_name,
-                             $this->myConfig['audit_columns']);
+                             $trigger_name);
   }
 
   //--------------------------------------------------------------------------------------------------------------------
@@ -190,7 +189,7 @@ class Audit
 
     foreach ($old_triggers as $trigger)
     {
-      $this->logVerbose("Drop trigger {$trigger['Trigger_Name']} for table {$theTableName}.");
+      $this->logVerbose(sprintf('Drop trigger %s for table %s.', $trigger['Trigger_Name'], $theTableName));
       DataLayer::dropTrigger($trigger['Trigger_Name']);
     }
   }
@@ -208,7 +207,7 @@ class Audit
   {
     $uuid = uniqid('trg_');
 
-    return strtolower("`{$theDataSchema}`.`{$uuid}_{$theAction}`");
+    return strtolower(sprintf('`%s`.`%s_%s`', $theDataSchema, $uuid, $theAction));
   }
 
   //--------------------------------------------------------------------------------------------------------------------
@@ -294,7 +293,7 @@ class Audit
           $exist_column = StaticDataLayer::searchInRowSet('column_name', $column_name, $audit_columns);
           if (!$exist_column)
           {
-            $this->logInfo("Find new column '{$column_name}' in table '{$table_name}'");
+            $this->logInfo(sprintf('Find new column %s in table %s', $column_name, $table_name));
             $new_columns[] = ['column_name' => $column_name, 'column_type' => $column_type];
           }
         }
@@ -313,7 +312,7 @@ class Audit
 
     foreach ($missing_tables as $table)
     {
-      $this->logInfo("Creating audit table {$table['table_name']}.");
+      $this->logInfo(sprintf('Creating audit table %s.', $table['table_name']));
       $columns = $this->getMergeColumns($table['table_name'], true);
       DataLayer::generateSqlCreateStatement($this->myConfig['database']['audit_schema'], $table['table_name'], $columns);
     }
@@ -346,9 +345,7 @@ class Audit
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
-   * Finding different columns from new audit table and existing.
-   *
-   * @return array
+   * Finding different columns from new audit table and existing.   *
    */
   public function findDifferentColumns()
   {
@@ -446,12 +443,12 @@ class Audit
       {
         if (!$this->myConfig['tables'][$table['table_name']])
         {
-          $this->logInfo("Audit flag is not set in table {$table['table_name']}.\n");
+          $this->logInfo(sprintf('Audit flag is not set in table .', $table['table_name']));
         }
       }
       else
       {
-        $this->logInfo("Find new table {$table['table_name']}, not listed in config file.\n");
+        $this->logInfo(sprintf('Find new table %s, not listed in config file.', $table['table_name']));
         $this->myConfig['tables'][$table['table_name']] = false;
       }
     }
@@ -474,7 +471,7 @@ class Audit
    *
    * @param string $theTableName Name of table
    *
-   * @return array
+   * @return array[]
    */
   public function columnsOfTable($theTableName)
   {
