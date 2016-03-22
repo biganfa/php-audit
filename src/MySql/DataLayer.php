@@ -57,6 +57,7 @@ class DataLayer extends StaticDataLayer
    */
   public static function createTrigger($theDataSchema, $theAuditSchemaName, $theTableName, $theAction, $theTriggerName)
   {
+    $row_state = [];
     switch ($theAction)
     {
       case 'INSERT':
@@ -73,7 +74,7 @@ class DataLayer extends StaticDataLayer
         break;
 
       default:
-        throw new FallenException('Wrong trigger ACTION', $theAction);
+        throw new FallenException('$theAction', $theAction);
     }
 
     $sql = sprintf('
@@ -110,9 +111,9 @@ for each row begin
     {
       $sql .= sprintf(',%s.`%s`', $row_state[0], $column['column_name']);
     }
-    $sql .= ");";
+    $sql .= ');';
 
-    if (strcmp($theAction, "UPDATE")==0)
+    if ($theAction=='UPDATE')
     {
       $sql .= sprintf('
     insert into `%s`.`%s`
@@ -134,7 +135,7 @@ for each row begin
       $sql .= ');';
     }
     $sql .= 'end if;
-END;
+end;
 ';
 
     self::executeNone($sql);
@@ -148,7 +149,7 @@ END;
    */
   public static function dropTrigger($theTriggerName)
   {
-    $sql = sprintf('DROP TRIGGER `%s`', $theTriggerName);
+    $sql = sprintf('drop trigger `%s`', $theTriggerName);
 
     self::executeNone($sql);
   }
@@ -215,7 +216,7 @@ END;
     return parent::executeRow1($theQuery);
   }
 
-//--------------------------------------------------------------------------------------------------------------------
+  //--------------------------------------------------------------------------------------------------------------------
   /**
    * Executes a query that returns 0 or more rows.
    *
@@ -230,23 +231,7 @@ END;
     return parent::executeRows($theQuery);
   }
 
-//--------------------------------------------------------------------------------------------------------------------
-  /**
-   * Executes a query and shows the data in a formatted in a table (like mysql's default pager) of in multiple tables
-   * (in case of a multi query).
-   *
-   * @param string $theQuery The query.
-   *
-   * @return int The total number of rows in the tables.
-   */
-  public static function executeTable($theQuery)
-  {
-    self::$myLog->addDebug(sprintf('Executing query: %s', $theQuery));
-
-    return parent::executeTable($theQuery);
-  }
-
-//--------------------------------------------------------------------------------------------------------------------
+  //--------------------------------------------------------------------------------------------------------------------
   /**
    * Creates an audit table.
    *
@@ -260,18 +245,18 @@ END;
     $sql_create = sprintf('create table `%s`.`%s` (', $theAuditSchemaName, $theTableName);
     foreach ($theMergedColumns as $column)
     {
-      $sql_create .= '`'.$column['column_name'].'` '.$column['column_type'];
+      $sql_create .= sprintf('`%s` %s', $column['column_name'], $column['column_type'] );
       if (end($theMergedColumns)!==$column)
       {
         $sql_create .= ',';
       }
     }
-    $sql_create .= ');';
+    $sql_create .= ')';
 
     self::executeNone($sql_create);
   }
 
-//--------------------------------------------------------------------------------------------------------------------
+  //--------------------------------------------------------------------------------------------------------------------
   /**
    * Selects metadata of all columns of table.
    *
@@ -293,14 +278,14 @@ order by COLUMN_NAME';
     return self::executeRows($sql);
   }
 
-//--------------------------------------------------------------------------------------------------------------------
+  //--------------------------------------------------------------------------------------------------------------------
   /**
    * Selects all triggers on a table.
    *
    * @param string $theSchemaName The name of the table schema.
    * @param string $theTableName  The name of the table.
    *
-   * @return array
+   * @return array[]
    */
   public static function getTableTriggers($theSchemaName, $theTableName)
   {
@@ -317,7 +302,7 @@ where
     return self::executeRows($sql);
   }
 
-//--------------------------------------------------------------------------------------------------------------------
+  //--------------------------------------------------------------------------------------------------------------------
   /**
    * Selects all table names in a schema.
    *
@@ -337,7 +322,7 @@ order by TABLE_NAME';
     return self::executeRows($sql);
   }
 
-//--------------------------------------------------------------------------------------------------------------------
+  //--------------------------------------------------------------------------------------------------------------------
   /**
    * Acquires a write lock on a table.
    *
@@ -350,42 +335,7 @@ order by TABLE_NAME';
     self::executeNone($sql);
   }
 
-//--------------------------------------------------------------------------------------------------------------------
-  /**
-   * Executes multiple SQL statements.
-   *
-   * Wrapper around [multi_mysqli::query](http://php.net/manual/mysqli.multi-query.php), however on failure an exception
-   * is thrown.
-   *
-   * @param string $theQueries The SQL statements.
-   *
-   * @return \mysqli_result
-   */
-  public static function multi_query($theQueries)
-  {
-    self::$myLog->addDebug(sprintf('Executing queries: %s', $theQueries));
-
-    return parent::multi_query($theQueries);
-  }
-
-//--------------------------------------------------------------------------------------------------------------------
-  /**
-   * Executes an SQL statement.
-   *
-   * Wrapper around [mysqli::query](http://php.net/manual/mysqli.query.php), however on failure an exception is thrown.
-   *
-   * @param string $theQuery The SQL statement.
-   *
-   * @return \mysqli_result
-   */
-  public static function query($theQuery)
-  {
-    self::$myLog->addDebug(sprintf('Executing query: %s', $theQuery));
-
-    return parent::query($theQuery);
-  }
-
-//--------------------------------------------------------------------------------------------------------------------
+  //--------------------------------------------------------------------------------------------------------------------
   /**
    * Setter for logger.
    *
@@ -396,7 +346,7 @@ order by TABLE_NAME';
     self::$myLog = $theLogger;
   }
 
-//--------------------------------------------------------------------------------------------------------------------
+  //--------------------------------------------------------------------------------------------------------------------
   /**
    * Releases all table locks.
    */
@@ -407,7 +357,7 @@ order by TABLE_NAME';
     self::executeNone($sql);
   }
 
-//--------------------------------------------------------------------------------------------------------------------
+  //--------------------------------------------------------------------------------------------------------------------
 }
 
 //----------------------------------------------------------------------------------------------------------------------
