@@ -76,10 +76,10 @@ class DataLayer extends StaticDataLayer
         throw new FallenException('Wrong trigger ACTION', $theAction);
     }
 
-    $sql     = sprintf('
-CREATE TRIGGER %s
-AFTER %s ON `%s`.`%s`
-FOR EACH ROW BEGIN
+    $sql = sprintf('
+create trigger %s
+after %s on `%s`.`%s`
+for each row begin
   if (@audit_uuid is null) then
     set @audit_uuid = uuid_short();
   end if;
@@ -87,35 +87,46 @@ FOR EACH ROW BEGIN
   if (@abc_g_skip%s is null) then
     set @audit_rownum = ifnull(@audit_rownum,0) + 1;
 
-    INSERT INTO `%s`.`%s`
-    VALUES( now()
+    insert into `%s`.`%s`
+    values( now()
     ,       %s
     ,       %s
     ,       @audit_uuid
     ,       @audit_rownum
     ,       @abc_g_ses_id
     ,       @abc_g_usr_id',
-                       $theTriggerName, $theAction, $theDataSchema, $theTableName,
-                       $theTableName, $theAuditSchemaName, $theTableName,
-                       self::quoteString($theAction), self::quoteString($row_state[0]));
+                   $theTriggerName,
+                   $theAction,
+                   $theDataSchema,
+                   $theTableName,
+                   $theTableName,
+                   $theAuditSchemaName,
+                   $theTableName,
+                   self::quoteString($theAction),
+                   self::quoteString($row_state[0]));
+
     $columns = self::getTableColumns($theDataSchema, $theTableName);
     foreach ($columns as $column)
     {
       $sql .= sprintf(',%s.`%s`', $row_state[0], $column['column_name']);
     }
     $sql .= ");";
+
     if (strcmp($theAction, "UPDATE")==0)
     {
       $sql .= sprintf('
-    INSERT INTO `%s`.`%s`
-    VALUES( now()
+    insert into `%s`.`%s`
+    values( now()
     ,       %s
     ,       %s
     ,       @audit_uuid
     ,       @audit_rownum
     ,       @abc_g_ses_id
     ,       @abc_g_usr_id',
-                      $theAuditSchemaName, $theTableName, self::quoteString($theAction), self::quoteString($row_state[1]));
+                      $theAuditSchemaName,
+                      $theTableName,
+                      self::quoteString($theAction),
+                      self::quoteString($row_state[1]));
       foreach ($columns as $column)
       {
         $sql .= sprintf(',%s.`%s`', $row_state[1], $column['column_name']);
@@ -246,7 +257,7 @@ END;
    */
   public static function generateSqlCreateStatement($theAuditSchemaName, $theTableName, $theMergedColumns)
   {
-    $sql_create = sprintf('CREATE TABLE `%s`.`%s` (', $theAuditSchemaName, $theTableName);
+    $sql_create = sprintf('create table `%s`.`%s` (', $theAuditSchemaName, $theTableName);
     foreach ($theMergedColumns as $column)
     {
       $sql_create .= '`'.$column['column_name'].'` '.$column['column_type'];
@@ -294,13 +305,13 @@ order by COLUMN_NAME';
   public static function getTableTriggers($theSchemaName, $theTableName)
   {
     $sql = '
-SELECT
+select
   Trigger_Name
-FROM
+from
 	information_schema.TRIGGERS
-WHERE
+where
 	TRIGGER_SCHEMA = '.self::quoteString($theSchemaName).'
-  AND
+  and
   EVENT_OBJECT_TABLE = '.self::quoteString($theTableName);
 
     return self::executeRows($sql);
@@ -321,7 +332,7 @@ select TABLE_NAME AS table_name
 from   information_schema.TABLES
 where  TABLE_SCHEMA = '.self::quoteString($theSchemaName).'
 and    TABLE_TYPE   = "BASE TABLE"
-ORDER BY TABLE_NAME';
+order by TABLE_NAME';
 
     return self::executeRows($sql);
   }
@@ -334,7 +345,7 @@ ORDER BY TABLE_NAME';
    */
   public static function lockTable($theTableName)
   {
-    $sql = sprintf('LOCK TABLES `%s` WRITE', $theTableName);
+    $sql = sprintf('lock tables `%s` write', $theTableName);
 
     self::executeNone($sql);
   }
@@ -352,7 +363,7 @@ ORDER BY TABLE_NAME';
    */
   public static function multi_query($theQueries)
   {
-    self::$myLog->addDebug(sprintf('Executing query: %s', $theQueries));
+    self::$myLog->addDebug(sprintf('Executing queries: %s', $theQueries));
 
     return parent::multi_query($theQueries);
   }
@@ -391,7 +402,7 @@ ORDER BY TABLE_NAME';
    */
   public static function unlockTables()
   {
-    $sql = 'UNLOCK TABLES';
+    $sql = 'unlock tables';
 
     self::executeNone($sql);
   }
