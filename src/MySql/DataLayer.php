@@ -4,7 +4,7 @@ namespace SetBased\Audit\MySql;
 
 use Monolog\Logger;
 use SetBased\Stratum\Exception\FallenException;
-use SetBased\Audit\Exception\ResultException;
+use SetBased\Stratum\Exception\ResultException;
 use SetBased\Stratum\MySql\StaticDataLayer;
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -32,9 +32,7 @@ class DataLayer extends StaticDataLayer
    */
   public static function addNewColumns($theAuditSchemaName, $theTableName, $theColumns, $theAfterColumn)
   {
-    $sql = "
-alter table `{$theAuditSchemaName}`.`{$theTableName}`
-";
+    $sql = sprintf('alter table `%s`.`%s`', $theAuditSchemaName, $theTableName);
     foreach ($theColumns as $column)
     {
       $sql .= 'add `'.$column['column_name'].'` '.$column['column_type'].' after `'.$theAfterColumn.'`';
@@ -78,45 +76,49 @@ alter table `{$theAuditSchemaName}`.`{$theTableName}`
         throw new FallenException('Wrong trigger ACTION', $theAction);
     }
 
-    $sql     = "
-CREATE TRIGGER {$theTriggerName}
-AFTER {$theAction} ON `{$theDataSchema}`.`{$theTableName}`
+    $sql     = sprintf('
+CREATE TRIGGER %s
+AFTER %s ON `%s`.`%s`
 FOR EACH ROW BEGIN
   if (@audit_uuid is null) then
     set @audit_uuid = uuid_short();
   end if;
 
-  if (@abc_g_skip{$theTableName} is null) then
+  if (@abc_g_skip%s is null) then
     set @audit_rownum = ifnull(@audit_rownum,0) + 1;
 
-    INSERT INTO `{$theAuditSchemaName}`.`{$theTableName}`
+    INSERT INTO `%s`.`%s`
     VALUES( now()
-    ,       ".self::quoteString($theAction).'
-    ,       '.self::quoteString($row_state[0]).'
+    ,       %s
+    ,       %s
     ,       @audit_uuid
     ,       @audit_rownum
     ,       @abc_g_ses_id
-    ,       @abc_g_usr_id';
+    ,       @abc_g_usr_id',
+                       $theTriggerName, $theAction, $theDataSchema, $theTableName,
+                       $theTableName, $theAuditSchemaName, $theTableName,
+                       self::quoteString($theAction), self::quoteString($row_state[0]));
     $columns = self::getTableColumns($theDataSchema, $theTableName);
     foreach ($columns as $column)
     {
-      $sql .= ",{$row_state[0]}.`{$column['column_name']}`";
+      $sql .= sprintf(',%s.`%s`', $row_state[0], $column['column_name']);
     }
     $sql .= ");";
     if (strcmp($theAction, "UPDATE")==0)
     {
-      $sql .= "
-    INSERT INTO `{$theAuditSchemaName}`.`{$theTableName}`
+      $sql .= sprintf('
+    INSERT INTO `%s`.`%s`
     VALUES( now()
-    ,       ".self::quoteString($theAction).'
-    ,       '.self::quoteString($row_state[1]).'
+    ,       %s
+    ,       %s
     ,       @audit_uuid
     ,       @audit_rownum
     ,       @abc_g_ses_id
-    ,       @abc_g_usr_id';
+    ,       @abc_g_usr_id',
+                      $theAuditSchemaName, $theTableName, self::quoteString($theAction), self::quoteString($row_state[1]));
       foreach ($columns as $column)
       {
-        $sql .= ",{$row_state[1]}.`{$column['column_name']}`";
+        $sql .= sprintf(',%s.`%s`', $row_state[1], $column['column_name']);
       }
       $sql .= ');';
     }
@@ -135,7 +137,7 @@ END;
    */
   public static function dropTrigger($theTriggerName)
   {
-    $sql = "DROP TRIGGER `{$theTriggerName}`";
+    $sql = sprintf('DROP TRIGGER `%s`', $theTriggerName);
 
     self::executeNone($sql);
   }
@@ -150,7 +152,7 @@ END;
    */
   public static function executeLog($theQuery)
   {
-    self::$myLog->addDebug("Executing query: $theQuery");
+    self::$myLog->addDebug(sprintf('Executing query: %s', $theQuery));
 
     return parent::executeLog($theQuery);
   }
@@ -163,7 +165,7 @@ END;
    */
   public static function executeNone($theQuery)
   {
-    self::$myLog->addDebug("Executing query: $theQuery");
+    self::$myLog->addDebug(sprintf('Executing query: %s', $theQuery));
 
     return parent::executeNone($theQuery);
   }
@@ -180,7 +182,7 @@ END;
    */
   public static function executeRow0($theQuery)
   {
-    self::$myLog->addDebug("Executing query: $theQuery");
+    self::$myLog->addDebug(sprintf('Executing query: %s', $theQuery));
 
     return parent::executeRow0($theQuery);
   }
@@ -197,7 +199,7 @@ END;
    */
   public static function executeRow1($theQuery)
   {
-    self::$myLog->addDebug("Executing query: $theQuery");
+    self::$myLog->addDebug(sprintf('Executing query: %s', $theQuery));
 
     return parent::executeRow1($theQuery);
   }
@@ -212,7 +214,7 @@ END;
    */
   public static function executeRows($theQuery)
   {
-    self::$myLog->addDebug("Executing query: $theQuery");
+    self::$myLog->addDebug(sprintf('Executing query: %s', $theQuery));
 
     return parent::executeRows($theQuery);
   }
@@ -228,7 +230,7 @@ END;
    */
   public static function executeTable($theQuery)
   {
-    self::$myLog->addDebug("Executing query: $theQuery");
+    self::$myLog->addDebug(sprintf('Executing query: %s', $theQuery));
 
     return parent::executeTable($theQuery);
   }
@@ -244,7 +246,7 @@ END;
    */
   public static function generateSqlCreateStatement($theAuditSchemaName, $theTableName, $theMergedColumns)
   {
-    $sql_create = "CREATE TABLE `{$theAuditSchemaName}`.`{$theTableName}` (";
+    $sql_create = sprintf('CREATE TABLE `%s`.`%s` (', $theAuditSchemaName, $theTableName);
     foreach ($theMergedColumns as $column)
     {
       $sql_create .= '`'.$column['column_name'].'` '.$column['column_type'];
@@ -332,7 +334,7 @@ ORDER BY TABLE_NAME';
    */
   public static function lockTable($theTableName)
   {
-    $sql = "LOCK TABLES `{$theTableName}` WRITE";
+    $sql = sprintf('LOCK TABLES `%s` WRITE', $theTableName);
 
     self::executeNone($sql);
   }
@@ -350,7 +352,7 @@ ORDER BY TABLE_NAME';
    */
   public static function multi_query($theQueries)
   {
-    self::$myLog->addDebug("Executing query: $theQueries");
+    self::$myLog->addDebug(sprintf('Executing query: %s', $theQueries));
 
     return parent::multi_query($theQueries);
   }
@@ -367,7 +369,7 @@ ORDER BY TABLE_NAME';
    */
   public static function query($theQuery)
   {
-    self::$myLog->addDebug("Executing query: $theQuery");
+    self::$myLog->addDebug(sprintf('Executing query: %s', $theQuery));
 
     return parent::query($theQuery);
   }
