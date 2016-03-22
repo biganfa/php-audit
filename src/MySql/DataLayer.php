@@ -267,13 +267,15 @@ end;
    */
   public static function getTableColumns($theSchemaName, $theTableName)
   {
-    $sql = '
+    $sql = sprintf('
 select COLUMN_NAME as column_name
 ,      COLUMN_TYPE as data_type
 from   information_schema.COLUMNS
-where  TABLE_SCHEMA = '.self::quoteString($theSchemaName).'
-and    TABLE_NAME   = '.self::quoteString($theTableName).'
-order by COLUMN_NAME';
+where  TABLE_SCHEMA = %s
+and    TABLE_NAME   = %s
+order by COLUMN_NAME',
+                   self::quoteString($theSchemaName),
+                   self::quoteString($theTableName));
 
     return self::executeRows($sql);
   }
@@ -289,15 +291,17 @@ order by COLUMN_NAME';
    */
   public static function getTableTriggers($theSchemaName, $theTableName)
   {
-    $sql = '
+    $sql = sprintf('
 select
   Trigger_Name
 from
 	information_schema.TRIGGERS
 where
-	TRIGGER_SCHEMA = '.self::quoteString($theSchemaName).'
+	TRIGGER_SCHEMA = %s
   and
-  EVENT_OBJECT_TABLE = '.self::quoteString($theTableName);
+  EVENT_OBJECT_TABLE = %s',
+                   self::quoteString($theTableName),
+                   self::quoteString($theSchemaName));
 
     return self::executeRows($sql);
   }
@@ -312,12 +316,12 @@ where
    */
   public static function getTablesNames($theSchemaName)
   {
-    $sql = '
+    $sql = sprintf("
 select TABLE_NAME AS table_name
 from   information_schema.TABLES
-where  TABLE_SCHEMA = '.self::quoteString($theSchemaName).'
-and    TABLE_TYPE   = "BASE TABLE"
-order by TABLE_NAME';
+where  TABLE_SCHEMA = %s
+and    TABLE_TYPE   = 'BASE TABLE'
+order by TABLE_NAME", self::quoteString($theSchemaName));
 
     return self::executeRows($sql);
   }
