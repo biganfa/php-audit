@@ -38,7 +38,7 @@ class DataLayer extends StaticDataLayer
       $sql .= 'add `'.$column['column_name'].'` '.$column['column_type'].' after `'.$theAfterColumn.'`';
       if (end($theColumns)!==$column)
       {
-        $sql .= ",";
+        $sql .= ',';
       }
     }
 
