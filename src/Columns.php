@@ -6,7 +6,7 @@ use SetBased\Audit\MySql\DataLayer;
 
 //----------------------------------------------------------------------------------------------------------------------
 /**
- * Class for metadata of columns.
+ * Class for metadata of (table) columns.
  */
 class Columns
 {
@@ -39,45 +39,6 @@ class Columns
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
-   * Gets columns array.
-   *
-   * @return array[]
-   */
-  public function getColumns()
-  {
-    return $this->myColumns;
-  }
-
-  //--------------------------------------------------------------------------------------------------------------------
-  /**
-   * Compare two arrays for search columns from first array not set in second array
-   *
-   * @param array[] $theCurrentColumns   Search this columns
-   * @param array[] $theColumnsForSearch Search in this array
-   *
-   * @return array[]
-   */
-  public static function notInOtherSet($theCurrentColumns, $theColumnsForSearch)
-  {
-    $not_in_other_columns = [];
-    if (isset($theCurrentColumns))
-    {
-      foreach ($theCurrentColumns as $column)
-      {
-        $exist_column = DataLayer::searchInRowSet('column_name', $column['column_name'], $theColumnsForSearch);
-        if (!isset($exist_column))
-        {
-          $not_in_other_columns[] = ['column_name' => $column['column_name'],
-                                     'column_type' => $column['column_type']];
-        }
-      }
-    }
-
-    return $not_in_other_columns;
-  }
-
-  //--------------------------------------------------------------------------------------------------------------------
-  /**
    * Generate array with audit columns and columns from data table.
    *
    * @param Columns $theAuditColumnsMetadata   Audit columns for adding to exist columns
@@ -88,10 +49,12 @@ class Columns
   public static function combine($theAuditColumnsMetadata, $theCurrentColumnsMetadata)
   {
     $columns = [];
+    
     foreach ($theAuditColumnsMetadata->getColumns() as $column)
     {
       $columns[] = ['column_name' => $column['column_name'], 'column_type' => $column['column_type']];
     }
+    
     foreach ($theCurrentColumnsMetadata->getColumns() as $column)
     {
       if ($column['column_type']!='timestamp')
@@ -105,6 +68,46 @@ class Columns
     }
 
     return new Columns($columns);
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
+   * Compares two Columns objects and returns an array with columns that are in the first columns object but not in the
+   * second Columns object.
+   *
+   * @param Columns $theColumns1 The first Columns object.
+   * @param Columns $theColumns2 The second Columns object.
+   *
+   * @return array[]
+   */
+  public static function notInOtherSet($theColumns1, $theColumns2)
+  {
+    $diff = [];
+    if (isset($theColumns1))
+    {
+      foreach ($theColumns1->myColumns as $column1)
+      {
+        $column2 = DataLayer::searchInRowSet('column_name', $column1['column_name'], $theColumns2->myColumns);
+        if ($column2===null)
+        {
+          $diff[] = ['column_name' => $column1['column_name'],
+                     'column_type' => $column1['column_type']];
+        }
+      }
+    }
+
+    return $diff;
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
+   * Returns the underlying array with metadata of the columns.
+   *
+   * @return array[]
+   */
+  public function getColumns()
+  {
+    return $this->myColumns;
   }
 
   //--------------------------------------------------------------------------------------------------------------------

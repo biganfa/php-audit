@@ -117,6 +117,7 @@ class Audit
         {
           $current_table->createMissingAuditTable();
         }
+
         $columns = $current_table->main();
         $this->getColumns($current_table->getTableName(), $columns);
       }
@@ -157,18 +158,19 @@ class Audit
    * Compares the tables listed in the config file and the tables found in the audit schema
    *
    * @param string  $theTableName Name of table
-   * @param array[] $theColumns   Array with columns
+   * @param Columns $theColumns   The table columns.
    */
   public function getColumns($theTableName, $theColumns)
   {
     $columns = [];
-    foreach ($theColumns as $column)
+    foreach ($theColumns->getColumns() as $column)
     {
       $columns[] = ['column_name' => $column['column_name'],
                     'column_type' => $column['column_type']];
     }
     $this->myConfig['table_columns'][$theTableName] = $columns;
-    if ($this->myPruneOption==1)
+
+    if ($this->myPruneOption)
     {
       $this->myConfig['table_columns'] = [];
     }
