@@ -43,28 +43,28 @@ class Table
   /**
    * Merged columns array, audit columns and table columns
    *
-   * @var array[]
+   * @var \SetBased\Audit\Columns
    */
   private $myTargetColumnsMetadata;
 
   /**
    * Audit columns from config file
    *
-   * @var array[]
+   * @var \SetBased\Audit\Columns
    */
   private $myAuditColumnsMetadata;
 
   /**
    * Columns from config file
    *
-   * @var array[]
+   * @var \SetBased\Audit\Columns
    */
   private $myConfigColumnsMetadata;
 
   /**
    * Columns from data schema
    *
-   * @var array[]
+   * @var \SetBased\Audit\Columns
    */
   private $myCurrentColumnsMetadata;
 
@@ -186,6 +186,8 @@ class Table
   //--------------------------------------------------------------------------------------------------------------------
   /**
    * Compare columns from table in data_schema with columns in config file
+   *
+   * @return array[]
    */
   public function compareTableColumnsConfig()
   {

@@ -57,7 +57,7 @@ class Columns
    *
    * @return array[]
    */
-  static public function notInOtherSet($theCurrentColumns, $theColumnsForSearch)
+  public static function notInOtherSet($theCurrentColumns, $theColumnsForSearch)
   {
     $not_in_other_columns = [];
     if (isset($theCurrentColumns))
@@ -85,7 +85,7 @@ class Columns
    *
    * @return Columns
    */
-  static function combine($theAuditColumnsMetadata, $theCurrentColumnsMetadata)
+  public static function combine($theAuditColumnsMetadata, $theCurrentColumnsMetadata)
   {
     $columns = [];
     foreach ($theAuditColumnsMetadata->getColumns() as $column)
