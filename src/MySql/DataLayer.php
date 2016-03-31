@@ -245,7 +245,7 @@ end;
     $sql_create = sprintf('create table `%s`.`%s` (', $theAuditSchemaName, $theTableName);
     foreach ($theMergedColumns as $column)
     {
-      $sql_create .= sprintf('`%s` %s', $column['column_name'], $column['column_type'] );
+      $sql_create .= sprintf('`%s` %s', $column['column_name'], $column['column_type']);
       if (end($theMergedColumns)!==$column)
       {
         $sql_create .= ',';
@@ -269,7 +269,7 @@ end;
   {
     $sql = sprintf('
 select COLUMN_NAME as column_name
-,      COLUMN_TYPE as data_type
+,      COLUMN_TYPE as column_type
 from   information_schema.COLUMNS
 where  TABLE_SCHEMA = %s
 and    TABLE_NAME   = %s
@@ -300,8 +300,8 @@ where
 	TRIGGER_SCHEMA = %s
   and
   EVENT_OBJECT_TABLE = %s',
-                   self::quoteString($theTableName),
-                   self::quoteString($theSchemaName));
+                   self::quoteString($theSchemaName),
+                   self::quoteString($theTableName));
 
     return self::executeRows($sql);
   }
