@@ -69,7 +69,7 @@ class Audit
   {
     $this->myPruneOption = (boolean)$theOptions['prune'];
 
-    // Initialize monolog, set custom output for LineFormatter
+    // Initialize Monolog, set custom output for LineFormatter
     // Set Logger levels from console commands {-v, -d}
     $output    = "[%datetime%] %message%\n";
     $formatter = new LineFormatter($output);
@@ -99,7 +99,7 @@ class Audit
 
     foreach ($this->myDataSchemaTables as $table)
     {
-      if ($this->myConfig['tables'][$table['table_name']])
+      if ($this->myConfig['tables'][$table['table_name']]['audit'])
       {
         $table_columns = [];
         if (isset($this->myConfig['table_columns'][$table['table_name']]))
@@ -111,7 +111,8 @@ class Audit
                                    $this->myConfig['database']['data_schema'],
                                    $this->myConfig['database']['audit_schema'],
                                    $table_columns,
-                                   $this->myConfig['audit_columns']);
+                                   $this->myConfig['audit_columns'],
+                                   $this->myConfig['tables'][$table['table_name']]['alias']);
         $res           = DataLayer::searchInRowSet('table_name', $current_table->getTableName(), $this->myAuditSchemaTables);
         if (!isset($res))
         {
@@ -186,9 +187,9 @@ class Audit
   {
     foreach ($this->myDataSchemaTables as $table)
     {
-      if (isset($this->myConfig['tables'][$table['table_name']]))
+      if (isset($this->myConfig['tables'][$table['table_name']]['audit']))
       {
-        if (!isset($this->myConfig['tables'][$table['table_name']]))
+        if (!isset($this->myConfig['tables'][$table['table_name']]['audit']))
         {
           $this->logInfo(sprintf('Audit flag is not set in table %s.', $table['table_name']));
         }
@@ -196,7 +197,8 @@ class Audit
       else
       {
         $this->logInfo(sprintf('Find new table %s, not listed in config file.', $table['table_name']));
-        $this->myConfig['tables'][$table['table_name']] = false;
+        $this->myConfig['tables'][$table['table_name']] = ['audit' => false,
+                                                           'alias' => Table::getUUID()];
       }
     }
   }
@@ -234,9 +236,9 @@ class Audit
       $this->myConfig['audit_columns'] = [];
     }
 
-    foreach ($this->myConfig['tables'] as $table_name => $flag)
+    foreach ($this->myConfig['tables'] as $table_name => $params)
     {
-      $this->myConfig['tables'][$table_name] = filter_var($flag, FILTER_VALIDATE_BOOLEAN);
+      $this->myConfig['tables'][$table_name]['audit'] = filter_var($params['audit'], FILTER_VALIDATE_BOOLEAN);
     }
   }
 
