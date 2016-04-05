@@ -49,12 +49,12 @@ class Columns
   public static function combine($theAuditColumnsMetadata, $theCurrentColumnsMetadata)
   {
     $columns = [];
-    
+
     foreach ($theAuditColumnsMetadata->getColumns() as $column)
     {
       $columns[] = ['column_name' => $column['column_name'], 'column_type' => $column['column_type']];
     }
-    
+
     foreach ($theCurrentColumnsMetadata->getColumns() as $column)
     {
       if ($column['column_type']!='timestamp')
@@ -68,6 +68,35 @@ class Columns
     }
 
     return new Columns($columns);
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
+   * Compares two Columns objects and returns an array with columns that are in the first columns object and in the
+   * second Columns object but have different types.
+   *
+   * @param Columns $theColumns1 The first Columns object.
+   * @param Columns $theColumns2 The second Columns object.
+   *
+   * @return array[]
+   */
+  public static function differentColumnTypes($theColumns1, $theColumns2)
+  {
+    $diff = [];
+    foreach ($theColumns2->getColumns() as $column)
+    {
+      $key = DataLayer::searchInRowSet('column_name', $column['column_name'], $theColumns1->getColumns());
+      if (isset($key))
+      {
+        $current_columns = $theColumns1->getColumns()[$key];
+        if ($column['column_type']!=$current_columns['column_type'])
+        {
+          $diff[] = $current_columns;
+        }
+      }
+    }
+
+    return $diff;
   }
 
   //--------------------------------------------------------------------------------------------------------------------
