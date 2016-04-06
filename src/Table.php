@@ -55,11 +55,18 @@ class Table
   private $myLog;
 
   /**
-   * The name of the table.
+   * The name of this data table.
    *
    * @var string
    */
   private $myTableName;
+
+  /**
+   * The unique alias or this data table.
+   *
+   * @var string
+   */
+  private $myAlias;
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
@@ -71,13 +78,15 @@ class Table
    * @param string  $theAuditSchema           The name of the schema with audit tables.
    * @param array[] $theConfigColumnsMetadata The columns of the data table as stored in the config file.
    * @param array[] $theAuditColumnsMetadata  The columns of the audit table as stored in the config file.
+   * @param string  $theAlias                 An unique alias for this table.
    */
   public function __construct($theTableName,
                               $theLog,
                               $theDataSchema,
                               $theAuditSchema,
                               $theConfigColumnsMetadata,
-                              $theAuditColumnsMetadata)
+                              $theAuditColumnsMetadata,
+                              $theAlias)
   {
     $this->myTableName                = $theTableName;
     $this->myDataTableColumnsConfig   = new Columns($theConfigColumnsMetadata);
@@ -86,6 +95,7 @@ class Table
     $this->myAuditSchema              = $theAuditSchema;
     $this->myDataTableColumnsDatabase = new Columns($this->getColumnsFromInformationSchema());
     $this->myAuditColumns             = new Columns($theAuditColumnsMetadata);
+    $this->myAlias                    = $theAlias;
   }
 
   //--------------------------------------------------------------------------------------------------------------------
@@ -158,6 +168,17 @@ class Table
 
     return ['columns'         => $compared_columns['full_columns'],
             'altered_columns' => $altered_columns_types];
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
+   * Returns a random alias for a table.
+   *
+   * @return string
+   */
+  public static function getRandomAlias()
+  {
+    return uniqid();
   }
 
   //--------------------------------------------------------------------------------------------------------------------
@@ -299,9 +320,7 @@ class Table
    */
   private function getTriggerName($theDataSchema, $theAction)
   {
-    $uuid = uniqid('trg_');
-
-    return strtolower(sprintf('`%s`.`%s_%s`', $theDataSchema, $uuid, $theAction));
+    return strtolower(sprintf('`%s`.`trg_%s_%s`', $theDataSchema, $this->myAlias, $theAction));
   }
 
   //--------------------------------------------------------------------------------------------------------------------
