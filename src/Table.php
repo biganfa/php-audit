@@ -174,16 +174,17 @@ class Table
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
-   * Compare columns types from table in data_schema with columns in config file
+   * Compares columns types from table in data_schema with columns in config file. 
    *
    * @return array[]
    */
   private function compareColumnsTypesConfig()
   {
-    $altered_columns_types = Columns::differentColumnTypes($this->myDataTableColumnsDatabase, $this->myDataTableColumnsConfig);
+    $altered_columns_types = Columns::differentColumnTypes($this->myDataTableColumnsDatabase, 
+                                                           $this->myDataTableColumnsConfig);
     foreach ($altered_columns_types as $column)
     {
-      $this->logInfo(sprintf('Type in %s.%s has been altered to %s',
+      $this->logInfo(sprintf('Type of %s.%s has been altered to %s',
                              $this->myTableName,
                              $column['column_name'],
                              $column['column_type']));

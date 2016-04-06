@@ -83,15 +83,15 @@ class Columns
   public static function differentColumnTypes($theColumns1, $theColumns2)
   {
     $diff = [];
-    foreach ($theColumns2->getColumns() as $column)
+    foreach ($theColumns2->getColumns() as $column2)
     {
-      $key = DataLayer::searchInRowSet('column_name', $column['column_name'], $theColumns1->getColumns());
+      $key = DataLayer::searchInRowSet('column_name', $column2['column_name'], $theColumns1->getColumns());
       if (isset($key))
       {
-        $current_columns = $theColumns1->getColumns()[$key];
-        if ($column['column_type']!=$current_columns['column_type'])
+        $column1 = $theColumns1->getColumns()[$key];
+        if ($column2['column_type']!=$column1['column_type'])
         {
-          $diff[] = $current_columns;
+          $diff[] = $column1;
         }
       }
     }
