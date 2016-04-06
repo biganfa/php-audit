@@ -146,9 +146,18 @@ class Table
       $compared_columns = $this->compareTableColumnsConfig();
     }
 
-    $this->createTriggers();  // XXX only when not new and not obsolste columns.
+    $altered_columns_types = [];
+    if (empty($compared_columns['new_columns']) && empty($compared_columns['obsolete_columns']))
+    {
+      $altered_columns_types = $this->compareColumnsTypesConfig();
+      if (empty($altered_columns_types))
+      {
+        $this->createTriggers();
+      }
+    }
 
-    return $compared_columns;
+    return ['columns'         => $compared_columns['full_columns'],
+            'altered_columns' => $altered_columns_types];
   }
 
   //--------------------------------------------------------------------------------------------------------------------
@@ -161,6 +170,26 @@ class Table
   private function addNewColumns($theColumns, $theAfterColumn)
   {
     DataLayer::addNewColumns($this->myAuditSchema, $this->myTableName, $theColumns, $theAfterColumn);
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
+   * Compare columns types from table in data_schema with columns in config file
+   *
+   * @return array[]
+   */
+  private function compareColumnsTypesConfig()
+  {
+    $altered_columns_types = Columns::differentColumnTypes($this->myDataTableColumnsDatabase, $this->myDataTableColumnsConfig);
+    foreach ($altered_columns_types as $column)
+    {
+      $this->logInfo(sprintf('Type in %s.%s has been altered to %s',
+                             $this->myTableName,
+                             $column['column_name'],
+                             $column['column_type']));
+    }
+
+    return $altered_columns_types;
   }
 
   //--------------------------------------------------------------------------------------------------------------------
@@ -191,12 +220,14 @@ class Table
         $this->logInfo(sprintf('Obsolete column %s', $column['column_name']));
       }
 
-      return $this->myDataTableColumnsConfig;
+      return ['full_columns'     => $this->myDataTableColumnsConfig,
+              'new_columns'      => $new_columns,
+              'obsolete_columns' => $obsolete_columns];
     }
 
     foreach ($obsolete_columns as $column)
     {
-      $this->logInfo(sprintf('Obsolete columns %s.%s', $this->myTableName, $column['column_name']));
+      $this->logInfo(sprintf('Obsolete column %s.%s', $this->myTableName, $column['column_name']));
     }
 
     foreach ($new_columns as $new_column)
@@ -205,7 +236,9 @@ class Table
     }
     $this->addNewColumns($new_columns, 'audit_usr_id');
 
-    return $this->myDataTableColumnsDatabase;
+    return ['full_columns'     => $this->myDataTableColumnsDatabase,
+            'new_columns'      => $new_columns,
+            'obsolete_columns' => $obsolete_columns];
   }
 
   //--------------------------------------------------------------------------------------------------------------------

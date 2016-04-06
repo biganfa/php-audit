@@ -119,7 +119,10 @@ class Audit
         }
 
         $columns = $current_table->main();
-        $this->getColumns($current_table->getTableName(), $columns);
+        if (empty($columns['altered_columns']))
+        {
+          $this->getColumns($current_table->getTableName(), $columns['columns']);
+        }
       }
     }
 
