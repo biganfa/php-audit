@@ -55,14 +55,14 @@ class Table
   private $myLog;
 
   /**
-   * The name of the table.
+   * The name of this data table.
    *
    * @var string
    */
   private $myTableName;
 
   /**
-   * The table UUID.
+   * The unique alias or this data table.
    *
    * @var string
    */
@@ -78,7 +78,7 @@ class Table
    * @param string  $theAuditSchema           The name of the schema with audit tables.
    * @param array[] $theConfigColumnsMetadata The columns of the data table as stored in the config file.
    * @param array[] $theAuditColumnsMetadata  The columns of the audit table as stored in the config file.
-   * @param string  $theAlias                 The table UUID.
+   * @param string  $theAlias                 An unique alias for this table.
    */
   public function __construct($theTableName,
                               $theLog,
@@ -172,11 +172,11 @@ class Table
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
-   * Returns UUID of this table.
+   * Returns a random alias for a table.
    *
    * @return string
    */
-  public static function getUUID()
+  public static function getRandomAlias()
   {
     return uniqid();
   }

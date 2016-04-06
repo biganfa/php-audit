@@ -201,7 +201,7 @@ class Audit
       {
         $this->logInfo(sprintf('Find new table %s, not listed in config file.', $table['table_name']));
         $this->myConfig['tables'][$table['table_name']] = ['audit' => false,
-                                                           'alias' => Table::getUUID()];
+                                                           'alias' => Table::getRandomAlias()];
       }
     }
   }
