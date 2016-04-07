@@ -85,10 +85,9 @@ class Columns
     $diff = [];
     foreach ($theColumns2->getColumns() as $column2)
     {
-      $key = DataLayer::searchInRowSet('column_name', $column2['column_name'], $theColumns1->getColumns());
-      if (isset($key))
+      if (isset($theColumns1->getColumns()[$column2['column_name']]))
       {
-        $column1 = $theColumns1->getColumns()[$key];
+        $column1 = $theColumns1->getColumns()[$column2['column_name']];
         if ($column2['column_type']!=$column1['column_type'])
         {
           $diff[] = $column1;
@@ -116,8 +115,7 @@ class Columns
     {
       foreach ($theColumns1->myColumns as $column1)
       {
-        $column2 = DataLayer::searchInRowSet('column_name', $column1['column_name'], $theColumns2->myColumns);
-        if ($column2===null)
+        if (!isset($theColumns2->myColumns[$column1['column_name']]))
         {
           $diff[] = ['column_name' => $column1['column_name'],
                      'column_type' => $column1['column_type']];
