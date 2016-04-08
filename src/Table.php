@@ -68,6 +68,13 @@ class Table
    */
   private $myAlias;
 
+  /**
+   * The skip variable for triggers.
+   *
+   * @var string
+   */
+  private $mySkipVariable;
+
   //--------------------------------------------------------------------------------------------------------------------
   /**
    * Object constructor.
@@ -79,6 +86,7 @@ class Table
    * @param array[] $theConfigColumnsMetadata The columns of the data table as stored in the config file.
    * @param array[] $theAuditColumnsMetadata  The columns of the audit table as stored in the config file.
    * @param string  $theAlias                 An unique alias for this table.
+   * @param string  $theSkipVariable          The skip variable
    */
   public function __construct($theTableName,
                               $theLog,
@@ -86,7 +94,8 @@ class Table
                               $theAuditSchema,
                               $theConfigColumnsMetadata,
                               $theAuditColumnsMetadata,
-                              $theAlias)
+                              $theAlias,
+                              $theSkipVariable)
   {
     $this->myTableName                = $theTableName;
     $this->myDataTableColumnsConfig   = new Columns($theConfigColumnsMetadata);
@@ -96,6 +105,7 @@ class Table
     $this->myDataTableColumnsDatabase = new Columns($this->getColumnsFromInformationSchema());
     $this->myAuditColumns             = new Columns($theAuditColumnsMetadata);
     $this->myAlias                    = $theAlias;
+    $this->mySkipVariable             = $theSkipVariable;
   }
 
   //--------------------------------------------------------------------------------------------------------------------
@@ -195,13 +205,13 @@ class Table
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
-   * Compares columns types from table in data_schema with columns in config file. 
+   * Compares columns types from table in data_schema with columns in config file.
    *
    * @return array[]
    */
   private function compareColumnsTypesConfig()
   {
-    $altered_columns_types = Columns::differentColumnTypes($this->myDataTableColumnsDatabase, 
+    $altered_columns_types = Columns::differentColumnTypes($this->myDataTableColumnsDatabase,
                                                            $this->myDataTableColumnsConfig);
     foreach ($altered_columns_types as $column)
     {
@@ -278,7 +288,8 @@ class Table
                              $this->myAuditSchema,
                              $theTableName,
                              $theAction,
-                             $trigger_name);
+                             $trigger_name,
+                             $this->mySkipVariable);
   }
 
   //--------------------------------------------------------------------------------------------------------------------
