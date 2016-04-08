@@ -3,8 +3,7 @@
 namespace SetBased\Audit\MySql;
 
 use Monolog\Logger;
-use SetBased\Stratum\Exception\FallenException;
-use SetBased\Stratum\Exception\ResultException;
+use SetBased\Affirm\Exception\FallenException;
 use SetBased\Stratum\MySql\StaticDataLayer;
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -47,15 +46,39 @@ class DataLayer extends StaticDataLayer
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
+   * Create or skip 'skip variable statement' for triggers.
+   *
+   * @param  string $theSkipVariable The skip variable.
+   *
+   * @return string
+   */
+  private static function skipVariableStatement($theSkipVariable)
+  {
+    $statement = '';
+    if (isset($theSkipVariable))
+    {
+      $statement = sprintf('
+      if (@%s is null) then
+        set @audit_rownum = ifnull(@audit_rownum,0) + 1;',
+                           $theSkipVariable);
+    }
+
+    return $statement;
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
    * Creates a trigger on a table.
    *
-   * @param string $theDataSchema      The name of the data schema.
-   * @param string $theAuditSchemaName The name of the audit schema.
-   * @param string $theTableName       The name of the table.
-   * @param string $theAction          Action for trigger {INSERT, UPDATE, DELETE}
-   * @param string $theTriggerName     The name of the trigger.
+   * @param string  $theDataSchema      The name of the data schema.
+   * @param string  $theAuditSchemaName The name of the audit schema.
+   * @param string  $theTableName       The name of the table.
+   * @param string  $theAction          Action for trigger {INSERT, UPDATE, DELETE}
+   * @param string  $theTriggerName     The name of the trigger.
+   * @param  string $theSkipVariable    The skip variable.
+   * @throws FallenException
    */
-  public static function createTrigger($theDataSchema, $theAuditSchemaName, $theTableName, $theAction, $theTriggerName)
+  public static function createTrigger($theDataSchema, $theAuditSchemaName, $theTableName, $theAction, $theTriggerName, $theSkipVariable)
   {
     $row_state = [];
     switch ($theAction)
@@ -85,8 +108,7 @@ for each row begin
     set @audit_uuid = uuid_short();
   end if;
 
-  if (@abc_g_skip%s is null) then
-    set @audit_rownum = ifnull(@audit_rownum,0) + 1;
+  %s
 
     insert into `%s`.`%s`
     values( now()
@@ -100,7 +122,7 @@ for each row begin
                    $theAction,
                    $theDataSchema,
                    $theTableName,
-                   $theTableName,
+                   self::skipVariableStatement($theSkipVariable),
                    $theAuditSchemaName,
                    $theTableName,
                    self::quoteString($theAction),
@@ -134,9 +156,8 @@ for each row begin
       }
       $sql .= ');';
     }
-    $sql .= 'end if;
-end;
-';
+    $sql .= isset($theSkipVariable) ? 'end if;' : '';
+    $sql .= 'end;';
 
     self::executeNone($sql);
   }
@@ -190,7 +211,6 @@ end;
    * @param string $theQuery The SQL statement.
    *
    * @return array|null The selected row.
-   * @throws ResultException
    */
   public static function executeRow0($theQuery)
   {
@@ -207,7 +227,6 @@ end;
    * @param string $theQuery The SQL statement.
    *
    * @return array The selected row.
-   * @throws ResultException
    */
   public static function executeRow1($theQuery)
   {
@@ -245,7 +264,7 @@ end;
     $sql_create = sprintf('create table `%s`.`%s` (', $theAuditSchemaName, $theTableName);
     foreach ($theMergedColumns as $column)
     {
-      $sql_create .= sprintf('`%s` %s', $column['column_name'], $column['column_type'] );
+      $sql_create .= sprintf('`%s` %s', $column['column_name'], $column['column_type']);
       if (end($theMergedColumns)!==$column)
       {
         $sql_create .= ',';
@@ -269,7 +288,7 @@ end;
   {
     $sql = sprintf('
 select COLUMN_NAME as column_name
-,      COLUMN_TYPE as data_type
+,      COLUMN_TYPE as column_type
 from   information_schema.COLUMNS
 where  TABLE_SCHEMA = %s
 and    TABLE_NAME   = %s
@@ -300,8 +319,8 @@ where
 	TRIGGER_SCHEMA = %s
   and
   EVENT_OBJECT_TABLE = %s',
-                   self::quoteString($theTableName),
-                   self::quoteString($theSchemaName));
+                   self::quoteString($theSchemaName),
+                   self::quoteString($theTableName));
 
     return self::executeRows($sql);
   }

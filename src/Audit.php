@@ -3,11 +3,9 @@
 namespace SetBased\Audit;
 
 use Monolog\Formatter\LineFormatter;
-use SetBased\Audit\Exception\RuntimeException;
-use SetBased\Audit\MySql\DataLayer;
-use Monolog\Logger;
 use Monolog\Handler\StreamHandler;
-use SetBased\Stratum\MySql\StaticDataLayer;
+use Monolog\Logger;
+use SetBased\Audit\MySql\DataLayer;
 
 //----------------------------------------------------------------------------------------------------------------------
 /**
@@ -17,11 +15,11 @@ class Audit
 {
   //--------------------------------------------------------------------------------------------------------------------.
   /**
-   * Logger.
+   * Array of tables from audit schema.
    *
-   * @var Logger
+   * @var array
    */
-  private $myLog;
+  private $myAuditSchemaTables;
 
   /**
    * All config file as array.
@@ -31,18 +29,11 @@ class Audit
   private $myConfig;
 
   /**
-   * If true remove all column information from config file.
+   * Config file name.
    *
-   * @var boolean
+   * @var string
    */
-  private $myPruneOption;
-
-  /**
-   * Array of tables from audit schema.
-   *
-   * @var array
-   */
-  private $myAuditSchemaTables;
+  private $myConfigFileName;
 
   /**
    * Array of tables from data schema.
@@ -52,86 +43,51 @@ class Audit
   private $myDataSchemaTables;
 
   /**
-   * Config file name.
+   * Logger.
    *
-   * @var string
+   * @var Logger
    */
-  private $myConfigFileName;
+  private $myLog;
+
+  /**
+   * If true remove all column information from config file.
+   *
+   * @var boolean
+   */
+  private $myPruneOption;
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
-   * Main function.
+   * Compares the tables listed in the config file and the tables found in the audit schema
    *
-   * @param string[] $theOptions Option from console on running script
-   *
-   * @return int
+   * @param string  $theTableName Name of table
+   * @param Columns $theColumns   The table columns.
    */
-  public function main($theOptions)
+  public function getColumns($theTableName, $theColumns)
   {
-    $this->myPruneOption = (boolean)$theOptions['prune'];
+    $columns = [];
+    foreach ($theColumns->getColumns() as $column)
+    {
+      $columns[] = ['column_name' => $column['column_name'],
+                    'column_type' => $column['column_type']];
+    }
+    $this->myConfig['table_columns'][$theTableName] = $columns;
 
-    // Initialize monolog, set custom output for LineFormatter
-    // Set Logger levels from console commands {-v, -d}
-    $output    = "[%datetime%] %message%\n";
-    $formatter = new LineFormatter($output);
-
-    $logger_level = Logger::NOTICE;
-    if ($theOptions['verbose']) $logger_level = Logger::INFO;
-    if ($theOptions['debug']) $logger_level = Logger::DEBUG;
-
-    $streamHandler = new StreamHandler('php://stdout', $logger_level);
-    $streamHandler->setFormatter($formatter);
-    $this->myLog = new Logger('AUDIT');
-    $this->myLog->pushHandler($streamHandler);
-    $streamHandler->setFormatter($formatter);
-
-    // Read config file name, config content and then save in variable
-    $this->myConfigFileName = $theOptions['config'];
-    $this->readConfigFile($this->myConfigFileName);
-
-    // Create database connection with params from config file
-    DataLayer::connect($this->myConfig['database']['host_name'], $this->myConfig['database']['user_name'],
-                       $this->myConfig['database']['password'], $this->myConfig['database']['data_schema']);
-    DataLayer::setLog($this->myLog);
-
-    $this->listOfTables();
-
-    $this->getUnknownTables();
-
-    $this->getKnownTables();
-
-    $this->getColumns();
-
-    $this->createMissingAuditTables();
-
-    $this->createTriggers();
-
-    $this->compareColumns();
-
-    $this->findDifferentColumns();
-
-    // Drop database connection
-    DataLayer::disconnect();
-
-    return 0;
+    if ($this->myPruneOption)
+    {
+      $this->myConfig['table_columns'] = [];
+    }
   }
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
-   * Create SQL code for trigger for all tables
-   *
-   * @param string $theTableName The name of table
-   * @param string $theAction    Trigger ON action {INSERT, DELETE, UPDATE}
+   * Getting list of all tables from information_schema of database from config file.
    */
-  public function createTableTrigger($theTableName, $theAction)
+  public function listOfTables()
   {
-    $this->logVerbose(sprintf('Create %s trigger for table %s.', $theAction, $theTableName));
-    $trigger_name = $this->getTriggerName($this->myConfig['database']['data_schema'], $theAction);
-    DataLayer::createTrigger($this->myConfig['database']['data_schema'],
-                             $this->myConfig['database']['audit_schema'],
-                             $theTableName,
-                             $theAction,
-                             $trigger_name);
+    $this->myDataSchemaTables = DataLayer::getTablesNames($this->myConfig['database']['data_schema']);
+
+    $this->myAuditSchemaTables = DataLayer::getTablesNames($this->myConfig['database']['audit_schema']);
   }
 
   //--------------------------------------------------------------------------------------------------------------------
@@ -158,326 +114,81 @@ class Audit
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
-   * Lock the table to prevent insert, updates, or deletes between dropping and creating triggers.
+   * Main function.
    *
-   * @param string $theTableName Name of table
-   */
-  public function lockTable($theTableName)
-  {
-    DataLayer::lockTable($theTableName);
-  }
-
-  //--------------------------------------------------------------------------------------------------------------------
-  /**
-   * Insert, updates, and deletes are no audited again. So, release lock on the table.
-   */
-  public function unlockTables()
-  {
-    DataLayer::unlockTables();
-  }
-
-  //--------------------------------------------------------------------------------------------------------------------
-  /**
-   * Drop trigger from table.
+   * @param string[] $theOptions Option from console on running script
    *
-   * @param string $theDataSchema Database data schema
-   * @param string $theTableName  Name of table
+   * @return int
    */
-  public function dropTriggers($theDataSchema, $theTableName)
+  public function main($theOptions)
   {
-    $old_triggers = DataLayer::getTableTriggers($theDataSchema, $theTableName);
+    $this->myPruneOption = (boolean)$theOptions['prune'];
 
-    foreach ($old_triggers as $trigger)
-    {
-      $this->logVerbose(sprintf('Drop trigger %s for table %s.', $trigger['Trigger_Name'], $theTableName));
-      DataLayer::dropTrigger($trigger['Trigger_Name']);
-    }
-  }
+    // Initialize Monolog, set custom output for LineFormatter
+    // Set Logger levels from console commands {-v, -d}
+    $output    = "[%datetime%] %message%\n";
+    $formatter = new LineFormatter($output);
 
-  //--------------------------------------------------------------------------------------------------------------------
-  /**
-   * Create and return trigger name.
-   *
-   * @param string $theDataSchema Database data schema
-   * @param string $theAction     Trigger on action (Insert, Update, Delete)
-   *
-   * @return string
-   */
-  public function getTriggerName($theDataSchema, $theAction)
-  {
-    $uuid = uniqid('trg_');
+    $logger_level = Logger::NOTICE;
+    if ($theOptions['verbose']) $logger_level = Logger::INFO;
+    if ($theOptions['debug']) $logger_level = Logger::DEBUG;
 
-    return strtolower(sprintf('`%s`.`%s_%s`', $theDataSchema, $uuid, $theAction));
-  }
+    $streamHandler = new StreamHandler('php://stdout', $logger_level);
+    $streamHandler->setFormatter($formatter);
+    $this->myLog = new Logger('AUDIT');
+    $this->myLog->pushHandler($streamHandler);
+    $streamHandler->setFormatter($formatter);
 
-  //--------------------------------------------------------------------------------------------------------------------
-  /**
-   * Creates triggers for all tables in data schema if need audit this tables in config file.
-   */
-  public function createTriggers()
-  {
-    foreach ($this->myDataSchemaTables as $table)
-    {
-      if ($this->myConfig['tables'][$table['table_name']])
-      {
-        // Lock the table to prevent insert, updates, or deletes between dropping and creating triggers.
-        $this->lockTable($table['table_name']);
+    // Read config file name, config content and then save in variable
+    $this->myConfigFileName = $theOptions['config'];
+    $this->readConfigFile($this->myConfigFileName);
 
-        // Drop all triggers, if any.
-        $this->dropTriggers($this->myConfig['database']['data_schema'], $table['table_name']);
+    // Create database connection with params from config file
+    DataLayer::connect($this->myConfig['database']['host_name'], $this->myConfig['database']['user_name'],
+                       $this->myConfig['database']['password'], $this->myConfig['database']['data_schema']);
+    DataLayer::setLog($this->myLog);
 
-        // Create or recreate the audit triggers.
-        $this->createTableTrigger($table['table_name'], 'INSERT');
-        $this->createTableTrigger($table['table_name'], 'UPDATE');
-        $this->createTableTrigger($table['table_name'], 'DELETE');
+    $this->listOfTables();
 
-        // Insert, updates, and deletes are no audited again. So, release lock on the table.
-        $this->unlockTables();
-      }
-    }
-  }
-
-  //--------------------------------------------------------------------------------------------------------------------
-  /**
-   * Returns an array with missing tables in the audit schema.
-   *
-   * @return string[]
-   */
-  public function findMissingTables()
-  {
-    $missing_tables = [];
+    $this->unknownTables();
 
     foreach ($this->myDataSchemaTables as $table)
     {
-      if ($this->myConfig['tables'][$table['table_name']])
+      if ($this->myConfig['tables'][$table['table_name']]['audit'])
       {
-        $res = DataLayer::searchInRowSet('table_name', $table['table_name'], $this->myAuditSchemaTables);
+        $table_columns = [];
+        if (isset($this->myConfig['table_columns'][$table['table_name']]))
+        {
+          $table_columns = $this->myConfig['table_columns'][$table['table_name']];
+        }
+        $current_table = new Table($table['table_name'],
+                                   $this->myLog,
+                                   $this->myConfig['database']['data_schema'],
+                                   $this->myConfig['database']['audit_schema'],
+                                   $table_columns,
+                                   $this->myConfig['audit_columns'],
+                                   $this->myConfig['tables'][$table['table_name']]['alias'],
+                                   $this->myConfig['tables'][$table['table_name']]['skip']);
+        $res           = DataLayer::searchInRowSet('table_name', $current_table->getTableName(), $this->myAuditSchemaTables);
         if (!isset($res))
         {
-          $missing_tables[] = $table;
+          $current_table->createMissingAuditTable();
         }
-      }
-    }
 
-    return $missing_tables;
-  }
-
-  //--------------------------------------------------------------------------------------------------------------------
-  /**
-   * Add new columns to audit table if table does not have
-   *
-   * @param string $theDataSchema  The table schema.
-   * @param string $theTableName   The table name.
-   * @param array  $theColumns     Columns array
-   * @param string $theAfterColumn After which column add new columns
-   */
-  public function addNewColumns($theDataSchema, $theTableName, $theColumns, $theAfterColumn)
-  {
-    DataLayer::addNewColumns($theDataSchema, $theTableName, $theColumns, $theAfterColumn);
-  }
-
-  //--------------------------------------------------------------------------------------------------------------------
-  /**
-   * Compare table columns in audit and data schemas
-   */
-  public function compareColumns()
-  {
-    foreach ($this->myConfig['tables'] as $table_name => $flag)
-    {
-      if ($flag)
-      {
-        $audit_columns = DataLayer::getTableColumns($this->myConfig['database']['audit_schema'], $table_name);
-        $new_columns   = [];
-        foreach ($this->myConfig['table_columns'][$table_name] as $column_name => $column_type)
+        $columns = $current_table->main();
+        if (empty($columns['altered_columns']))
         {
-          $exist_column = StaticDataLayer::searchInRowSet('column_name', $column_name, $audit_columns);
-          if (!$exist_column)
-          {
-            $this->logInfo(sprintf('Find new column %s in table %s', $column_name, $table_name));
-            $new_columns[] = ['column_name' => $column_name, 'column_type' => $column_type];
-          }
-        }
-        $this->addNewColumns($this->myConfig['database']['audit_schema'], $table_name, $new_columns, 'audit_usr_id');
-      }
-    }
-  }
-
-  //--------------------------------------------------------------------------------------------------------------------
-  /**
-   * Create missing tables in audit schema
-   */
-  public function createMissingAuditTables()
-  {
-    $missing_tables = $this->findMissingTables();
-
-    foreach ($missing_tables as $table)
-    {
-      $this->logInfo(sprintf('Creating audit table %s.', $table['table_name']));
-      $columns = $this->getMergeColumns($table['table_name'], true);
-      DataLayer::generateSqlCreateStatement($this->myConfig['database']['audit_schema'], $table['table_name'], $columns);
-    }
-  }
-
-  //--------------------------------------------------------------------------------------------------------------------
-  /**
-   * Compares the tables listed in the config file and the tables found in the audit schema
-   */
-  public function getColumns()
-  {
-    $this->myConfig['table_columns'] = [];
-    foreach ($this->myConfig['tables'] as $table_name => $flag)
-    {
-      if ($flag)
-      {
-        $columns = $this->columnsOfTable($table_name);
-        foreach ($columns as $column)
-        {
-          $this->myConfig['table_columns'][$table_name][$column['column_name']] = $column['data_type'];
+          $this->getColumns($current_table->getTableName(), $columns['columns']);
         }
       }
     }
-    if ($this->myPruneOption==1)
-    {
-      $this->myConfig['table_columns'] = [];
-    }
+
+    // Drop database connection
+    DataLayer::disconnect();
+
     $this->rewriteConfig();
-  }
 
-  //--------------------------------------------------------------------------------------------------------------------
-  /**
-   * Finding different columns from new audit table and existing.   *
-   */
-  public function findDifferentColumns()
-  {
-    foreach ($this->myConfig['tables'] as $table_name => $flag)
-    {
-      if ($flag)
-      {
-        $new_columns      = $this->getMergeColumns($table_name, false);
-        $existing_columns = DataLayer::getTableColumns('rank_audit', 'ABC_BLOB');
-      }
-    }
-  }
-
-  //--------------------------------------------------------------------------------------------------------------------
-  /**
-   * Generate array with audit columns and columns from data table.
-   *
-   * @param string  $theTableName        Name of table
-   * @param boolean $theMissingTableFlag Check if table is missing in audit
-   *
-   * @return array
-   */
-  public function getMergeColumns($theTableName, $theMissingTableFlag)
-  {
-    $columns = [];
-    foreach ($this->myConfig['audit_columns'] as $column)
-    {
-      $columns[] = ['column_name' => $column['column_name'], 'column_type' => $column['column_type']];
-    }
-    if ($theMissingTableFlag)
-    {
-      $miss_columns = $this->columnsOfTable($theTableName);
-      foreach ($miss_columns as $column)
-      {
-        if ($column['data_type']!='timestamp')
-        {
-          $columns[] = ['column_name' => $column['column_name'], 'column_type' => $column['data_type'].' DEFAULT NULL'];
-        }
-        else
-        {
-          $columns[] = ['column_name' => $column['column_name'], 'column_type' => $column['data_type'].' NULL'];
-        }
-      }
-    }
-    else
-    {
-      foreach ($this->myConfig['table_columns'][$theTableName] as $name => $type)
-      {
-        if ($type!='timestamp')
-        {
-          $columns[] = ['column_name' => $name, 'column_type' => $type.' DEFAULT NULL'];
-        }
-        else
-        {
-          $columns[] = ['column_name' => $name, 'column_type' => $type.' NULL'];
-        }
-      }
-    }
-
-    return $columns;
-  }
-
-  //--------------------------------------------------------------------------------------------------------------------
-  /**
-   * Compares the tables listed in the config file and the tables found in the audit schema
-   */
-  public function getKnownTables()
-  {
-    foreach ($this->myConfig['tables'] as $table_name => $flag)
-    {
-      if ($flag)
-      {
-        $miss_table = DataLayer::searchInRowSet('table_name', $table_name, $this->myAuditSchemaTables);
-        if ($miss_table)
-        {
-          // @todo comparing the audit and data table
-        }
-        else
-        {
-          // @todo comparing the audit and data table
-        }
-      }
-    }
-  }
-
-  //--------------------------------------------------------------------------------------------------------------------
-  /**
-   * Compares the tables listed in the config file and the tables found in the data schema
-   */
-  public function getUnknownTables()
-  {
-    foreach ($this->myDataSchemaTables as $table)
-    {
-      if (isset($this->myConfig['tables'][$table['table_name']]))
-      {
-        if (!$this->myConfig['tables'][$table['table_name']])
-        {
-          $this->logInfo(sprintf('Audit flag is not set in table .', $table['table_name']));
-        }
-      }
-      else
-      {
-        $this->logInfo(sprintf('Find new table %s, not listed in config file.', $table['table_name']));
-        $this->myConfig['tables'][$table['table_name']] = false;
-      }
-    }
-  }
-
-  //--------------------------------------------------------------------------------------------------------------------
-  /**
-   * Getting list of all tables from information_schema of database from config file.
-   */
-  public function listOfTables()
-  {
-    $this->myDataSchemaTables = DataLayer::getTablesNames($this->myConfig['database']['data_schema']);
-
-    $this->myAuditSchemaTables = DataLayer::getTablesNames($this->myConfig['database']['audit_schema']);
-  }
-
-  //--------------------------------------------------------------------------------------------------------------------
-  /**
-   * Getting columns names and data_types from table from information_schema of database from config file.
-   *
-   * @param string $theTableName Name of table
-   *
-   * @return array[]
-   */
-  public function columnsOfTable($theTableName)
-  {
-    $result = DataLayer::getTableColumns($this->myConfig['database']['data_schema'], $theTableName);
-
-    return $result;
+    return 0;
   }
 
   //--------------------------------------------------------------------------------------------------------------------
@@ -485,16 +196,11 @@ class Audit
    * Reads configuration parameters from the configuration file.
    *
    * @param string $theConfigFilename
-   *
-   * @throws RuntimeException
    */
   public function readConfigFile($theConfigFilename)
   {
     $content = file_get_contents($theConfigFilename);
-    if ($content===false)
-    {
-      throw new RuntimeException("Unable to read file '%s'.", $theConfigFilename);
-    }
+
     $this->myConfig = json_decode($content, true);
 
     if (!isset($this->myConfig['audit_columns']))
@@ -502,9 +208,36 @@ class Audit
       $this->myConfig['audit_columns'] = [];
     }
 
-    foreach ($this->myConfig['tables'] as $table_name => $flag)
+    foreach ($this->myConfig['tables'] as $table_name => $params)
     {
-      $this->myConfig['tables'][$table_name] = filter_var($flag, FILTER_VALIDATE_BOOLEAN);
+      $this->myConfig['tables'][$table_name]['audit'] = filter_var($params['audit'], FILTER_VALIDATE_BOOLEAN);
+    }
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
+   * Found tables in config file
+   *
+   * Compares the tables listed in the config file and the tables found in the data schema
+   */
+  public function unknownTables()
+  {
+    foreach ($this->myDataSchemaTables as $table)
+    {
+      if (isset($this->myConfig['tables'][$table['table_name']]['audit']))
+      {
+        if (!isset($this->myConfig['tables'][$table['table_name']]['audit']))
+        {
+          $this->logInfo(sprintf('Audit flag is not set in table %s.', $table['table_name']));
+        }
+      }
+      else
+      {
+        $this->logInfo(sprintf('Find new table %s, not listed in config file.', $table['table_name']));
+        $this->myConfig['tables'][$table['table_name']] = ['audit' => false,
+                                                           'alias' => Table::getRandomAlias(),
+                                                           'skip'  => null];
+      }
     }
   }
 
