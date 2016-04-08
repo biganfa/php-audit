@@ -3,10 +3,9 @@
 namespace SetBased\Audit;
 
 use Monolog\Formatter\LineFormatter;
-use SetBased\Audit\Exception\RuntimeException;
-use SetBased\Audit\MySql\DataLayer;
-use Monolog\Logger;
 use Monolog\Handler\StreamHandler;
+use Monolog\Logger;
+use SetBased\Audit\MySql\DataLayer;
 
 //----------------------------------------------------------------------------------------------------------------------
 /**
@@ -16,11 +15,11 @@ class Audit
 {
   //--------------------------------------------------------------------------------------------------------------------.
   /**
-   * Logger.
+   * Array of tables from audit schema.
    *
-   * @var Logger
+   * @var array
    */
-  private $myLog;
+  private $myAuditSchemaTables;
 
   /**
    * All config file as array.
@@ -30,18 +29,11 @@ class Audit
   private $myConfig;
 
   /**
-   * If true remove all column information from config file.
+   * Config file name.
    *
-   * @var boolean
+   * @var string
    */
-  private $myPruneOption;
-
-  /**
-   * Array of tables from audit schema.
-   *
-   * @var array
-   */
-  private $myAuditSchemaTables;
+  private $myConfigFileName;
 
   /**
    * Array of tables from data schema.
@@ -51,11 +43,74 @@ class Audit
   private $myDataSchemaTables;
 
   /**
-   * Config file name.
+   * Logger.
    *
-   * @var string
+   * @var Logger
    */
-  private $myConfigFileName;
+  private $myLog;
+
+  /**
+   * If true remove all column information from config file.
+   *
+   * @var boolean
+   */
+  private $myPruneOption;
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
+   * Compares the tables listed in the config file and the tables found in the audit schema
+   *
+   * @param string  $theTableName Name of table
+   * @param Columns $theColumns   The table columns.
+   */
+  public function getColumns($theTableName, $theColumns)
+  {
+    $columns = [];
+    foreach ($theColumns->getColumns() as $column)
+    {
+      $columns[] = ['column_name' => $column['column_name'],
+                    'column_type' => $column['column_type']];
+    }
+    $this->myConfig['table_columns'][$theTableName] = $columns;
+
+    if ($this->myPruneOption)
+    {
+      $this->myConfig['table_columns'] = [];
+    }
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
+   * Getting list of all tables from information_schema of database from config file.
+   */
+  public function listOfTables()
+  {
+    $this->myDataSchemaTables = DataLayer::getTablesNames($this->myConfig['database']['data_schema']);
+
+    $this->myAuditSchemaTables = DataLayer::getTablesNames($this->myConfig['database']['audit_schema']);
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
+   * Log function
+   *
+   * @param string $theMessage Message for print in console
+   */
+  public function logInfo($theMessage)
+  {
+    $this->myLog->addNotice($theMessage);
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
+   * Log verbose
+   *
+   * @param string $theMessage Message for print in console
+   */
+  public function logVerbose($theMessage)
+  {
+    $this->myLog->addInfo($theMessage);
+  }
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
@@ -137,46 +192,24 @@ class Audit
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
-   * Log function
+   * Reads configuration parameters from the configuration file.
    *
-   * @param string $theMessage Message for print in console
+   * @param string $theConfigFilename
    */
-  public function logInfo($theMessage)
+  public function readConfigFile($theConfigFilename)
   {
-    $this->myLog->addNotice($theMessage);
-  }
+    $content = file_get_contents($theConfigFilename);
 
-  //--------------------------------------------------------------------------------------------------------------------
-  /**
-   * Log verbose
-   *
-   * @param string $theMessage Message for print in console
-   */
-  public function logVerbose($theMessage)
-  {
-    $this->myLog->addInfo($theMessage);
-  }
+    $this->myConfig = json_decode($content, true);
 
-  //--------------------------------------------------------------------------------------------------------------------
-  /**
-   * Compares the tables listed in the config file and the tables found in the audit schema
-   *
-   * @param string  $theTableName Name of table
-   * @param Columns $theColumns   The table columns.
-   */
-  public function getColumns($theTableName, $theColumns)
-  {
-    $columns = [];
-    foreach ($theColumns->getColumns() as $column)
+    if (!isset($this->myConfig['audit_columns']))
     {
-      $columns[] = ['column_name' => $column['column_name'],
-                    'column_type' => $column['column_type']];
+      $this->myConfig['audit_columns'] = [];
     }
-    $this->myConfig['table_columns'][$theTableName] = $columns;
 
-    if ($this->myPruneOption)
+    foreach ($this->myConfig['tables'] as $table_name => $params)
     {
-      $this->myConfig['table_columns'] = [];
+      $this->myConfig['tables'][$table_name]['audit'] = filter_var($params['audit'], FILTER_VALIDATE_BOOLEAN);
     }
   }
 
@@ -203,45 +236,6 @@ class Audit
         $this->myConfig['tables'][$table['table_name']] = ['audit' => false,
                                                            'alias' => Table::getRandomAlias()];
       }
-    }
-  }
-
-  //--------------------------------------------------------------------------------------------------------------------
-  /**
-   * Getting list of all tables from information_schema of database from config file.
-   */
-  public function listOfTables()
-  {
-    $this->myDataSchemaTables = DataLayer::getTablesNames($this->myConfig['database']['data_schema']);
-
-    $this->myAuditSchemaTables = DataLayer::getTablesNames($this->myConfig['database']['audit_schema']);
-  }
-
-  //--------------------------------------------------------------------------------------------------------------------
-  /**
-   * Reads configuration parameters from the configuration file.
-   *
-   * @param string $theConfigFilename
-   *
-   * @throws RuntimeException
-   */
-  public function readConfigFile($theConfigFilename)
-  {
-    $content = file_get_contents($theConfigFilename);
-    if ($content===false)
-    {
-      throw new RuntimeException("Unable to read file '%s'.", $theConfigFilename);
-    }
-    $this->myConfig = json_decode($content, true);
-
-    if (!isset($this->myConfig['audit_columns']))
-    {
-      $this->myConfig['audit_columns'] = [];
-    }
-
-    foreach ($this->myConfig['tables'] as $table_name => $params)
-    {
-      $this->myConfig['tables'][$table_name]['audit'] = filter_var($params['audit'], FILTER_VALIDATE_BOOLEAN);
     }
   }
 

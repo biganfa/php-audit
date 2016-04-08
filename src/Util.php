@@ -10,7 +10,7 @@
 //----------------------------------------------------------------------------------------------------------------------
 namespace SetBased\Audit;
 
-use SetBased\Audit\Exception\RuntimeException;
+use SetBased\Affirm\Exception\RuntimeException;
 
 //----------------------------------------------------------------------------------------------------------------------
 /**
@@ -29,6 +29,8 @@ class Util
    * @param string $theSettingName   The name of the setting of the requested setting.
    *
    * @return array|null
+   *
+   * @throws RuntimeException
    */
   public static function getSetting($theSettings, $theMandatoryFlag, $theSectionName, $theSettingName)
   {

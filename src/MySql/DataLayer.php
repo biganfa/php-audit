@@ -3,8 +3,7 @@
 namespace SetBased\Audit\MySql;
 
 use Monolog\Logger;
-use SetBased\Stratum\Exception\FallenException;
-use SetBased\Stratum\Exception\ResultException;
+use SetBased\Affirm\Exception\FallenException;
 use SetBased\Stratum\MySql\StaticDataLayer;
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -54,6 +53,8 @@ class DataLayer extends StaticDataLayer
    * @param string $theTableName       The name of the table.
    * @param string $theAction          Action for trigger {INSERT, UPDATE, DELETE}
    * @param string $theTriggerName     The name of the trigger.
+   *
+   * @throws FallenException
    */
   public static function createTrigger($theDataSchema, $theAuditSchemaName, $theTableName, $theAction, $theTriggerName)
   {
@@ -190,7 +191,6 @@ end;
    * @param string $theQuery The SQL statement.
    *
    * @return array|null The selected row.
-   * @throws ResultException
    */
   public static function executeRow0($theQuery)
   {
@@ -207,7 +207,6 @@ end;
    * @param string $theQuery The SQL statement.
    *
    * @return array The selected row.
-   * @throws ResultException
    */
   public static function executeRow1($theQuery)
   {

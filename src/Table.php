@@ -13,6 +13,13 @@ class Table
 {
   //--------------------------------------------------------------------------------------------------------------------
   /**
+   * The unique alias or this data table.
+   *
+   * @var string
+   */
+  private $myAlias;
+
+  /**
    * The metadata (additional) audit columns (as stored in the config file).
    *
    * @var Columns
@@ -61,13 +68,6 @@ class Table
    */
   private $myTableName;
 
-  /**
-   * The unique alias or this data table.
-   *
-   * @var string
-   */
-  private $myAlias;
-
   //--------------------------------------------------------------------------------------------------------------------
   /**
    * Object constructor.
@@ -96,6 +96,17 @@ class Table
     $this->myDataTableColumnsDatabase = new Columns($this->getColumnsFromInformationSchema());
     $this->myAuditColumns             = new Columns($theAuditColumnsMetadata);
     $this->myAlias                    = $theAlias;
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
+   * Returns a random alias for a table.
+   *
+   * @return string
+   */
+  public static function getRandomAlias()
+  {
+    return uniqid();
   }
 
   //--------------------------------------------------------------------------------------------------------------------
@@ -172,17 +183,6 @@ class Table
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
-   * Returns a random alias for a table.
-   *
-   * @return string
-   */
-  public static function getRandomAlias()
-  {
-    return uniqid();
-  }
-
-  //--------------------------------------------------------------------------------------------------------------------
-  /**
    * Adds new columns to audit table.
    *
    * @param array[] $theColumns     Columns array
@@ -195,13 +195,13 @@ class Table
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
-   * Compares columns types from table in data_schema with columns in config file. 
+   * Compares columns types from table in data_schema with columns in config file.
    *
    * @return array[]
    */
   private function compareColumnsTypesConfig()
   {
-    $altered_columns_types = Columns::differentColumnTypes($this->myDataTableColumnsDatabase, 
+    $altered_columns_types = Columns::differentColumnTypes($this->myDataTableColumnsDatabase,
                                                            $this->myDataTableColumnsConfig);
     foreach ($altered_columns_types as $column)
     {
