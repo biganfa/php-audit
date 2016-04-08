@@ -1,6 +1,7 @@
 #!/usr/bin/php
 <?php
 //----------------------------------------------------------------------------------------------------------------------
+use SetBased\Affirm\ErrorHandler;
 use SetBased\Audit\Audit;
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -126,6 +127,10 @@ if (!function_exists('json_last_error_msg'))
  */
 function main($options)
 {
+  // Set error handler.
+  $handler = new ErrorHandler();
+  $handler->register();
+
   $setting = getSetting($options);
 
   $constants = new Audit();
