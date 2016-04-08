@@ -167,7 +167,8 @@ class Audit
                                    $this->myConfig['database']['audit_schema'],
                                    $table_columns,
                                    $this->myConfig['audit_columns'],
-                                   $this->myConfig['tables'][$table['table_name']]['alias']);
+                                   $this->myConfig['tables'][$table['table_name']]['alias'],
+                                   $this->myConfig['tables'][$table['table_name']]['skip']);
         $res           = DataLayer::searchInRowSet('table_name', $current_table->getTableName(), $this->myAuditSchemaTables);
         if (!isset($res))
         {
@@ -234,7 +235,8 @@ class Audit
       {
         $this->logInfo(sprintf('Find new table %s, not listed in config file.', $table['table_name']));
         $this->myConfig['tables'][$table['table_name']] = ['audit' => false,
-                                                           'alias' => Table::getRandomAlias()];
+                                                           'alias' => Table::getRandomAlias(),
+                                                           'skip'  => null];
       }
     }
   }
