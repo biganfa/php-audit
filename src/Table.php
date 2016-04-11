@@ -13,7 +13,7 @@ class Table
 {
   //--------------------------------------------------------------------------------------------------------------------
   /**
-   * The unique alias or this data table.
+   * The unique alias for this data table.
    *
    * @var string
    */
@@ -62,18 +62,18 @@ class Table
   private $myLog;
 
   /**
-   * The name of this data table.
-   *
-   * @var string
-   */
-  private $myTableName;
-
-  /**
    * The skip variable for triggers.
    *
    * @var string
    */
   private $mySkipVariable;
+
+  /**
+   * The name of this data table.
+   *
+   * @var string
+   */
+  private $myTableName;
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
@@ -128,7 +128,7 @@ class Table
     $this->logInfo(sprintf('Creating audit table %s.', $this->myTableName));
 
     $columns = Columns::combine($this->myAuditColumns, $this->myDataTableColumnsDatabase);
-    DataLayer::generateSqlCreateStatement($this->myAuditSchema, $this->myTableName, $columns->getColumns());
+    DataLayer::createTableStatement($this->myAuditSchema, $this->myTableName, $columns->getColumns());
   }
 
   //--------------------------------------------------------------------------------------------------------------------
