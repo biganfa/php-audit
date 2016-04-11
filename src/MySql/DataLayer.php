@@ -4,6 +4,7 @@ namespace SetBased\Audit\MySql;
 
 use Monolog\Logger;
 use SetBased\Affirm\Exception\FallenException;
+use SetBased\Audit\Columns;
 use SetBased\Stratum\MySql\StaticDataLayer;
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -19,6 +20,13 @@ class DataLayer extends StaticDataLayer
    * @var Logger
    */
   private static $myLog;
+
+  /**
+   * The additional SQL code as lines array.
+   *
+   * @var array[]
+   */
+  private static $myAdditionalSQL;
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
@@ -68,6 +76,75 @@ class DataLayer extends StaticDataLayer
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
+   * Create insert part for triggers.
+   *
+   * @param string  $theSchemaName   The name of the database schema.
+   * @param string  $theTableName    The name of the table.
+   * @param Columns $theAuditColumns Audit columns from metadata.
+   * @param Columns $theTableColumns Table columns from metadata.
+   * @param string  $theAction       Action for trigger {INSERT, UPDATE, DELETE}
+   * @param string  $theRowState     Row state for values in insert statement {NEW, OLD}
+   *
+   * @return string
+   */
+  private static function createInsertStatement($theSchemaName, $theTableName, $theAuditColumns, $theTableColumns, $theAction, $theRowState)
+  {
+    $column_names = '';
+    foreach ($theAuditColumns->getColumns() as $column)
+    {
+      if ($column_names) $column_names .= ',';
+      $column_names .= $column['column_name'];
+    }
+    foreach ($theTableColumns->getColumns() as $column)
+    {
+      if ($column_names) $column_names .= ',';
+      $column_names .= $column['column_name'];
+    }
+
+    $values = '';
+    foreach ($theAuditColumns->getColumns() as $column)
+    {
+      if ($values) $values .= ',';
+      if (isset($column['audit_value_type']))
+      {
+        switch ($column['audit_value_type'])
+        {
+          case 'ACTION':
+            $values .= self::quoteString($theAction);
+            break;
+
+          case 'STATE':
+            $values .= self::quoteString($theRowState);
+            break;
+
+          default:
+            throw new FallenException('audit_value_type', ($column['audit_value_type']));
+        }
+      }
+      else
+      {
+        $values .= $column['audit_expression'];
+      }
+    }
+    foreach ($theTableColumns->getColumns() as $column)
+    {
+      if ($values) $values .= ',';
+      $values .= sprintf('%s.`%s`', $theRowState, $column['column_name']);
+    }
+
+    $insert_statement = sprintf('
+insert into `%s`.`%s`(%s)
+values(%s);',
+                                $theSchemaName,
+                                $theTableName,
+                                $column_names,
+                                $values);
+
+    return $insert_statement;
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
    * Creates a trigger on a table.
    *
    * @param string  $theDataSchema      The name of the data schema.
@@ -75,10 +152,13 @@ class DataLayer extends StaticDataLayer
    * @param string  $theTableName       The name of the table.
    * @param string  $theAction          Action for trigger {INSERT, UPDATE, DELETE}
    * @param string  $theTriggerName     The name of the trigger.
-   * @param  string $theSkipVariable    The skip variable.
-   * @throws FallenException
+   * @param string  $theSkipVariable    The skip variable.
+   * @param Columns $theTableColumns    Table columns from metadata.
+   * @param Columns $theAuditColumns    Audit columns from metadata.
    */
-  public static function createTrigger($theDataSchema, $theAuditSchemaName, $theTableName, $theAction, $theTriggerName, $theSkipVariable)
+  public static function createTrigger($theDataSchema, $theAuditSchemaName,
+                                       $theTableName, $theAction, $theTriggerName,
+                                       $theSkipVariable, $theTableColumns, $theAuditColumns)
   {
     $row_state = [];
     switch ($theAction)
@@ -104,57 +184,33 @@ class DataLayer extends StaticDataLayer
 create trigger %s
 after %s on `%s`.`%s`
 for each row begin
-  if (@audit_uuid is null) then
-    set @audit_uuid = uuid_short();
-  end if;
-
-  %s
-
-    insert into `%s`.`%s`
-    values( now()
-    ,       %s
-    ,       %s
-    ,       @audit_uuid
-    ,       @audit_rownum
-    ,       @abc_g_ses_id
-    ,       @abc_g_usr_id',
+',
                    $theTriggerName,
                    $theAction,
                    $theDataSchema,
-                   $theTableName,
-                   self::skipVariableStatement($theSkipVariable),
-                   $theAuditSchemaName,
-                   $theTableName,
-                   self::quoteString($theAction),
-                   self::quoteString($row_state[0]));
+                   $theTableName);
 
-    $columns = self::getTableColumns($theDataSchema, $theTableName);
-    foreach ($columns as $column)
+    $sql .= self::skipVariableStatement($theSkipVariable);
+
+    foreach (self::$myAdditionalSQL as $line)
     {
-      $sql .= sprintf(',%s.`%s`', $row_state[0], $column['column_name']);
+      $sql .= $line;
     }
-    $sql .= ');';
+    $sql .= self::createInsertStatement($theAuditSchemaName,
+                                        $theTableName,
+                                        $theAuditColumns,
+                                        $theTableColumns,
+                                        $theAction,
+                                        $row_state[0]);
 
     if ($theAction=='UPDATE')
     {
-      $sql .= sprintf('
-    insert into `%s`.`%s`
-    values( now()
-    ,       %s
-    ,       %s
-    ,       @audit_uuid
-    ,       @audit_rownum
-    ,       @abc_g_ses_id
-    ,       @abc_g_usr_id',
-                      $theAuditSchemaName,
-                      $theTableName,
-                      self::quoteString($theAction),
-                      self::quoteString($row_state[1]));
-      foreach ($columns as $column)
-      {
-        $sql .= sprintf(',%s.`%s`', $row_state[1], $column['column_name']);
-      }
-      $sql .= ');';
+      $sql .= self::createInsertStatement($theAuditSchemaName,
+                                          $theTableName,
+                                          $theAuditColumns,
+                                          $theTableColumns,
+                                          $theAction,
+                                          $row_state[1]);
     }
     $sql .= isset($theSkipVariable) ? 'end if;' : '';
     $sql .= 'end;';
@@ -367,6 +423,17 @@ order by TABLE_NAME", self::quoteString($theSchemaName));
   public static function setLog($theLogger)
   {
     self::$myLog = $theLogger;
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
+   * Set addition SQL code.
+   *
+   * @param array[] $theAdditionalSQL
+   */
+  public static function setAdditionalSQL($theAdditionalSQL)
+  {
+    self::$myAdditionalSQL = $theAdditionalSQL;
   }
 
   //--------------------------------------------------------------------------------------------------------------------

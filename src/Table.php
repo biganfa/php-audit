@@ -284,12 +284,15 @@ class Table
   {
     $this->logVerbose(sprintf('Create %s trigger for table %s.', $theAction, $theTableName));
     $trigger_name = $this->getTriggerName($this->myDataSchema, $theAction);
+
     DataLayer::createTrigger($this->myDataSchema,
                              $this->myAuditSchema,
                              $theTableName,
                              $theAction,
                              $trigger_name,
-                             $this->mySkipVariable);
+                             $this->mySkipVariable,
+                             $this->myDataTableColumnsConfig,
+                             $this->myAuditColumns);
   }
 
   //--------------------------------------------------------------------------------------------------------------------

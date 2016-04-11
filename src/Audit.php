@@ -147,6 +147,7 @@ class Audit
     DataLayer::connect($this->myConfig['database']['host_name'], $this->myConfig['database']['user_name'],
                        $this->myConfig['database']['password'], $this->myConfig['database']['data_schema']);
     DataLayer::setLog($this->myLog);
+    DataLayer::setAdditionalSQL($this->myConfig['additional_sql']);
 
     $this->listOfTables();
 
@@ -224,18 +225,25 @@ class Audit
   {
     foreach ($this->myDataSchemaTables as $table)
     {
-      if (isset($this->myConfig['tables'][$table['table_name']]['audit']))
+      if (isset($this->myConfig['tables'][$table['table_name']]))
       {
         if (!isset($this->myConfig['tables'][$table['table_name']]['audit']))
         {
           $this->logInfo(sprintf('Audit flag is not set in table %s.', $table['table_name']));
+        }
+        else
+        {
+          if ($this->myConfig['tables'][$table['table_name']]['audit'])
+          {
+            $this->myConfig['tables'][$table['table_name']]['alias'] = Table::getRandomAlias();
+          }
         }
       }
       else
       {
         $this->logInfo(sprintf('Find new table %s, not listed in config file.', $table['table_name']));
         $this->myConfig['tables'][$table['table_name']] = ['audit' => false,
-                                                           'alias' => Table::getRandomAlias(),
+                                                           'alias' => null,
                                                            'skip'  => null];
       }
     }
