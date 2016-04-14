@@ -167,28 +167,25 @@ class Table
   /**
    * Main function for work with table.
    *
-   * @return Columns Columns for config file
+   * @return array[] Columns for config file
    */
   public function main()
   {
     $compared_columns = null;
     if (isset($this->myDataTableColumnsConfig))
     {
-      $compared_columns = $this->compareTableColumnsConfig();
+      $compared_columns = $this->getTableColumnInfo();
     }
 
-    $altered_columns_types = [];
     if (empty($compared_columns['new_columns']) && empty($compared_columns['obsolete_columns']))
     {
-      $altered_columns_types = $this->compareColumnsTypesConfig();
-      if (empty($altered_columns_types))
+      if (empty($compared_columns['altered_columns']))
       {
         $this->createTriggers();
       }
     }
 
-    return ['columns'         => $compared_columns['full_columns'],
-            'altered_columns' => $altered_columns_types];
+    return $compared_columns;
   }
 
   //--------------------------------------------------------------------------------------------------------------------
@@ -209,7 +206,7 @@ class Table
    *
    * @return array[]
    */
-  private function compareColumnsTypesConfig()
+  private function getAlteredColumns()
   {
     $altered_columns_types = Columns::differentColumnTypes($this->myDataTableColumnsDatabase,
                                                            $this->myDataTableColumnsConfig);
@@ -230,7 +227,7 @@ class Table
    *
    * @return array[]
    */
-  private function compareTableColumnsConfig()
+  private function getTableColumnInfo()
   {
     $column_actual  = new Columns(DataLayer::getTableColumns($this->myAuditSchema, $this->myTableName));
     $columns_config = Columns::combine($this->myAuditColumns, $this->myDataTableColumnsConfig);
@@ -239,6 +236,24 @@ class Table
     $new_columns      = Columns::notInOtherSet($columns_target, $column_actual);
     $obsolete_columns = Columns::notInOtherSet($columns_config, $columns_target);
 
+    $this->loggingColumnInfo($new_columns, $obsolete_columns);
+    $this->addNewColumns($new_columns, 'audit_usr_id');
+
+    return ['full_columns'     => $this->getTableColumnsFromConfig(),
+            'new_columns'      => $new_columns,
+            'obsolete_columns' => $obsolete_columns,
+            'altered_columns'  => $this->getAlteredColumns()];
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
+   * Logging new and obsolete columns.
+   *
+   * @param array[] $theNewColumns
+   * @param array[] $theObsoleteColumns
+   */
+  private function loggingColumnInfo($theNewColumns, $theObsoleteColumns)
+  {
     if (!empty($new_columns) && !empty($obsolete_columns))
     {
       $this->logInfo(sprintf('Found both new and obsolete columns for table %s', $this->myTableName));
@@ -251,26 +266,33 @@ class Table
       {
         $this->logInfo(sprintf('Obsolete column %s', $column['column_name']));
       }
-
-      return ['full_columns'     => $this->myDataTableColumnsConfig,
-              'new_columns'      => $new_columns,
-              'obsolete_columns' => $obsolete_columns];
     }
 
-    foreach ($obsolete_columns as $column)
+    foreach ($theObsoleteColumns as $column)
     {
       $this->logInfo(sprintf('Obsolete column %s.%s', $this->myTableName, $column['column_name']));
     }
 
-    foreach ($new_columns as $new_column)
+    foreach ($theNewColumns as $new_column)
     {
       $this->logInfo(sprintf('New column %s.%s', $this->myTableName, $new_column['column_name']));
     }
-    $this->addNewColumns($new_columns, 'audit_usr_id');
+  }
 
-    return ['full_columns'     => $this->myDataTableColumnsDatabase,
-            'new_columns'      => $new_columns,
-            'obsolete_columns' => $obsolete_columns];
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
+   * Check for know what columns array returns.
+   *
+   * @return Columns
+   */
+  private function getTableColumnsFromConfig()
+  {
+    if (!empty($new_columns) && !empty($obsolete_columns))
+    {
+      return $this->myDataTableColumnsConfig;
+    }
+
+    return $this->myDataTableColumnsDatabase;
   }
 
   //--------------------------------------------------------------------------------------------------------------------
