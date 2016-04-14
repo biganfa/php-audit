@@ -15,7 +15,7 @@
     "setbased/phing-extensions": "2.*"
   },
   "require": {
-    "monolog/monolog": "^1.18",
+    "monolog/monolog": "1.*",
     "php": ">=5.4.0",
     "setbased/php-affirm": "*",
     "setbased/php-stratum": "*"
