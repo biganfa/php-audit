@@ -3,6 +3,8 @@
 namespace SetBased\Audit;
 
 use Monolog\Logger;
+use SetBased\Audit\MySql\Sql\CreateAuditTable;
+use SetBased\Audit\MySql\Sql\CreateAuditTrigger;
 use SetBased\Audit\MySql\DataLayer;
 
 //--------------------------------------------------------------------------------------------------------------------
@@ -128,7 +130,7 @@ class Table
     $this->logInfo(sprintf('Creating audit table %s.', $this->myTableName));
 
     $columns = Columns::combine($this->myAuditColumns, $this->myDataTableColumnsDatabase);
-    DataLayer::createTableStatement($this->myAuditSchema, $this->myTableName, $columns->getColumns());
+    CreateAuditTable::buildStatement($this->myAuditSchema, $this->myTableName, $columns->getColumns());
   }
 
   //--------------------------------------------------------------------------------------------------------------------
@@ -307,14 +309,14 @@ class Table
     $this->logVerbose(sprintf('Create %s trigger for table %s.', $theAction, $theTableName));
     $trigger_name = $this->getTriggerName($this->myDataSchema, $theAction);
 
-    DataLayer::createTrigger($this->myDataSchema,
-                             $this->myAuditSchema,
-                             $theTableName,
-                             $theAction,
-                             $trigger_name,
-                             $this->mySkipVariable,
-                             $this->myDataTableColumnsConfig,
-                             $this->myAuditColumns);
+    CreateAuditTrigger::buildStatement($this->myDataSchema,
+                                       $this->myAuditSchema,
+                                       $theTableName,
+                                       $theAction,
+                                       $trigger_name,
+                                       $this->mySkipVariable,
+                                       $this->myDataTableColumnsConfig,
+                                       $this->myAuditColumns);
   }
 
   //--------------------------------------------------------------------------------------------------------------------
