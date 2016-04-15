@@ -190,14 +190,42 @@ class Table
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
+   * Add 'after' key to each columns in array for SQL alter statement.
+   *
+   * @param array[] $theColumns Columns array
+   *
+   * @return array[]
+   */
+  private function addAfterKey($theColumns)
+  {
+    $modified_columns = $theColumns;
+
+    foreach ($theColumns as $key => $column)
+    {
+      $after_column = $this->myAuditColumns->getPreviousColumn($column['column_name']);
+      if (isset($after_column))
+      {
+        $modified_columns[$key]['after'] = $after_column;
+      }
+      else
+      {
+        $modified_columns[$key]['after'] = $this->myDataTableColumnsDatabase->getPreviousColumn($column['column_name']);
+      }
+    }
+    var_dump($modified_columns);
+
+    return $modified_columns;
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
    * Adds new columns to audit table.
    *
-   * @param array[] $theColumns     Columns array
-   * @param string  $theAfterColumn After which column add new columns
+   * @param array[] $theColumns Columns array
    */
-  private function addNewColumns($theColumns, $theAfterColumn)
+  private function addNewColumns($theColumns)
   {
-    DataLayer::addNewColumns($this->myAuditSchema, $this->myTableName, $theColumns, $theAfterColumn);
+    DataLayer::addNewColumns($this->myAuditSchema, $this->myTableName, $theColumns);
   }
 
   //--------------------------------------------------------------------------------------------------------------------
@@ -237,7 +265,8 @@ class Table
     $obsolete_columns = Columns::notInOtherSet($columns_config, $columns_target);
 
     $this->loggingColumnInfo($new_columns, $obsolete_columns);
-    $this->addNewColumns($new_columns, 'audit_usr_id');
+    $new_columns = $this->addAfterKey($new_columns);
+    $this->addNewColumns($new_columns);
 
     return ['full_columns'     => $this->getTableColumnsFromConfig(),
             'new_columns'      => $new_columns,

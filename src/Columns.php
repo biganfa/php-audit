@@ -2,7 +2,8 @@
 //----------------------------------------------------------------------------------------------------------------------
 namespace SetBased\Audit;
 
-//----------------------------------------------------------------------------------------------------------------------
+use SetBased\Audit\MySql\DataLayer;
+
 /**
  * Class for metadata of (table) columns.
  */
@@ -37,6 +38,28 @@ class Columns
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
+   * Returns previous column of a columns. Returns null if the column name is not found in this Columns.
+   *
+   * @param string $theColumnName The column name.
+   *
+   * @return null|string
+   */
+  public function getPreviousColumn($theColumnName)
+  {
+    $columns = array_keys($this->myColumns);
+    $key     = array_search($theColumnName, $columns);
+    var_dump($columns);
+
+    if ($key>=1)
+    {
+      return $columns[$key - 1];
+    }
+
+    return null;
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
    * Generate array with audit columns and columns from data table.
    *
    * @param Columns $theAuditColumnsMetadata   Audit columns for adding to exist columns
@@ -48,12 +71,12 @@ class Columns
   {
     $columns = [];
 
-    foreach ($theAuditColumnsMetadata->getColumns() as $column)
+    foreach ($theAuditColumnsMetadata->myColumns as $column)
     {
       $columns[] = ['column_name' => $column['column_name'], 'column_type' => $column['column_type']];
     }
 
-    foreach ($theCurrentColumnsMetadata->getColumns() as $column)
+    foreach ($theCurrentColumnsMetadata->myColumns as $column)
     {
       if ($column['column_type']!='timestamp')
       {
@@ -81,11 +104,11 @@ class Columns
   public static function differentColumnTypes($theColumns1, $theColumns2)
   {
     $diff = [];
-    foreach ($theColumns2->getColumns() as $column2)
+    foreach ($theColumns2->myColumns as $column2)
     {
-      if (isset($theColumns1->getColumns()[$column2['column_name']]))
+      if (isset($theColumns1->myColumns[$column2['column_name']]))
       {
-        $column1 = $theColumns1->getColumns()[$column2['column_name']];
+        $column1 = $theColumns1->myColumns[$column2['column_name']];
         if ($column2['column_type']!=$column1['column_type'])
         {
           $diff[] = $column1;
