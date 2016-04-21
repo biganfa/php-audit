@@ -37,20 +37,20 @@ class CreateAuditTrigger extends DataLayer
                                         $theTableColumns,
                                         $theAuditColumns)
   {
-    $row_state = [];
+    $rowState = [];
     switch ($theAction)
     {
       case 'INSERT':
-        $row_state[] = 'NEW';
+        $rowState[] = 'NEW';
         break;
 
       case 'DELETE':
-        $row_state[] = 'OLD';
+        $rowState[] = 'OLD';
         break;
 
       case 'UPDATE':
-        $row_state[] = 'OLD';
-        $row_state[] = 'NEW';
+        $rowState[] = 'OLD';
+        $rowState[] = 'NEW';
         break;
 
       default:
@@ -79,7 +79,7 @@ begin
                                         $theAuditColumns,
                                         $theTableColumns,
                                         $theAction,
-                                        $row_state[0]);
+                                        $rowState[0]);
 
     if ($theAction=='UPDATE')
     {
@@ -88,7 +88,7 @@ begin
                                           $theAuditColumns,
                                           $theTableColumns,
                                           $theAction,
-                                          $row_state[1]);
+                                          $rowState[1]);
     }
     $sql .= isset($theSkipVariable) ? 'end if;' : '';
     $sql .= 'end;';
@@ -116,16 +116,16 @@ begin
                                                 $theAction,
                                                 $theRowState)
   {
-    $column_names = '';
+    $columnNames = '';
     foreach ($theAuditColumns->getColumns() as $column)
     {
-      if ($column_names) $column_names .= ',';
-      $column_names .= $column['column_name'];
+      if ($columnNames) $columnNames .= ',';
+      $columnNames .= $column['column_name'];
     }
     foreach ($theTableColumns->getColumns() as $column)
     {
-      if ($column_names) $column_names .= ',';
-      $column_names .= $column['column_name'];
+      if ($columnNames) $columnNames .= ',';
+      $columnNames .= $column['column_name'];
     }
 
     $values = '';
@@ -159,15 +159,15 @@ begin
       $values .= sprintf('%s.`%s`', $theRowState, $column['column_name']);
     }
 
-    $insert_statement = sprintf('
+    $insertStatement = sprintf('
 insert into `%s`.`%s`(%s)
 values(%s);',
                                 $theSchemaName,
                                 $theTableName,
-                                $column_names,
+                                $columnNames,
                                 $values);
 
-    return $insert_statement;
+    return $insertStatement;
   }
 
   //--------------------------------------------------------------------------------------------------------------------

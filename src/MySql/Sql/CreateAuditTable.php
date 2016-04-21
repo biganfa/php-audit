@@ -21,18 +21,18 @@ class CreateAuditTable extends DataLayer
    */
   public static function buildStatement($theAuditSchemaName, $theTableName, $theMergedColumns)
   {
-    $sql_create = sprintf('create table `%s`.`%s` (', $theAuditSchemaName, $theTableName);
+    $sqlCreate = sprintf('create table `%s`.`%s` (', $theAuditSchemaName, $theTableName);
     foreach ($theMergedColumns as $column)
     {
-      $sql_create .= sprintf('`%s` %s', $column['column_name'], $column['column_type']);
+      $sqlCreate .= sprintf('`%s` %s', $column['column_name'], $column['column_type']);
       if (end($theMergedColumns)!==$column)
       {
-        $sql_create .= ',';
+        $sqlCreate .= ',';
       }
     }
-    $sql_create .= ')';
+    $sqlCreate .= ')';
 
-    self::executeNone($sql_create);
+    self::executeNone($sqlCreate);
   }
 
   //--------------------------------------------------------------------------------------------------------------------
