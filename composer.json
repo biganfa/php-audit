@@ -15,10 +15,10 @@
     "setbased/phing-extensions": "2.*"
   },
   "require": {
-    "monolog/monolog": "1.*",
     "php": ">=5.4.0",
-    "setbased/php-affirm": "*",
-    "setbased/php-stratum": "*"
+    "setbased/exception": "1.*",
+    "setbased/php-stratum": "*",
+    "symfony/console": "^2.8 || ^3.0"
   },
   "autoload": {
     "psr-4": {

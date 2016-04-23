@@ -1,4 +1,4 @@
-#!/usr/bin/php
+#!/usr/bin/env php
 <?php
 //----------------------------------------------------------------------------------------------------------------------
 use SetBased\Affirm\ErrorHandler;
@@ -17,82 +17,6 @@ foreach ($files as $file)
     require $file;
     break;
   }
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-/**
- * Prints the synopsis of this program and terminates this program.
- */
-function synopsis()
-{
-  echo "Synopsis: audit [-c] <configuration file> [-v] [-d] [-p]\n";
-  echo "\n";
-  echo "Options:\n";
-  echo "  -p --prune   : Clear all columns information from config file.\n";
-  echo "  -h --help    : Print this help text.\n";
-  echo "  -v --verbose : Print verbose log.\n";
-  echo "  -d --debug   : Print debug log.\n";
-
-  exit(1);
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-
-/**
- * Parses the arguments of this program.
- *
- * @param array $options The arguments of this programs (i.e. $argv).
- *
- * @return array  The parameters.
- * @throws Exception
- */
-function getSetting($options)
-{
-  // skip first key with current file name.
-  array_shift($options);
-
-  $setting['prune']   = false;
-  $setting['debug']   = false;
-  $setting['verbose'] = false;
-
-  while (($param = array_shift($options))!==null)
-  {
-    switch ($param)
-    {
-      case '-p':
-      case '--prune':
-        $setting['prune'] = true;
-        break;
-
-      case '-d':
-      case '--debug':
-        $setting['debug'] = true;
-        break;
-
-      case '-v':
-      case '--verbose':
-        $setting['verbose'] = true;
-        break;
-
-      case '-h':
-      case '--help':
-        synopsis();
-        break;
-
-      case '-c':
-      case '--config':
-        $setting['config'] = array_shift($options);
-        break;
-
-      default:
-        synopsis();
-        break;
-    }
-  }
-
-  if (!isset($setting['config'])) synopsis();
-
-  return $setting;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -120,25 +44,10 @@ if (!function_exists('json_last_error_msg'))
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-/**
- * Starts the execution of this program.
- *
- * @param array $options The arguments of this programs (i.e. $argv).
- */
-function main($options)
-{
-  // Set error handler.
-  $handler = new ErrorHandler();
-  $handler->register();
+// Set error handler.
+$handler = new ErrorHandler();
+$handler->register();
 
-  $setting = getSetting($options);
+$application = new Audit();
+$application->run();
 
-  $constants = new Audit();
-  $ret       = $constants->main($setting);
-  if ($ret!=0) exit($ret);
-
-  exit(0);
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-main($argv);

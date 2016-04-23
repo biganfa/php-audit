@@ -1,16 +1,8 @@
 <?php
 //----------------------------------------------------------------------------------------------------------------------
-/**
- * phpStratum
- *
- * @copyright 2005-2015 Paul Water / Set Based IT Consultancy (https://www.setbased.nl)
- * @license   http://www.opensource.org/licenses/mit-license.php MIT
- * @link
- */
-//----------------------------------------------------------------------------------------------------------------------
 namespace SetBased\Audit;
 
-use SetBased\Affirm\Exception\RuntimeException;
+use SetBased\Exception\RuntimeException;
 
 //----------------------------------------------------------------------------------------------------------------------
 /**

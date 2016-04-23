@@ -2,10 +2,10 @@
 //----------------------------------------------------------------------------------------------------------------------
 namespace SetBased\Audit;
 
-use Monolog\Logger;
+use SetBased\Audit\MySql\DataLayer;
 use SetBased\Audit\MySql\Sql\CreateAuditTable;
 use SetBased\Audit\MySql\Sql\CreateAuditTrigger;
-use SetBased\Audit\MySql\DataLayer;
+use Symfony\Component\Console\Output\OutputInterface;
 
 //--------------------------------------------------------------------------------------------------------------------
 /**
@@ -13,6 +13,9 @@ use SetBased\Audit\MySql\DataLayer;
  */
 class Table
 {
+  //--------------------------------------------------------------------------------------------------------------------
+  use ConsoleOutput;
+
   //--------------------------------------------------------------------------------------------------------------------
   /**
    * The unique alias for this data table.
@@ -57,13 +60,6 @@ class Table
   private $myDataTableColumnsDatabase;
 
   /**
-   * Monolog
-   *
-   * @var Logger
-   */
-  private $myLog;
-
-  /**
    * The skip variable for triggers.
    *
    * @var string
@@ -81,17 +77,17 @@ class Table
   /**
    * Object constructor.
    *
-   * @param string  $theTableName             The table name.
-   * @param Logger  $theLog                   Monolog
-   * @param string  $theDataSchema            The name of the schema with data tables.
-   * @param string  $theAuditSchema           The name of the schema with audit tables.
-   * @param array[] $theConfigColumnsMetadata The columns of the data table as stored in the config file.
-   * @param array[] $theAuditColumnsMetadata  The columns of the audit table as stored in the config file.
-   * @param string  $theAlias                 An unique alias for this table.
-   * @param string  $theSkipVariable          The skip variable
+   * @param OutputInterface $output                   The output for log messages.
+   * @param string          $theTableName             The table name.
+   * @param string          $theDataSchema            The name of the schema with data tables.
+   * @param string          $theAuditSchema           The name of the schema with audit tables.
+   * @param array[]         $theConfigColumnsMetadata The columns of the data table as stored in the config file.
+   * @param array[]         $theAuditColumnsMetadata  The columns of the audit table as stored in the config file.
+   * @param string          $theAlias                 An unique alias for this table.
+   * @param string          $theSkipVariable          The skip variable
    */
-  public function __construct($theTableName,
-                              $theLog,
+  public function __construct($output,
+                              $theTableName,
                               $theDataSchema,
                               $theAuditSchema,
                               $theConfigColumnsMetadata,
@@ -99,9 +95,9 @@ class Table
                               $theAlias,
                               $theSkipVariable)
   {
+    $this->output                     = $output;
     $this->myTableName                = $theTableName;
     $this->myDataTableColumnsConfig   = new Columns($theConfigColumnsMetadata);
-    $this->myLog                      = $theLog;
     $this->myDataSchema               = $theDataSchema;
     $this->myAuditSchema              = $theAuditSchema;
     $this->myDataTableColumnsDatabase = new Columns($this->getColumnsFromInformationSchema());
@@ -112,7 +108,7 @@ class Table
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
-   * Returns a random alias for a table.
+   * Returns a random alias for this table.
    *
    * @return string
    */
@@ -127,7 +123,7 @@ class Table
    */
   public function createMissingAuditTable()
   {
-    $this->logInfo(sprintf('Creating audit table %s.', $this->myTableName));
+    $this->logInfo('Creating audit table <dbo>%s.%s<dbo>', $this->myAuditSchema, $this->myTableName);
 
     $columns = Columns::combine($this->myAuditColumns, $this->myDataTableColumnsDatabase);
     CreateAuditTable::buildStatement($this->myAuditSchema, $this->myTableName, $columns->getColumns());
@@ -146,9 +142,9 @@ class Table
     $this->dropTriggers();
 
     // Create or recreate the audit triggers.
-    $this->createTableTrigger($this->myTableName, 'INSERT');
-    $this->createTableTrigger($this->myTableName, 'UPDATE');
-    $this->createTableTrigger($this->myTableName, 'DELETE');
+    $this->createTableTrigger('INSERT');
+    $this->createTableTrigger('UPDATE');
+    $this->createTableTrigger('DELETE');
 
     // Insert, updates, and deletes are no audited again. So, release lock on the table.
     $this->unlockTables();
@@ -203,6 +199,49 @@ class Table
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
+   * Creates a triggers for this table.
+   *
+   * @param string $theAction Trigger ON action {INSERT, DELETE, UPDATE}
+   */
+  private function createTableTrigger($theAction)
+  {
+    $triggerName = $this->getTriggerName($this->myDataSchema, $theAction);
+
+    $this->logVerbose('Creating trigger <dbo>%s</dbo> on table <dbo>%s.%s</dbo>',
+                      str_replace('`', '', $triggerName),
+                      $this->myDataSchema,
+                      $this->myTableName);
+
+    CreateAuditTrigger::buildStatement($this->myDataSchema,
+                                       $this->myAuditSchema,
+                                       $this->myTableName,
+                                       $theAction,
+                                       $triggerName,
+                                       $this->mySkipVariable,
+                                       $this->myDataTableColumnsConfig,
+                                       $this->myAuditColumns);
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
+   * Drops all triggers from this table.
+   */
+  private function dropTriggers()
+  {
+    $triggers = DataLayer::getTableTriggers($this->myDataSchema, $this->myTableName);
+    foreach ($triggers as $trigger)
+    {
+      $this->logVerbose('Dropping trigger <dbo>%s</dbo> on <dbo>%s.%s</dbo>',
+                        $trigger['trigger_name'],
+                        $this->myDataSchema,
+                        $this->myTableName);
+
+      DataLayer::dropTrigger($this->myDataSchema, $trigger['trigger_name']);
+    }
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
    * Compares columns types from table in data_schema with columns in config file.
    *
    * @return array[]
@@ -210,16 +249,29 @@ class Table
   private function getAlteredColumns()
   {
     $alteredColumnsTypes = Columns::differentColumnTypes($this->myDataTableColumnsDatabase,
-                                                           $this->myDataTableColumnsConfig);
+                                                         $this->myDataTableColumnsConfig);
     foreach ($alteredColumnsTypes as $column)
     {
-      $this->logInfo(sprintf('Type of %s.%s has been altered to %s',
-                             $this->myTableName,
-                             $column['column_name'],
-                             $column['column_type']));
+      $this->logInfo('Type of <dbo>%s.%s</dbo> has been altered to <dbo>%s</dbo>',
+                     $this->myTableName,
+                     $column['column_name'],
+                     $column['column_type']);
     }
 
     return $alteredColumnsTypes;
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
+   * Selects and returns the metadata of the columns of this table from information_schema.
+   *
+   * @return array[]
+   */
+  private function getColumnsFromInformationSchema()
+  {
+    $result = DataLayer::getTableColumns($this->myDataSchema, $this->myTableName);
+
+    return $result;
   }
 
   //--------------------------------------------------------------------------------------------------------------------
@@ -240,44 +292,10 @@ class Table
     $this->loggingColumnInfo($newColumns, $obsoleteColumns);
     $this->addNewColumns($newColumns);
 
-    return ['full_columns'     => $this->getTableColumnsFromConfig($newColumns,$obsoleteColumns),
+    return ['full_columns'     => $this->getTableColumnsFromConfig($newColumns, $obsoleteColumns),
             'new_columns'      => $newColumns,
             'obsolete_columns' => $obsoleteColumns,
             'altered_columns'  => $this->getAlteredColumns()];
-  }
-
-  //--------------------------------------------------------------------------------------------------------------------
-  /**
-   * Logging new and obsolete columns.
-   *
-   * @param array[] $theNewColumns
-   * @param array[] $theObsoleteColumns
-   */
-  private function loggingColumnInfo($theNewColumns, $theObsoleteColumns)
-  {
-    if (!empty($theNewColumns) && !empty($theObsoleteColumns))
-    {
-      $this->logInfo(sprintf('Found both new and obsolete columns for table %s', $this->myTableName));
-      $this->logInfo(sprintf('No action taken.'));
-      foreach ($theNewColumns as $column)
-      {
-        $this->logInfo(sprintf('New column %s', $column['column_name']));
-      }
-      foreach ($theObsoleteColumns as $column)
-      {
-        $this->logInfo(sprintf('Obsolete column %s', $column['column_name']));
-      }
-    }
-
-    foreach ($theObsoleteColumns as $column)
-    {
-      $this->logInfo(sprintf('Obsolete column %s.%s', $this->myTableName, $column['column_name']));
-    }
-
-    foreach ($theNewColumns as $column)
-    {
-      $this->logInfo(sprintf('New column %s.%s', $this->myTableName, $column['column_name']));
-    }
   }
 
   //--------------------------------------------------------------------------------------------------------------------
@@ -297,56 +315,6 @@ class Table
     }
 
     return $this->myDataTableColumnsDatabase;
-  }
-
-  //--------------------------------------------------------------------------------------------------------------------
-  /**
-   * Creates a triggers for this table.
-   *
-   * @param string $theTableName The name of table
-   * @param string $theAction    Trigger ON action {INSERT, DELETE, UPDATE}
-   */
-  private function createTableTrigger($theTableName, $theAction)
-  {
-    $this->logVerbose(sprintf('Create %s trigger for table %s.', $theAction, $theTableName));
-    $triggerName = $this->getTriggerName($this->myDataSchema, $theAction);
-
-    CreateAuditTrigger::buildStatement($this->myDataSchema,
-                                       $this->myAuditSchema,
-                                       $theTableName,
-                                       $theAction,
-                                       $triggerName,
-                                       $this->mySkipVariable,
-                                       $this->myDataTableColumnsConfig,
-                                       $this->myAuditColumns);
-  }
-
-  //--------------------------------------------------------------------------------------------------------------------
-  /**
-   * Drops all triggers from this table.
-   */
-  private function dropTriggers()
-  {
-    $triggers = DataLayer::getTableTriggers($this->myDataSchema, $this->myTableName);
-    foreach ($triggers as $trigger)
-    {
-      $this->logVerbose(sprintf('Drop trigger %s for table %s.', $trigger['Trigger_Name'], $this->myTableName));
-
-      DataLayer::dropTrigger($trigger['Trigger_Name']);
-    }
-  }
-
-  //--------------------------------------------------------------------------------------------------------------------
-  /**
-   * Selects and returns the metadata of the columns of this table from information_schema.
-   *
-   * @return array[]
-   */
-  private function getColumnsFromInformationSchema()
-  {
-    $result = DataLayer::getTableColumns($this->myDataSchema, $this->myTableName);
-
-    return $result;
   }
 
   //--------------------------------------------------------------------------------------------------------------------
@@ -376,24 +344,36 @@ class Table
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
-   * Log function
+   * Logging new and obsolete columns.
    *
-   * @param string $theMessage Message for print in console
+   * @param array[] $theNewColumns
+   * @param array[] $theObsoleteColumns
    */
-  private function logInfo($theMessage)
+  private function loggingColumnInfo($theNewColumns, $theObsoleteColumns)
   {
-    $this->myLog->addNotice($theMessage);
-  }
+    if (!empty($theNewColumns) && !empty($theObsoleteColumns))
+    {
+      $this->logInfo('Found both new and obsolete columns for table %s', $this->myTableName);
+      $this->logInfo('No action taken');
+      foreach ($theNewColumns as $column)
+      {
+        $this->logInfo('New column %s', $column['column_name']);
+      }
+      foreach ($theObsoleteColumns as $column)
+      {
+        $this->logInfo('Obsolete column %s', $column['column_name']);
+      }
+    }
 
-  //--------------------------------------------------------------------------------------------------------------------
-  /**
-   * Log verbose
-   *
-   * @param string $theMessage Message for print in console
-   */
-  private function logVerbose($theMessage)
-  {
-    $this->myLog->addInfo($theMessage);
+    foreach ($theObsoleteColumns as $column)
+    {
+      $this->logInfo('Obsolete column %s.%s', $this->myTableName, $column['column_name']);
+    }
+
+    foreach ($theNewColumns as $column)
+    {
+      $this->logInfo('New column %s.%s', $this->myTableName, $column['column_name']);
+    }
   }
 
   //--------------------------------------------------------------------------------------------------------------------

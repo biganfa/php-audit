@@ -6,7 +6,7 @@ use SetBased\Audit\MySql\DataLayer;
 
 //----------------------------------------------------------------------------------------------------------------------
 /**
- * Class for creating and executing SQL statements for Audit tables.
+ * Class for creating and executing SQL statements for creating audit tables.
  */
 class CreateAuditTable extends DataLayer
 {

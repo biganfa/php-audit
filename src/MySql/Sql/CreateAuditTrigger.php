@@ -2,9 +2,9 @@
 //----------------------------------------------------------------------------------------------------------------------
 namespace SetBased\Audit\MySql\Sql;
 
-use SetBased\Affirm\Exception\FallenException;
 use SetBased\Audit\Columns;
 use SetBased\Audit\MySql\DataLayer;
+use SetBased\Exception\FallenException;
 use SetBased\Stratum\MySql\StaticDataLayer;
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -73,6 +73,7 @@ begin
     foreach (self::$ourAdditionalSql as $line)
     {
       $sql .= $line;
+      $sql .= "\n";
     }
     $sql .= self::createInsertStatement($theAuditSchemaName,
                                         $theTableName,
@@ -90,7 +91,7 @@ begin
                                           $theAction,
                                           $rowState[1]);
     }
-    $sql .= isset($theSkipVariable) ? 'end if;' : '';
+    $sql .= isset($theSkipVariable) ? "end if;\n" : '';
     $sql .= 'end;';
 
     self::executeNone($sql);
@@ -159,9 +160,9 @@ begin
       $values .= sprintf('%s.`%s`', $theRowState, $column['column_name']);
     }
 
-    $insertStatement = sprintf('
-insert into `%s`.`%s`(%s)
-values(%s);',
+    $insertStatement = sprintf('insert into `%s`.`%s`(%s)
+values(%s);
+',
                                 $theSchemaName,
                                 $theTableName,
                                 $columnNames,
@@ -183,7 +184,7 @@ values(%s);',
     $statement = '';
     if (isset($theSkipVariable))
     {
-      $statement = sprintf('if (%s is null) then', $theSkipVariable);
+      $statement = sprintf("if (%s is null) then\n", $theSkipVariable);
     }
 
     return $statement;
