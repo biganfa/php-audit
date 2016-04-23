@@ -157,29 +157,29 @@ class Audit
     {
       if ($this->myConfig['tables'][$table['table_name']]['audit'])
       {
-        $table_columns = [];
+        $tableColumns = [];
         if (isset($this->myConfig['table_columns'][$table['table_name']]))
         {
-          $table_columns = $this->myConfig['table_columns'][$table['table_name']];
+          $tableColumns = $this->myConfig['table_columns'][$table['table_name']];
         }
-        $current_table = new Table($table['table_name'],
+        $currentTable = new Table($table['table_name'],
                                    $this->myLog,
                                    $this->myConfig['database']['data_schema'],
                                    $this->myConfig['database']['audit_schema'],
-                                   $table_columns,
+                                   $tableColumns,
                                    $this->myConfig['audit_columns'],
                                    $this->myConfig['tables'][$table['table_name']]['alias'],
                                    $this->myConfig['tables'][$table['table_name']]['skip']);
-        $res           = DataLayer::searchInRowSet('table_name', $current_table->getTableName(), $this->myAuditSchemaTables);
+        $res           = DataLayer::searchInRowSet('table_name', $currentTable->getTableName(), $this->myAuditSchemaTables);
         if (!isset($res))
         {
-          $current_table->createMissingAuditTable();
+          $currentTable->createMissingAuditTable();
         }
 
-        $columns = $current_table->main();
+        $columns = $currentTable->main();
         if (empty($columns['altered_columns']))
         {
-          $this->getColumns($current_table->getTableName(), $columns['full_columns']);
+          $this->getColumns($currentTable->getTableName(), $columns['full_columns']);
         }
       }
     }
