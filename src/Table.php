@@ -192,35 +192,6 @@ class Table
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
-   * Add 'after' key to each columns in array for SQL alter statement.
-   *
-   * @param array[] $theColumns Columns array
-   *
-   * @return array[]
-   */
-  private function addAfterKey($theColumns)
-  {
-    $modified_columns = $theColumns;
-
-    foreach ($theColumns as $key => $column)
-    {
-      $after_column = $this->myAuditColumns->getPreviousColumn($column['column_name']);
-      if (isset($after_column))
-      {
-        $modified_columns[$key]['after'] = $after_column;
-      }
-      else
-      {
-        $modified_columns[$key]['after'] = $this->myDataTableColumnsDatabase->getPreviousColumn($column['column_name']);
-      }
-    }
-    var_dump($modified_columns);
-
-    return $modified_columns;
-  }
-
-  //--------------------------------------------------------------------------------------------------------------------
-  /**
    * Adds new columns to audit table.
    *
    * @param array[] $theColumns Columns array
@@ -267,8 +238,7 @@ class Table
     $obsoleteColumns = Columns::notInOtherSet($columnsConfig, $columnsTarget);
 
     $this->loggingColumnInfo($newColumns, $obsoleteColumns);
-    $this->addNewColumns($newColumns, 'audit_usr_id');
-    $this->addNewColumns($new_columns);
+    $this->addNewColumns($newColumns);
 
     return ['full_columns'     => $this->getTableColumnsFromConfig($newColumns,$obsoleteColumns),
             'new_columns'      => $newColumns,
