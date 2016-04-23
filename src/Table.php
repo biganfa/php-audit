@@ -3,6 +3,8 @@
 namespace SetBased\Audit;
 
 use Monolog\Logger;
+use SetBased\Audit\MySql\Sql\CreateAuditTable;
+use SetBased\Audit\MySql\Sql\CreateAuditTrigger;
 use SetBased\Audit\MySql\DataLayer;
 
 //--------------------------------------------------------------------------------------------------------------------
@@ -128,7 +130,7 @@ class Table
     $this->logInfo(sprintf('Creating audit table %s.', $this->myTableName));
 
     $columns = Columns::combine($this->myAuditColumns, $this->myDataTableColumnsDatabase);
-    DataLayer::createTableStatement($this->myAuditSchema, $this->myTableName, $columns->getColumns());
+    CreateAuditTable::buildStatement($this->myAuditSchema, $this->myTableName, $columns->getColumns());
   }
 
   //--------------------------------------------------------------------------------------------------------------------
@@ -171,21 +173,21 @@ class Table
    */
   public function main()
   {
-    $compared_columns = null;
+    $comparedColumns = null;
     if (isset($this->myDataTableColumnsConfig))
     {
-      $compared_columns = $this->getTableColumnInfo();
+      $comparedColumns = $this->getTableColumnInfo();
     }
 
-    if (empty($compared_columns['new_columns']) && empty($compared_columns['obsolete_columns']))
+    if (empty($comparedColumns['new_columns']) && empty($comparedColumns['obsolete_columns']))
     {
-      if (empty($compared_columns['altered_columns']))
+      if (empty($comparedColumns['altered_columns']))
       {
         $this->createTriggers();
       }
     }
 
-    return $compared_columns;
+    return $comparedColumns;
   }
 
   //--------------------------------------------------------------------------------------------------------------------
@@ -236,9 +238,9 @@ class Table
    */
   private function getAlteredColumns()
   {
-    $altered_columns_types = Columns::differentColumnTypes($this->myDataTableColumnsDatabase,
+    $alteredColumnsTypes = Columns::differentColumnTypes($this->myDataTableColumnsDatabase,
                                                            $this->myDataTableColumnsConfig);
-    foreach ($altered_columns_types as $column)
+    foreach ($alteredColumnsTypes as $column)
     {
       $this->logInfo(sprintf('Type of %s.%s has been altered to %s',
                              $this->myTableName,
@@ -246,7 +248,7 @@ class Table
                              $column['column_type']));
     }
 
-    return $altered_columns_types;
+    return $alteredColumnsTypes;
   }
 
   //--------------------------------------------------------------------------------------------------------------------
@@ -257,20 +259,20 @@ class Table
    */
   private function getTableColumnInfo()
   {
-    $column_actual  = new Columns(DataLayer::getTableColumns($this->myAuditSchema, $this->myTableName));
-    $columns_config = Columns::combine($this->myAuditColumns, $this->myDataTableColumnsConfig);
-    $columns_target = Columns::combine($this->myAuditColumns, $this->myDataTableColumnsDatabase);
+    $columnActual  = new Columns(DataLayer::getTableColumns($this->myAuditSchema, $this->myTableName));
+    $columnsConfig = Columns::combine($this->myAuditColumns, $this->myDataTableColumnsConfig);
+    $columnsTarget = Columns::combine($this->myAuditColumns, $this->myDataTableColumnsDatabase);
 
-    $new_columns      = Columns::notInOtherSet($columns_target, $column_actual);
-    $obsolete_columns = Columns::notInOtherSet($columns_config, $columns_target);
+    $newColumns      = Columns::notInOtherSet($columnsTarget, $columnActual);
+    $obsoleteColumns = Columns::notInOtherSet($columnsConfig, $columnsTarget);
 
-    $this->loggingColumnInfo($new_columns, $obsolete_columns);
-    $new_columns = $this->addAfterKey($new_columns);
+    $this->loggingColumnInfo($newColumns, $obsoleteColumns);
+    $this->addNewColumns($newColumns, 'audit_usr_id');
     $this->addNewColumns($new_columns);
 
-    return ['full_columns'     => $this->getTableColumnsFromConfig(),
-            'new_columns'      => $new_columns,
-            'obsolete_columns' => $obsolete_columns,
+    return ['full_columns'     => $this->getTableColumnsFromConfig($newColumns,$obsoleteColumns),
+            'new_columns'      => $newColumns,
+            'obsolete_columns' => $obsoleteColumns,
             'altered_columns'  => $this->getAlteredColumns()];
   }
 
@@ -283,15 +285,15 @@ class Table
    */
   private function loggingColumnInfo($theNewColumns, $theObsoleteColumns)
   {
-    if (!empty($new_columns) && !empty($obsolete_columns))
+    if (!empty($theNewColumns) && !empty($theObsoleteColumns))
     {
       $this->logInfo(sprintf('Found both new and obsolete columns for table %s', $this->myTableName));
       $this->logInfo(sprintf('No action taken.'));
-      foreach ($new_columns as $column)
+      foreach ($theNewColumns as $column)
       {
         $this->logInfo(sprintf('New column %s', $column['column_name']));
       }
-      foreach ($obsolete_columns as $column)
+      foreach ($theObsoleteColumns as $column)
       {
         $this->logInfo(sprintf('Obsolete column %s', $column['column_name']));
       }
@@ -302,9 +304,9 @@ class Table
       $this->logInfo(sprintf('Obsolete column %s.%s', $this->myTableName, $column['column_name']));
     }
 
-    foreach ($theNewColumns as $new_column)
+    foreach ($theNewColumns as $column)
     {
-      $this->logInfo(sprintf('New column %s.%s', $this->myTableName, $new_column['column_name']));
+      $this->logInfo(sprintf('New column %s.%s', $this->myTableName, $column['column_name']));
     }
   }
 
@@ -312,11 +314,14 @@ class Table
   /**
    * Check for know what columns array returns.
    *
+   * @param array[] $theNewColumns
+   * @param array[] $theObsoleteColumns
+   *
    * @return Columns
    */
-  private function getTableColumnsFromConfig()
+  private function getTableColumnsFromConfig($theNewColumns, $theObsoleteColumns)
   {
-    if (!empty($new_columns) && !empty($obsolete_columns))
+    if (!empty($theNewColumns) && !empty($theObsoleteColumns))
     {
       return $this->myDataTableColumnsConfig;
     }
@@ -334,16 +339,16 @@ class Table
   private function createTableTrigger($theTableName, $theAction)
   {
     $this->logVerbose(sprintf('Create %s trigger for table %s.', $theAction, $theTableName));
-    $trigger_name = $this->getTriggerName($this->myDataSchema, $theAction);
+    $triggerName = $this->getTriggerName($this->myDataSchema, $theAction);
 
-    DataLayer::createTrigger($this->myDataSchema,
-                             $this->myAuditSchema,
-                             $theTableName,
-                             $theAction,
-                             $trigger_name,
-                             $this->mySkipVariable,
-                             $this->myDataTableColumnsConfig,
-                             $this->myAuditColumns);
+    CreateAuditTrigger::buildStatement($this->myDataSchema,
+                                       $this->myAuditSchema,
+                                       $theTableName,
+                                       $theAction,
+                                       $triggerName,
+                                       $this->mySkipVariable,
+                                       $this->myDataTableColumnsConfig,
+                                       $this->myAuditColumns);
   }
 
   //--------------------------------------------------------------------------------------------------------------------
