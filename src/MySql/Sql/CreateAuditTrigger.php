@@ -207,12 +207,12 @@ begin
     foreach ($this->auditColumns->getColumns() as $column)
     {
       if ($columnNames) $columnNames .= ',';
-      $columnNames .= $column['column_name'];
+      $columnNames .= sprintf('`%s`',$column['column_name']);
     }
     foreach ($this->tableColumns->getColumns() as $column)
     {
       if ($columnNames) $columnNames .= ',';
-      $columnNames .= $column['column_name'];
+      $columnNames .= sprintf('`%s`',$column['column_name']);
     }
 
     $values = '';
