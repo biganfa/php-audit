@@ -33,14 +33,14 @@ class DataLayer
   /**
    * Adds new columns to an audit table.
    *
-   * @param string $theAuditSchemaName The name of audit schema.
-   * @param string $theTableName       The name of the table.
-   * @param array  $theColumns         The metadata of the new columns.
+   * @param string $auditSchemaName The name of audit schema.
+   * @param string $tableName       The name of the table.
+   * @param array  $columns         The metadata of the new columns.
    */
-  public static function addNewColumns($theAuditSchemaName, $theTableName, $theColumns)
+  public static function addNewColumns($auditSchemaName, $tableName, $columns)
   {
-    $sql = sprintf('alter table `%s`.`%s`', $theAuditSchemaName, $theTableName);
-    foreach ($theColumns as $column)
+    $sql = sprintf('alter table `%s`.`%s`', $auditSchemaName, $tableName);
+    foreach ($columns as $column)
     {
       $sql .= ' add `'.$column['column_name'].'` '.$column['column_type'];
       if (isset($column['after']))
@@ -51,7 +51,7 @@ class DataLayer
       {
         $sql .= ' first';
       }
-      if (end($theColumns)!==$column)
+      if (end($columns)!==$column)
       {
         $sql .= ',';
       }
@@ -152,12 +152,12 @@ class DataLayer
   /**
    * Drops a trigger.
    *
-   * @param string $theTriggerSchema The name of the trigger schema.
-   * @param string $theTriggerName   The mame of trigger.
+   * @param string $triggerSchema The name of the trigger schema.
+   * @param string $triggerName   The mame of trigger.
    */
-  public static function dropTrigger($theTriggerSchema, $theTriggerName)
+  public static function dropTrigger($triggerSchema, $triggerName)
   {
-    $sql = sprintf('drop trigger `%s`.`%s`', $theTriggerSchema, $theTriggerName);
+    $sql = sprintf('drop trigger `%s`.`%s`', $triggerSchema, $triggerName);
 
     self::executeNone($sql);
   }
@@ -258,12 +258,12 @@ class DataLayer
   /**
    * Selects metadata of all columns of table.
    *
-   * @param string $theSchemaName The name of the table schema.
-   * @param string $theTableName  The name of the table.
+   * @param string $schemaName The name of the table schema.
+   * @param string $tableName  The name of the table.
    *
    * @return array[]
    */
-  public static function getTableColumns($theSchemaName, $theTableName)
+  public static function getTableColumns($schemaName, $tableName)
   {
     $sql = sprintf('
 select COLUMN_NAME as column_name
@@ -272,8 +272,8 @@ from   information_schema.COLUMNS
 where  TABLE_SCHEMA = %s
 and    TABLE_NAME   = %s
 order by ORDINAL_POSITION',
-                   self::$dl->quoteString($theSchemaName),
-                   self::$dl->quoteString($theTableName));
+                   self::$dl->quoteString($schemaName),
+                   self::$dl->quoteString($tableName));
 
     return self::$dl->executeRows($sql);
   }
@@ -282,12 +282,12 @@ order by ORDINAL_POSITION',
   /**
    * Selects all triggers on a table.
    *
-   * @param string $theSchemaName The name of the table schema.
-   * @param string $theTableName  The name of the table.
+   * @param string $schemaName The name of the table schema.
+   * @param string $tableName  The name of the table.
    *
    * @return array[]
    */
-  public static function getTableTriggers($theSchemaName, $theTableName)
+  public static function getTableTriggers($schemaName, $tableName)
   {
     $sql = sprintf('
 select Trigger_Name as trigger_name
@@ -295,8 +295,8 @@ from   information_schema.TRIGGERS
 where  TRIGGER_SCHEMA     = %s
 and    EVENT_OBJECT_TABLE = %s
 order by Trigger_Name',
-                   self::$dl->quoteString($theSchemaName),
-                   self::$dl->quoteString($theTableName));
+                   self::$dl->quoteString($schemaName),
+                   self::$dl->quoteString($tableName));
 
     return self::$dl->executeRows($sql);
   }
@@ -305,18 +305,18 @@ order by Trigger_Name',
   /**
    * Selects all table names in a schema.
    *
-   * @param string $theSchemaName The name of the schema.
+   * @param string $schemaName The name of the schema.
    *
    * @return array[]
    */
-  public static function getTablesNames($theSchemaName)
+  public static function getTablesNames($schemaName)
   {
     $sql = sprintf("
 select TABLE_NAME as table_name
 from   information_schema.TABLES
 where  TABLE_SCHEMA = %s
 and    TABLE_TYPE   = 'BASE TABLE'
-order by TABLE_NAME", self::$dl->quoteString($theSchemaName));
+order by TABLE_NAME", self::$dl->quoteString($schemaName));
 
     return self::$dl->executeRows($sql);
   }
@@ -325,11 +325,11 @@ order by TABLE_NAME", self::$dl->quoteString($theSchemaName));
   /**
    * Acquires a write lock on a table.
    *
-   * @param string $theTableName The table name.
+   * @param string $tableName The table name.
    */
-  public static function lockTable($theTableName)
+  public static function lockTable($tableName)
   {
-    $sql = sprintf('lock tables `%s` write', $theTableName);
+    $sql = sprintf('lock tables `%s` write', $tableName);
 
     self::$dl->executeNone($sql);
   }
