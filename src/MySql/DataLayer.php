@@ -2,29 +2,32 @@
 //----------------------------------------------------------------------------------------------------------------------
 namespace SetBased\Audit\MySql;
 
+use SetBased\Audit\Columns;
+use SetBased\Audit\MySql\Sql\CreateAuditTable;
+use SetBased\Audit\MySql\Sql\CreateAuditTrigger;
 use SetBased\Stratum\MySql\StaticDataLayer;
-use Symfony\Component\Console\Output\OutputInterface;
+use SetBased\Stratum\Style\StratumStyle;
 
 //----------------------------------------------------------------------------------------------------------------------
 /**
  * Class for executing SQL statements and retrieving metadata from MySQL.
  */
-class DataLayer extends StaticDataLayer
+class DataLayer
 {
   //--------------------------------------------------------------------------------------------------------------------
   /**
-   * The additional SQL statements.
+   * The connection to the MySQL instance.
    *
-   * @var array[]
+   * @var StaticDataLayer
    */
-  protected static $ourAdditionalSql;
+  private static $dl;
 
   /**
-   * The output for this command.
+   * The Output decorator.
    *
-   * @var OutputInterface
+   * @var StratumStyle
    */
-  private static $output;
+  private static $io;
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
@@ -54,7 +57,95 @@ class DataLayer extends StaticDataLayer
       }
     }
 
+    self::$dl->executeNone($sql);
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
+   * Connects to a MySQL instance.
+   *
+   * Wrapper around [mysqli::__construct](http://php.net/manual/mysqli.construct.php), however on failure an exception
+   * is thrown.
+   *
+   * @param string $host     The hostname.
+   * @param string $user     The MySQL user name.
+   * @param string $passWord The password.
+   * @param string $database The default database.
+   * @param int    $port     The port number.
+   */
+  public static function connect($host, $user, $passWord, $database, $port = 3306)
+  {
+    self::$dl = new StaticDataLayer();
+
+    self::$dl->connect($host, $user, $passWord, $database, $port);
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
+   * Creates an audit table.
+   *
+   * @param string  $auditSchemaName The name of the audit schema.
+   * @param string  $tableName       The name of the table.
+   * @param array[] $columns         The metadata of the columns of the audit table (i.e. the audit columns and columns
+   *                                 of the data table).
+   */
+  public static function createAuditTable($auditSchemaName, $tableName, $columns)
+  {
+    $helper = new CreateAuditTable($auditSchemaName, $tableName, $columns);
+    $sql    = $helper->buildStatement();
+
     self::executeNone($sql);
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
+   * Creates a trigger on a table.
+   *
+   * @param string   $dataSchemaName  The name of the data schema.
+   * @param string   $auditSchemaName The name of the audit schema.
+   * @param string   $tableName       The name of the table.
+   * @param string   $triggerAction   The trigger action (i.e. INSERT, UPDATE, or DELETE).
+   * @param string   $triggerName     The name of the trigger.
+   * @param Columns  $tableColumns    The data table columns.
+   * @param Columns  $auditColumns    The audit table columns.
+   * @param string   $skipVariable    The skip variable.
+   * @param string[] $additionSql     Additional SQL statements.
+   */
+  public static function createAuditTrigger($dataSchemaName,
+                                            $auditSchemaName,
+                                            $tableName,
+                                            $triggerAction,
+                                            $triggerName,
+                                            $tableColumns,
+                                            $auditColumns,
+                                            $skipVariable,
+                                            $additionSql)
+  {
+    $helper = new CreateAuditTrigger($dataSchemaName,
+                                     $auditSchemaName,
+                                     $tableName,
+                                     $triggerAction,
+                                     $triggerName,
+                                     $tableColumns,
+                                     $auditColumns,
+                                     $skipVariable,
+                                     $additionSql);
+    $sql    = $helper->buildStatement();
+
+    self::executeNone($sql);
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
+   * Closes the connection to the MySQL instance, if connected.
+   */
+  public static function disconnect()
+  {
+    if (self::$dl!==null)
+    {
+      self::$dl->disconnect();
+      self::$dl = null;
+    }
   }
 
   //--------------------------------------------------------------------------------------------------------------------
@@ -73,30 +164,15 @@ class DataLayer extends StaticDataLayer
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
-   * Executes a query and logs the result set.
-   *
-   * @param string $theQuery The query or multi query.
-   *
-   * @return int The total number of rows selected/logged.
-   */
-  public static function executeLog($theQuery)
-  {
-    self::logVeryVerbose('Executing query: <sql>%s</sql>', $theQuery);
-
-    return parent::executeLog($theQuery);
-  }
-
-  //--------------------------------------------------------------------------------------------------------------------
-  /**
-   * @param string $theQuery The SQL statement.
+   * @param string $query The SQL statement.
    *
    * @return int The number of affected rows (if any).
    */
-  public static function executeNone($theQuery)
+  public static function executeNone($query)
   {
-    self::logVeryVerbose('Executing query: <sql>%s</sql>', $theQuery);
+    self::logQuery($query);
 
-    return parent::executeNone($theQuery);
+    return self::$dl->executeNone($query);
   }
 
   //--------------------------------------------------------------------------------------------------------------------
@@ -104,15 +180,15 @@ class DataLayer extends StaticDataLayer
    * Executes a query that returns 0 or 1 row.
    * Throws an exception if the query selects 2 or more rows.
    *
-   * @param string $theQuery The SQL statement.
+   * @param string $query The SQL statement.
    *
    * @return array|null The selected row.
    */
-  public static function executeRow0($theQuery)
+  public static function executeRow0($query)
   {
-    self::logVeryVerbose('Executing query: <sql>%s</sql>', $theQuery);
+    self::logQuery($query);
 
-    return parent::executeRow0($theQuery);
+    return self::$dl->executeRow0($query);
   }
 
   //--------------------------------------------------------------------------------------------------------------------
@@ -120,30 +196,62 @@ class DataLayer extends StaticDataLayer
    * Executes a query that returns 1 and only 1 row.
    * Throws an exception if the query selects none, 2 or more rows.
    *
-   * @param string $theQuery The SQL statement.
+   * @param string $query The SQL statement.
    *
    * @return array The selected row.
    */
-  public static function executeRow1($theQuery)
+  public static function executeRow1($query)
   {
-    self::logVeryVerbose('Executing query: <sql>%s</sql>', $theQuery);
+    self::logQuery($query);
 
-    return parent::executeRow1($theQuery);
+    return self::$dl->executeRow1($query);
   }
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
    * Executes a query that returns 0 or more rows.
    *
-   * @param string $theQuery The SQL statement.
+   * @param string $query The SQL statement.
    *
-   * @return array[] The selected rows.
+   * @return \array[]
    */
-  public static function executeRows($theQuery)
+  public static function executeRows($query)
   {
-    self::logVeryVerbose('Executing query: <sql>%s</sql>', $theQuery);
+    self::logQuery($query);
 
-    return parent::executeRows($theQuery);
+    return self::$dl->executeRows($query);
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
+   * Executes a query that returns 0 or 1 row.
+   * Throws an exception if the query selects 2 or more rows.
+   *
+   * @param string $query The SQL statement.
+   *
+   * @return int|string|null The selected row.
+   */
+  public static function executeSingleton0($query)
+  {
+    self::logQuery($query);
+
+    return self::$dl->executeSingleton0($query);
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
+   * Executes a query that returns 1 and only 1 row with 1 column.
+   * Throws an exception if the query selects none, 2 or more rows.
+   *
+   * @param string $query The SQL statement.
+   *
+   * @return int|string The selected row.
+   */
+  public static function executeSingleton1($query)
+  {
+    self::logQuery($query);
+
+    return self::$dl->executeSingleton1($query);
   }
 
   //--------------------------------------------------------------------------------------------------------------------
@@ -164,10 +272,10 @@ from   information_schema.COLUMNS
 where  TABLE_SCHEMA = %s
 and    TABLE_NAME   = %s
 order by ORDINAL_POSITION',
-                   self::quoteString($theSchemaName),
-                   self::quoteString($theTableName));
+                   self::$dl->quoteString($theSchemaName),
+                   self::$dl->quoteString($theTableName));
 
-    return self::executeRows($sql);
+    return self::$dl->executeRows($sql);
   }
 
   //--------------------------------------------------------------------------------------------------------------------
@@ -187,10 +295,10 @@ from   information_schema.TRIGGERS
 where  TRIGGER_SCHEMA     = %s
 and    EVENT_OBJECT_TABLE = %s
 order by Trigger_Name',
-                   self::quoteString($theSchemaName),
-                   self::quoteString($theTableName));
+                   self::$dl->quoteString($theSchemaName),
+                   self::$dl->quoteString($theTableName));
 
-    return self::executeRows($sql);
+    return self::$dl->executeRows($sql);
   }
 
   //--------------------------------------------------------------------------------------------------------------------
@@ -208,9 +316,9 @@ select TABLE_NAME as table_name
 from   information_schema.TABLES
 where  TABLE_SCHEMA = %s
 and    TABLE_TYPE   = 'BASE TABLE'
-order by TABLE_NAME", self::quoteString($theSchemaName));
+order by TABLE_NAME", self::$dl->quoteString($theSchemaName));
 
-    return self::executeRows($sql);
+    return self::$dl->executeRows($sql);
   }
 
   //--------------------------------------------------------------------------------------------------------------------
@@ -223,24 +331,18 @@ order by TABLE_NAME", self::quoteString($theSchemaName));
   {
     $sql = sprintf('lock tables `%s` write', $theTableName);
 
-    self::executeNone($sql);
+    self::$dl->executeNone($sql);
   }
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
-   * Set addition SQL code.
+   * Sets the Output decorator.
    *
-   * @param array[] $theAdditionalSQL
+   * @param StratumStyle $io The Output decorator.
    */
-  public static function setAdditionalSQL($theAdditionalSQL)
+  public static function setIo($io)
   {
-    self::$ourAdditionalSql = $theAdditionalSQL;
-  }
-
-  //--------------------------------------------------------------------------------------------------------------------
-  public static function setLog($output)
-  {
-    self::$output = $output;
+    self::$io = $io;
   }
 
   //--------------------------------------------------------------------------------------------------------------------
@@ -251,18 +353,29 @@ order by TABLE_NAME", self::quoteString($theSchemaName));
   {
     $sql = 'unlock tables';
 
-    self::executeNone($sql);
+    self::$dl->executeNone($sql);
   }
 
   //--------------------------------------------------------------------------------------------------------------------
-  private static function logVeryVerbose()
+  /**
+   * Logs the query on the console.
+   *
+   * @param string $query The query.
+   */
+  private static function logQuery($query)
   {
-    if (self::$output->getVerbosity()>=OutputInterface::VERBOSITY_VERY_VERBOSE)
-    {
-      $args   = func_get_args();
-      $format = array_shift($args);
+    $query = trim($query);
 
-      self::$output->writeln(vsprintf('<info>'.$format.'</info>', $args));
+    if (strpos($query, "\n")!==false)
+    {
+      // Query is a multi line query.
+      self::$io->logVeryVerbose('Executing query:');
+      self::$io->logVeryVerbose('<sql>%s</sql>', $query);
+    }
+    else
+    {
+      // Query is a single line query.
+      self::$io->logVeryVerbose('Executing query: <sql>%s</sql>', $query);
     }
   }
 

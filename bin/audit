@@ -2,7 +2,7 @@
 <?php
 //----------------------------------------------------------------------------------------------------------------------
 use SetBased\Affirm\ErrorHandler;
-use SetBased\Audit\Audit;
+use SetBased\Audit\Application\AuditApplication;
 
 //----------------------------------------------------------------------------------------------------------------------
 $files = [__DIR__.'/../vendor/autoload.php',
@@ -48,6 +48,6 @@ if (!function_exists('json_last_error_msg'))
 $handler = new ErrorHandler();
 $handler->register();
 
-$application = new Audit();
+$application = new AuditApplication();
 $application->run();
 

@@ -1,38 +1,25 @@
 <?php
 //----------------------------------------------------------------------------------------------------------------------
-namespace SetBased\Audit;
+namespace SetBased\Audit\Application;
 
-use SetBased\Audit\Command\AuditCommand;
+use SetBased\Audit\Command\AboutCommand;
+use SetBased\Audit\Command\CompareCommand;
+use SetBased\Audit\MySql\Command\AuditCommand;
 use Symfony\Component\Console\Application;
-use Symfony\Component\Console\Input\InputInterface;
 
 //----------------------------------------------------------------------------------------------------------------------
 /**
- * The PhpAudit program.
+ * The Audit program.
  */
-class Audit extends Application
+class AuditApplication extends Application
 {
   //--------------------------------------------------------------------------------------------------------------------
   /**
-   * Overridden so that the application doesn't expect the command
-   * name to be the first argument.
+   * Object constructor.
    */
-  public function getDefinition()
+  public function __construct()
   {
-    $inputDefinition = parent::getDefinition();
-    // clear out the normal first argument, which is the command name
-    $inputDefinition->setArguments();
-
-    return $inputDefinition;
-  }
-
-  //--------------------------------------------------------------------------------------------------------------------
-  /**
-   * {@inheritdoc}
-   */
-  protected function getCommandName(InputInterface $input)
-  {
-    return 'audit';
+    parent::__construct('AuditApplication');
   }
 
   //--------------------------------------------------------------------------------------------------------------------
@@ -43,13 +30,13 @@ class Audit extends Application
    */
   protected function getDefaultCommands()
   {
-    // Keep the core default commands to have the HelpCommand
-    // which is used when using the --help option
-    $defaultCommands = parent::getDefaultCommands();
+    $commands = parent::getDefaultCommands();
 
-    $defaultCommands[] = new AuditCommand();
+    $commands[] = new AboutCommand();
+    $commands[] = new AuditCommand();
+    $commands[] = new CompareCommand();
 
-    return $defaultCommands;
+    return $commands;
   }
 
   //--------------------------------------------------------------------------------------------------------------------

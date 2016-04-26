@@ -2,37 +2,72 @@
 //----------------------------------------------------------------------------------------------------------------------
 namespace SetBased\Audit\MySql\Sql;
 
-use SetBased\Audit\MySql\DataLayer;
-
 //----------------------------------------------------------------------------------------------------------------------
 /**
  * Class for creating and executing SQL statements for creating audit tables.
  */
-class CreateAuditTable extends DataLayer
+class CreateAuditTable
 {
   //--------------------------------------------------------------------------------------------------------------------
   /**
-   * Creates an audit table.
+   * The name of the audit schema.
    *
-   * @param string $theAuditSchemaName The name of the audit schema.
-   * @param string $theTableName       The name of the table.
-   * @param array  $theMergedColumns   The metadata of the columns of the audit table (i.e. the audit columns and
-   *                                   columns of the data table).
+   * @var string
    */
-  public static function buildStatement($theAuditSchemaName, $theTableName, $theMergedColumns)
+  private $auditSchemaName;
+
+  /**
+   * The name of the table.
+   *
+   * @var array[]
+   */
+  private $columns;
+
+  /**
+   * The metadata of the columns of the audit table (i.e. the audit columns and columns of the data table).
+   *
+   * @var string
+   */
+  private $tableName;
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
+   * Object constructor.
+   *
+   * @param string  $auditSchemaName The name of the audit schema.
+   * @param string  $tableName       The name of the table.
+   * @param array[] $columns         The metadata of the columns of the audit table (i.e. the audit columns and columns
+   *                                 of the data table).
+   */
+  public function __construct($auditSchemaName,
+                              $tableName,
+                              $columns)
   {
-    $sqlCreate = sprintf('create table `%s`.`%s` (', $theAuditSchemaName, $theTableName);
-    foreach ($theMergedColumns as $column)
+    $this->auditSchemaName = $auditSchemaName;
+    $this->tableName       = $tableName;
+    $this->columns         = $columns;
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
+   * Returns a SQL statement for creating the audit table.
+   *
+   * @return string
+   */
+  public function buildStatement()
+  {
+    $sql = sprintf('create table `%s`.`%s`(', $this->auditSchemaName, $this->tableName);
+    foreach ($this->columns as $column)
     {
-      $sqlCreate .= sprintf('`%s` %s', $column['column_name'], $column['column_type']);
-      if (end($theMergedColumns)!==$column)
+      $sql .= sprintf('`%s` %s', $column['column_name'], $column['column_type']);
+      if (end($this->columns)!==$column)
       {
-        $sqlCreate .= ',';
+        $sql .= ',';
       }
     }
-    $sqlCreate .= ')';
+    $sql .= ')';
 
-    self::executeNone($sqlCreate);
+    return $sql;
   }
 
   //--------------------------------------------------------------------------------------------------------------------

@@ -14,19 +14,19 @@ class Columns
    *
    * @var array[]
    */
-  private $myColumns = [];
+  private $columns = [];
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
    * Object constructor.
    *
-   * @param array[] $theColumns The metadata of the columns.
+   * @param array[] $columns The metadata of the columns.
    */
-  public function __construct($theColumns)
+  public function __construct($columns)
   {
-    foreach ($theColumns as $column)
+    foreach ($columns as $column)
     {
-      $this->myColumns[$column['column_name']] = [
+      $this->columns[$column['column_name']] = [
         'column_name'      => $column['column_name'],
         'column_type'      => $column['column_type'],
         'audit_expression' => isset($column['expression']) ? $column['expression'] : null,
@@ -39,14 +39,14 @@ class Columns
   /**
    * Returns previous column of a columns. Returns null if the column name is not found in this Columns.
    *
-   * @param string $theColumnName The column name.
+   * @param string $columnName The column name.
    *
    * @return null|string
    */
-  public function getPreviousColumn($theColumnName)
+  public function getPreviousColumn($columnName)
   {
-    $columns = array_keys($this->myColumns);
-    $key     = array_search($theColumnName, $columns);
+    $columns = array_keys($this->columns);
+    $key     = array_search($columnName, $columns);
     var_dump($columns);
 
     if ($key>=1)
@@ -61,7 +61,7 @@ class Columns
   /**
    * Generate array with audit columns and columns from data table.
    *
-   * @param Columns $theAuditColumnsMetadata   Audit columns for adding to exist columns
+   * @param Columns $theAuditColumnsMetadata   AuditApplication columns for adding to exist columns
    * @param Columns $theCurrentColumnsMetadata Exist table columns
    *
    * @return Columns
@@ -70,12 +70,12 @@ class Columns
   {
     $columns = [];
 
-    foreach ($theAuditColumnsMetadata->myColumns as $column)
+    foreach ($theAuditColumnsMetadata->columns as $column)
     {
       $columns[] = ['column_name' => $column['column_name'], 'column_type' => $column['column_type']];
     }
 
-    foreach ($theCurrentColumnsMetadata->myColumns as $column)
+    foreach ($theCurrentColumnsMetadata->columns as $column)
     {
       if ($column['column_type']!='timestamp')
       {
@@ -103,11 +103,11 @@ class Columns
   public static function differentColumnTypes($theColumns1, $theColumns2)
   {
     $diff = [];
-    foreach ($theColumns2->myColumns as $column2)
+    foreach ($theColumns2->columns as $column2)
     {
-      if (isset($theColumns1->myColumns[$column2['column_name']]))
+      if (isset($theColumns1->columns[$column2['column_name']]))
       {
-        $column1 = $theColumns1->myColumns[$column2['column_name']];
+        $column1 = $theColumns1->columns[$column2['column_name']];
         if ($column2['column_type']!=$column1['column_type'])
         {
           $diff[] = $column1;
@@ -133,9 +133,9 @@ class Columns
     $diff = [];
     if (isset($theColumns1))
     {
-      foreach ($theColumns1->myColumns as $column1)
+      foreach ($theColumns1->columns as $column1)
       {
-        if (!isset($theColumns2->myColumns[$column1['column_name']]))
+        if (!isset($theColumns2->columns[$column1['column_name']]))
         {
           $diff[] = ['column_name' => $column1['column_name'],
                      'column_type' => $column1['column_type']];
@@ -154,7 +154,7 @@ class Columns
    */
   public function getColumns()
   {
-    return $this->myColumns;
+    return $this->columns;
   }
 
   //--------------------------------------------------------------------------------------------------------------------

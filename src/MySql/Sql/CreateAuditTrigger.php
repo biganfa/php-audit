@@ -3,172 +3,112 @@
 namespace SetBased\Audit\MySql\Sql;
 
 use SetBased\Audit\Columns;
-use SetBased\Audit\MySql\DataLayer;
 use SetBased\Exception\FallenException;
 use SetBased\Stratum\MySql\StaticDataLayer;
 
 //----------------------------------------------------------------------------------------------------------------------
 /**
- * Class for creating and executing SQL statements for Audit triggers.
+ * Class for creating SQL statements for creating audit triggers.
  */
-class CreateAuditTrigger extends DataLayer
+class CreateAuditTrigger
 {
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
+   * Additional SQL statements.
+   *
+   * @var string[]
+   */
+  private $additionalSql;
+
+  /**
+   * AuditApplication columns from metadata.
+   *
+   * @var Columns
+   */
+  private $auditColumns;
+
+  /**
+   * The name of the audit schema.
+   *
+   * @var string
+   */
+  private $auditSchemaName;
+
+  /**
+   * The name of the data schema.
+   *
+   * @var string
+   */
+  private $dataSchemaName;
+
+  /**
+   * The skip variable.
+   *
+   * @var string
+   */
+  private $skipVariable;
+
+  /**
+   * Table columns from metadata.
+   *
+   * @var Columns
+   */
+  private $tableColumns;
+
+  /**
+   * The name of the data table.
+   *
+   * @var string
+   */
+  private $tableName;
+
+  /**
+   * The trigger action (.e. INSERT, UPDATE, or DELETE).
+   *
+   * @var string
+   */
+  private $triggerAction;
+
+  /**
+   * The name of the trigger.
+   *
+   * @var string
+   */
+  private $triggerName;
+
   //--------------------------------------------------------------------------------------------------------------------
   /**
    * Creates a trigger on a table.
    *
-   * @param string  $theDataSchema      The name of the data schema.
-   * @param string  $theAuditSchemaName The name of the audit schema.
-   * @param string  $theTableName       The name of the table.
-   * @param string  $theAction          Action for trigger {INSERT, UPDATE, DELETE}
-   * @param string  $theTriggerName     The name of the trigger.
-   * @param string  $theSkipVariable    The skip variable.
-   * @param Columns $theTableColumns    Table columns from metadata.
-   * @param Columns $theAuditColumns    Audit columns from metadata.
-   *
-   * @throws FallenException
+   * @param string   $dataSchemaName  The name of the data schema.
+   * @param string   $auditSchemaName The name of the audit schema.
+   * @param string   $tableName       The name of the table.
+   * @param string   $triggerAction   The trigger action (i.e. INSERT, UPDATE, or DELETE).
+   * @param string   $triggerName     The name of the trigger.
+   * @param Columns  $tableColumns    The data table columns.
+   * @param Columns  $auditColumns    The audit table columns.
+   * @param string   $skipVariable    The skip variable.
+   * @param string[] $additionalSql   Additional SQL statements.
    */
-  public static function buildStatement($theDataSchema,
-                                        $theAuditSchemaName,
-                                        $theTableName,
-                                        $theAction,
-                                        $theTriggerName,
-                                        $theSkipVariable,
-                                        $theTableColumns,
-                                        $theAuditColumns)
+  public function __construct($dataSchemaName,
+                              $auditSchemaName,
+                              $tableName,
+                              $triggerName,
+                              $triggerAction,
+                              $auditColumns,
+                              $tableColumns,
+                              $skipVariable,
+                              $additionalSql)
   {
-    $rowState = [];
-    switch ($theAction)
-    {
-      case 'INSERT':
-        $rowState[] = 'NEW';
-        break;
-
-      case 'DELETE':
-        $rowState[] = 'OLD';
-        break;
-
-      case 'UPDATE':
-        $rowState[] = 'OLD';
-        $rowState[] = 'NEW';
-        break;
-
-      default:
-        throw new FallenException('action', $theAction);
-    }
-
-    $sql = sprintf('
-create trigger %s
-after %s on `%s`.`%s`
-for each row
-begin
-',
-                   $theTriggerName,
-                   $theAction,
-                   $theDataSchema,
-                   $theTableName);
-
-    $sql .= self::skipStatement($theSkipVariable);
-
-    foreach (self::$ourAdditionalSql as $line)
-    {
-      $sql .= $line;
-      $sql .= "\n";
-    }
-    $sql .= self::createInsertStatement($theAuditSchemaName,
-                                        $theTableName,
-                                        $theAuditColumns,
-                                        $theTableColumns,
-                                        $theAction,
-                                        $rowState[0]);
-
-    if ($theAction=='UPDATE')
-    {
-      $sql .= self::createInsertStatement($theAuditSchemaName,
-                                          $theTableName,
-                                          $theAuditColumns,
-                                          $theTableColumns,
-                                          $theAction,
-                                          $rowState[1]);
-    }
-    $sql .= isset($theSkipVariable) ? "end if;\n" : '';
-    $sql .= 'end;';
-
-    self::executeNone($sql);
-  }
-
-  //--------------------------------------------------------------------------------------------------------------------
-  /**
-   * Returns an insert SQL statement for an audit table.
-   *
-   * @param string  $theSchemaName   The name of the database schema.
-   * @param string  $theTableName    The name of the table.
-   * @param Columns $theAuditColumns Audit columns from metadata.
-   * @param Columns $theTableColumns Table columns from metadata.
-   * @param string  $theAction       Action for trigger {INSERT, UPDATE, DELETE}
-   * @param string  $theRowState     Row state for values in insert statement {NEW, OLD}
-   *
-   * @return string
-   */
-  private static function createInsertStatement($theSchemaName,
-                                                $theTableName,
-                                                $theAuditColumns,
-                                                $theTableColumns,
-                                                $theAction,
-                                                $theRowState)
-  {
-    $columnNames = '';
-    foreach ($theAuditColumns->getColumns() as $column)
-    {
-      if ($columnNames) $columnNames .= ',';
-      $columnNames .= $column['column_name'];
-    }
-    foreach ($theTableColumns->getColumns() as $column)
-    {
-      if ($columnNames) $columnNames .= ',';
-      $columnNames .= $column['column_name'];
-    }
-
-    $values = '';
-    foreach ($theAuditColumns->getColumns() as $column)
-    {
-      if ($values) $values .= ',';
-      if (isset($column['audit_value_type']))
-      {
-        switch ($column['audit_value_type'])
-        {
-          case 'ACTION':
-            $values .= StaticDataLayer::quoteString($theAction);
-            break;
-
-          case 'STATE':
-            $values .= StaticDataLayer::quoteString($theRowState);
-            break;
-
-          default:
-            throw new FallenException('audit_value_type', ($column['audit_value_type']));
-        }
-      }
-      else
-      {
-        $values .= $column['audit_expression'];
-      }
-    }
-    foreach ($theTableColumns->getColumns() as $column)
-    {
-      if ($values) $values .= ',';
-      $values .= sprintf('%s.`%s`', $theRowState, $column['column_name']);
-    }
-
-    $insertStatement = sprintf('insert into `%s`.`%s`(%s)
-values(%s);
-',
-                                $theSchemaName,
-                                $theTableName,
-                                $columnNames,
-                                $values);
-
-    return $insertStatement;
+    $this->dataSchemaName  = $dataSchemaName;
+    $this->auditSchemaName = $auditSchemaName;
+    $this->tableName       = $tableName;
+    $this->triggerName     = $triggerName;
+    $this->triggerAction   = $triggerAction;
+    $this->skipVariable    = $skipVariable;
+    $this->tableColumns    = $tableColumns;
+    $this->auditColumns    = $auditColumns;
+    $this->additionalSql   = $additionalSql;
   }
 
   //--------------------------------------------------------------------------------------------------------------------
@@ -188,6 +128,133 @@ values(%s);
     }
 
     return $statement;
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
+   * Returns the SQL code for creating an audit trigger.
+   *
+   * @throws FallenException
+   */
+  public function buildStatement()
+  {
+    $rowState = [];
+    switch ($this->triggerAction)
+    {
+      case 'INSERT':
+        $rowState[] = 'NEW';
+        break;
+
+      case 'DELETE':
+        $rowState[] = 'OLD';
+        break;
+
+      case 'UPDATE':
+        $rowState[] = 'OLD';
+        $rowState[] = 'NEW';
+        break;
+
+      default:
+        throw new FallenException('action', $this->triggerAction);
+    }
+
+    $sql = sprintf('
+create trigger `%s`.`%s`
+after %s on `%s`.`%s`
+for each row
+begin
+',
+                   $this->dataSchemaName,
+                   $this->triggerName,
+                   $this->triggerAction,
+                   $this->dataSchemaName,
+                   $this->tableName);
+
+    $sql .= $this->skipStatement($this->skipVariable);
+
+    if (is_array($this->additionalSql))
+    {
+      foreach ($this->additionalSql as $line)
+      {
+        $sql .= $line;
+        $sql .= "\n";
+      }
+    }
+
+    $sql .= $this->createInsertStatement($rowState[0]);
+    if (sizeof($rowState)==2)
+    {
+      $sql .= $this->createInsertStatement($rowState[1]);
+    }
+
+    $sql .= isset($this->skipVariable) ? "end if;\n" : '';
+    $sql .= 'end';
+
+    return $sql;
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
+   * Returns an insert SQL statement for an audit table.
+   *
+   * @param string $rowState The row state (i.e. OLD or NEW).
+   *
+   * @return string
+   */
+  private function createInsertStatement($rowState)
+  {
+    $columnNames = '';
+    foreach ($this->auditColumns->getColumns() as $column)
+    {
+      if ($columnNames) $columnNames .= ',';
+      $columnNames .= $column['column_name'];
+    }
+    foreach ($this->tableColumns->getColumns() as $column)
+    {
+      if ($columnNames) $columnNames .= ',';
+      $columnNames .= $column['column_name'];
+    }
+
+    $values = '';
+    foreach ($this->auditColumns->getColumns() as $column)
+    {
+      if ($values) $values .= ',';
+      if (isset($column['audit_value_type']))
+      {
+        switch ($column['audit_value_type'])
+        {
+          case 'ACTION':
+            $values .= StaticDataLayer::quoteString($this->triggerAction);
+            break;
+
+          case 'STATE':
+            $values .= StaticDataLayer::quoteString($rowState);
+            break;
+
+          default:
+            throw new FallenException('audit_value_type', ($column['audit_value_type']));
+        }
+      }
+      else
+      {
+        $values .= $column['audit_expression'];
+      }
+    }
+    foreach ($this->tableColumns->getColumns() as $column)
+    {
+      if ($values) $values .= ',';
+      $values .= sprintf('%s.`%s`', $rowState, $column['column_name']);
+    }
+
+    $insertStatement = sprintf('insert into `%s`.`%s`(%s)
+values(%s);
+',
+                               $this->auditSchemaName,
+                               $this->tableName,
+                               $columnNames,
+                               $values);
+
+    return $insertStatement;
   }
 
   //--------------------------------------------------------------------------------------------------------------------

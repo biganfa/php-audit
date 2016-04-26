@@ -1,45 +1,29 @@
 <?php
 //----------------------------------------------------------------------------------------------------------------------
-namespace SetBased\Audit\Command;
+namespace SetBased\Audit\MySql\Command;
 
 use SetBased\Audit\Columns;
-use SetBased\Audit\ConsoleOutput;
 use SetBased\Audit\MySql\DataLayer;
 use SetBased\Audit\Table;
-use SetBased\Audit\Util;
-use Symfony\Component\Console\Command\Command;
-use Symfony\Component\Console\Formatter\OutputFormatterStyle;
+use SetBased\Stratum\MySql\StaticDataLayer;
+use SetBased\Stratum\Style\StratumStyle;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
 //----------------------------------------------------------------------------------------------------------------------
-class AuditCommand extends Command
+/**
+ * Command for creating audit tables and audit triggers.
+ */
+class AuditCommand extends MySqlCommand
 {
   //--------------------------------------------------------------------------------------------------------------------
-  use ConsoleOutput;
-
-  //--------------------------------------------------------------------------------------------------------------------
   /**
-   * Array of tables from audit schema.
+   * All tables in the in the audit schema.
    *
    * @var array
    */
   private $auditSchemaTables;
-
-  /**
-   * All config file as array.
-   *
-   * @var array
-   */
-  private $config;
-
-  /**
-   * Config file name.
-   *
-   * @var string
-   */
-  private $configFileName;
 
   /**
    * Array of tables from data schema.
@@ -91,29 +75,6 @@ class AuditCommand extends Command
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
-   * Reads configuration parameters from the configuration file.
-   *
-   * @param string $theConfigFilename
-   */
-  public function readConfigFile($theConfigFilename)
-  {
-    $content = file_get_contents($theConfigFilename);
-
-    $this->config = json_decode($content, true);
-
-    if (!isset($this->config['audit_columns']))
-    {
-      $this->config['audit_columns'] = [];
-    }
-
-    foreach ($this->config['tables'] as $table_name => $params)
-    {
-      $this->config['tables'][$table_name]['audit'] = filter_var($params['audit'], FILTER_VALIDATE_BOOLEAN);
-    }
-  }
-
-  //--------------------------------------------------------------------------------------------------------------------
-  /**
    * Found tables in config file
    *
    * Compares the tables listed in the config file and the tables found in the data schema
@@ -126,7 +87,7 @@ class AuditCommand extends Command
       {
         if (!isset($this->config['tables'][$table['table_name']]['audit']))
         {
-          $this->output->writeln(sprintf('<info>Audit flag is not set in table %s</info>', $table['table_name']));
+          $this->io->writeln(sprintf('<info>AuditApplication flag is not set in table %s</info>', $table['table_name']));
         }
         else
         {
@@ -138,7 +99,7 @@ class AuditCommand extends Command
       }
       else
       {
-        $this->output->writeln(sprintf('<info>Found new table %s</info>', $table['table_name']));
+        $this->io->writeln(sprintf('<info>Found new table %s</info>', $table['table_name']));
         $this->config['tables'][$table['table_name']] = ['audit' => false,
                                                          'alias' => null,
                                                          'skip'  => null];
@@ -163,27 +124,13 @@ class AuditCommand extends Command
    */
   protected function execute(InputInterface $input, OutputInterface $output)
   {
-    $this->output = $output;
-
-    // Create style for database objects.
-    $style = new OutputFormatterStyle('green', null, ['bold']);
-    $output->getFormatter()->setStyle('dbo', $style);
-
-    // Create style for SQL statements.
-    $style = new OutputFormatterStyle('magenta', null, ['bold']);
-    $output->getFormatter()->setStyle('sql', $style);
-
-    DataLayer::setLog($output);
+    $this->io = new StratumStyle($input, $output);
 
     $this->configFileName = $input->getArgument('config file');
-
-    // Read config file name, config content and then save in variable
-    $this->readConfigFile($this->configFileName);
+    $this->readConfigFile();
 
     // Create database connection with params from config file
-    DataLayer::connect($this->config['database']['host_name'], $this->config['database']['user_name'],
-                       $this->config['database']['password'], $this->config['database']['data_schema']);
-    DataLayer::setAdditionalSQL($this->config['additional_sql']);
+    $this->connect($this->config);
 
     $this->listOfTables();
 
@@ -198,7 +145,7 @@ class AuditCommand extends Command
         {
           $tableColumns = $this->config['table_columns'][$table['table_name']];
         }
-        $currentTable = new Table($this->output,
+        $currentTable = new Table($this->io,
                                   $table['table_name'],
                                   $this->config['database']['data_schema'],
                                   $this->config['database']['audit_schema'],
@@ -206,13 +153,13 @@ class AuditCommand extends Command
                                   $this->config['audit_columns'],
                                   $this->config['tables'][$table['table_name']]['alias'],
                                   $this->config['tables'][$table['table_name']]['skip']);
-        $res          = DataLayer::searchInRowSet('table_name', $currentTable->getTableName(), $this->auditSchemaTables);
+        $res          = StaticDataLayer::searchInRowSet('table_name', $currentTable->getTableName(), $this->auditSchemaTables);
         if (!isset($res))
         {
           $currentTable->createMissingAuditTable();
         }
 
-        $columns = $currentTable->main();
+        $columns = $currentTable->main($this->config['additional_sql']);
         if (empty($columns['altered_columns']))
         {
           $this->getColumns($currentTable->getTableName(), $columns['full_columns']);
@@ -232,7 +179,7 @@ class AuditCommand extends Command
    */
   private function rewriteConfig()
   {
-    Util::writeTwoPhases($this->configFileName, json_encode($this->config, JSON_PRETTY_PRINT));
+    $this->writeTwoPhases($this->configFileName, json_encode($this->config, JSON_PRETTY_PRINT));
   }
 
   //--------------------------------------------------------------------------------------------------------------------
