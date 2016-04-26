@@ -115,16 +115,16 @@ class CreateAuditTrigger
   /**
    * Returns the if clause for skipping a trigger.
    *
-   * @param  string $theSkipVariable The skip variable (including @).
+   * @param  string $skipVariable The skip variable (including @).
    *
    * @return string
    */
-  private static function skipStatement($theSkipVariable)
+  private static function skipStatement($skipVariable)
   {
     $statement = '';
-    if (isset($theSkipVariable))
+    if (isset($skipVariable))
     {
-      $statement = sprintf("if (%s is null) then\n", $theSkipVariable);
+      $statement = sprintf("if (%s is null) then\n", $skipVariable);
     }
 
     return $statement;

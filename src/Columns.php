@@ -61,21 +61,21 @@ class Columns
   /**
    * Generate array with audit columns and columns from data table.
    *
-   * @param Columns $theAuditColumnsMetadata   AuditApplication columns for adding to exist columns
-   * @param Columns $theCurrentColumnsMetadata Exist table columns
+   * @param Columns $auditColumnsMetadata   AuditApplication columns for adding to exist columns
+   * @param Columns $currentColumnsMetadata Exist table columns
    *
    * @return Columns
    */
-  public static function combine($theAuditColumnsMetadata, $theCurrentColumnsMetadata)
+  public static function combine($auditColumnsMetadata, $currentColumnsMetadata)
   {
     $columns = [];
 
-    foreach ($theAuditColumnsMetadata->columns as $column)
+    foreach ($auditColumnsMetadata->columns as $column)
     {
       $columns[] = ['column_name' => $column['column_name'], 'column_type' => $column['column_type']];
     }
 
-    foreach ($theCurrentColumnsMetadata->columns as $column)
+    foreach ($currentColumnsMetadata->columns as $column)
     {
       if ($column['column_type']!='timestamp')
       {
@@ -95,19 +95,19 @@ class Columns
    * Compares two Columns objects and returns an array with columns that are in the first columns object and in the
    * second Columns object but have different types.
    *
-   * @param Columns $theColumns1 The first Columns object.
-   * @param Columns $theColumns2 The second Columns object.
+   * @param Columns $columns1 The first Columns object.
+   * @param Columns $columns2 The second Columns object.
    *
    * @return array[]
    */
-  public static function differentColumnTypes($theColumns1, $theColumns2)
+  public static function differentColumnTypes($columns1, $columns2)
   {
     $diff = [];
-    foreach ($theColumns2->columns as $column2)
+    foreach ($columns2->columns as $column2)
     {
-      if (isset($theColumns1->columns[$column2['column_name']]))
+      if (isset($columns1->columns[$column2['column_name']]))
       {
-        $column1 = $theColumns1->columns[$column2['column_name']];
+        $column1 = $columns1->columns[$column2['column_name']];
         if ($column2['column_type']!=$column1['column_type'])
         {
           $diff[] = $column1;
@@ -123,19 +123,19 @@ class Columns
    * Compares two Columns objects and returns an array with columns that are in the first columns object but not in the
    * second Columns object.
    *
-   * @param Columns $theColumns1 The first Columns object.
-   * @param Columns $theColumns2 The second Columns object.
+   * @param Columns $columns1 The first Columns object.
+   * @param Columns $columns2 The second Columns object.
    *
    * @return array[]
    */
-  public static function notInOtherSet($theColumns1, $theColumns2)
+  public static function notInOtherSet($columns1, $columns2)
   {
     $diff = [];
-    if (isset($theColumns1))
+    if (isset($columns1))
     {
-      foreach ($theColumns1->columns as $column1)
+      foreach ($columns1->columns as $column1)
       {
-        if (!isset($theColumns2->columns[$column1['column_name']]))
+        if (!isset($columns2->columns[$column1['column_name']]))
         {
           $diff[] = ['column_name' => $column1['column_name'],
                      'column_type' => $column1['column_type']];
