@@ -86,7 +86,7 @@ class DataLayer
    *
    * @param string  $auditSchemaName The name of the audit schema.
    * @param string  $tableName       The name of the table.
-   * @param array[] $columns         The metadata of the columns of the audit table (i.e. the audit columns and columns
+   * @param Columns $columns         The metadata of the columns of the audit table (i.e. the audit columns and columns
    *                                 of the data table).
    */
   public static function createAuditTable($auditSchemaName, $tableName, $columns)

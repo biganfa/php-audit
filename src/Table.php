@@ -81,12 +81,12 @@ class Table
    *
    * @param StratumStyle $io                    The output for log messages.
    * @param string       $tableName             The table name.
-   * @param string  $dataSchema            The name of the schema with data tables.
-   * @param string  $auditSchema           The name of the schema with audit tables.
-   * @param array[] $configColumnsMetadata The columns of the data table as stored in the config file.
-   * @param array[] $auditColumnsMetadata  The columns of the audit table as stored in the config file.
-   * @param string  $alias                 An unique alias for this table.
-   * @param string  $skipVariable          The skip variable
+   * @param string       $dataSchema            The name of the schema with data tables.
+   * @param string       $auditSchema           The name of the schema with audit tables.
+   * @param array[]      $configColumnsMetadata The columns of the data table as stored in the config file.
+   * @param array[]      $auditColumnsMetadata  The columns of the audit table as stored in the config file.
+   * @param string       $alias                 An unique alias for this table.
+   * @param string       $skipVariable          The skip variable
    */
   public function __construct($io,
                               $tableName,
@@ -128,7 +128,7 @@ class Table
     $this->io->logInfo('Creating audit table <dbo>%s.%s<dbo>', $this->auditSchemaName, $this->tableName);
 
     $columns = Columns::combine($this->auditColumns, $this->dataTableColumnsDatabase);
-    DataLayer::createAuditTable($this->auditSchemaName, $this->tableName, $columns->getColumns());
+    DataLayer::createAuditTable($this->auditSchemaName, $this->tableName, $columns);
   }
 
   //--------------------------------------------------------------------------------------------------------------------

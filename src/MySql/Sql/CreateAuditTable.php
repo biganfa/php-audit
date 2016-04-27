@@ -58,11 +58,12 @@ class CreateAuditTable
    */
   public function buildStatement()
   {
-    $sql = sprintf('create table `%s`.`%s`(', $this->auditSchemaName, $this->tableName);
-    foreach ($this->columns->getColumns() as $column)
+    $sql     = sprintf('create table `%s`.`%s`(', $this->auditSchemaName, $this->tableName);
+    $columns = $this->columns->getColumns();
+    foreach ($columns as $column)
     {
       $sql .= sprintf('`%s` %s', $column['column_name'], $column['column_type']);
-      if (end($this->columns->getColumns())!==$column)
+      if (end($columns)!==$column)
       {
         $sql .= ',';
       }
