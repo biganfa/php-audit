@@ -50,14 +50,14 @@ PhpAudit has the following features:
 * Flexible configuration. You can define additional columns to audit tables. For example to log user and session IDs.
 
 Using the audit trail you track changes made to the data of your application by the users of the application. 
-Even of data that has been deleted or changed back to its original state. Also, you can track the how your application manipulates data and find bugs if your application.
+Even of data that has been deleted or changed back to its original state. Also, you can track how your application manipulates data and find bugs if your application.
  
 
 
 # Real world example
 
 In this section we give a real world example taken from a tournament on the [Nahouw](https://www.nahouw.net/page/trn_all/).
-We have simplified the tournament table to two columns and changed some IDs for simplification.
+We have reduced the tournament table to two columns and changed some IDs for simplification.
 ```SQL
 select * 
 from   nahouw.NAH_TOURNAMENT
