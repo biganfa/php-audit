@@ -260,13 +260,6 @@ class Table
   {
     $alteredColumnsTypes = Columns::differentColumnTypes($this->dataTableColumnsDatabase,
                                                          $this->dataTableColumnsConfig);
-    foreach ($alteredColumnsTypes as $column)
-    {
-      $this->io->logInfo('Type of <dbo>%s.%s</dbo> has been altered to <dbo>%s</dbo>',
-                         $this->tableName,
-                         $column['column_name'],
-                         $column['column_type']);
-    }
 
     return $alteredColumnsTypes;
   }
@@ -298,14 +291,15 @@ class Table
 
     $newColumns      = Columns::notInOtherSet($columnsTarget, $columnActual);
     $obsoleteColumns = Columns::notInOtherSet($columnsConfig, $columnsTarget);
+    $alteredColumns  = $this->getAlteredColumns();
 
-    $this->loggingColumnInfo($newColumns, $obsoleteColumns);
+    $this->loggingColumnInfo($newColumns, $obsoleteColumns, $alteredColumns);
     $this->addNewColumns($newColumns);
 
     return ['full_columns'     => $this->getTableColumnsFromConfig($newColumns, $obsoleteColumns),
             'new_columns'      => $newColumns,
             'obsolete_columns' => $obsoleteColumns,
-            'altered_columns'  => $this->getAlteredColumns()];
+            'altered_columns'  => $alteredColumns];
   }
 
   //--------------------------------------------------------------------------------------------------------------------
@@ -357,8 +351,9 @@ class Table
    *
    * @param array[] $newColumns
    * @param array[] $obsoleteColumns
+   * @param array[] $alteredColumns
    */
-  private function loggingColumnInfo($newColumns, $obsoleteColumns)
+  private function loggingColumnInfo($newColumns, $obsoleteColumns, $alteredColumns)
   {
     if (!empty($newColumns) && !empty($obsoleteColumns))
     {
@@ -382,6 +377,14 @@ class Table
     foreach ($newColumns as $column)
     {
       $this->io->logInfo('New column %s.%s', $this->tableName, $column['column_name']);
+    }
+
+    foreach ($alteredColumns as $column)
+    {
+      $this->io->logInfo('Type of <dbo>%s.%s</dbo> has been altered to <dbo>%s</dbo>',
+                         $this->tableName,
+                         $column['column_name'],
+                         $column['column_type']);
     }
   }
 
