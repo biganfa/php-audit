@@ -3,6 +3,8 @@
 namespace SetBased\Audit\MySql\Sql;
 
 //----------------------------------------------------------------------------------------------------------------------
+use SetBased\Audit\Columns;
+
 /**
  * Class for creating and executing SQL statements for creating audit tables.
  */
@@ -19,7 +21,7 @@ class CreateAuditTable
   /**
    * The name of the table.
    *
-   * @var array[]
+   * @var Columns
    */
   private $columns;
 
@@ -36,7 +38,7 @@ class CreateAuditTable
    *
    * @param string  $auditSchemaName The name of the audit schema.
    * @param string  $tableName       The name of the table.
-   * @param array[] $columns         The metadata of the columns of the audit table (i.e. the audit columns and columns
+   * @param Columns $columns         The metadata of the columns of the audit table (i.e. the audit columns and columns
    *                                 of the data table).
    */
   public function __construct($auditSchemaName,
@@ -56,11 +58,12 @@ class CreateAuditTable
    */
   public function buildStatement()
   {
-    $sql = sprintf('create table `%s`.`%s`(', $this->auditSchemaName, $this->tableName);
-    foreach ($this->columns as $column)
+    $sql     = sprintf('create table `%s`.`%s`(', $this->auditSchemaName, $this->tableName);
+    $columns = $this->columns->getColumns();
+    foreach ($columns as $column)
     {
       $sql .= sprintf('`%s` %s', $column['column_name'], $column['column_type']);
-      if (end($this->columns)!==$column)
+      if (end($columns)!==$column)
       {
         $sql .= ',';
       }
