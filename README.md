@@ -123,6 +123,11 @@ composer require setbased/php-audit
 Or you can obtain the sources at [GitHub](https://github.com/SetBased/php-audit).
 
 
+# Manual
+
+Right now we are working on the manual and will be online soon.
+
+
 # Support
   
 If you are having issues, please let us know. Contact us at [Gitter](https://gitter.im/SetBased/php-audit) or create an issue on [GitHub](https://github.com/SetBased/php-audit/issues/new).
@@ -132,7 +137,18 @@ For commercial support, please contact us at info@setbased.nl.
 
 # Contributing
 
-You are welcome to contribute to PhpAudit. Just fork this project on [GitHub](https://github.com/SetBased/php-audit] and create a pull request.
+We are looking for contributors. We can use your help for:
+*	Fixing bugs and solving issues.
+*	Writing documentation.
+*	Developing new features.
+*	Code review.
+*	Implementing PhpAudit for other database systems.
+
+You can contribute to this project in many ways
+*	Fork this project on [GitHub](https://github.com/SetBased/php-audit) and create a pull request.
+*	Create an [issue](https://github.com/SetBased/php-audit/issues/new) on GitHub.
+*	Asking critical questions.
+*	Contacting us at [Gitter](https://gitter.im/SetBased/php-audit).
 
 
 # Limitations
