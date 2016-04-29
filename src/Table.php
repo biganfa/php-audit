@@ -128,7 +128,7 @@ class Table
     $this->io->logInfo('Creating audit table <dbo>%s.%s<dbo>', $this->auditSchemaName, $this->tableName);
 
     $columns = Columns::combine($this->auditColumns, $this->dataTableColumnsDatabase);
-    DataLayer::createAuditTable($this->auditSchemaName, $this->tableName, $columns);
+    DataLayer::createAuditTable($this->auditSchemaName, $this->dataSchemaName, $this->tableName, $columns);
   }
 
   //--------------------------------------------------------------------------------------------------------------------
