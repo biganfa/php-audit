@@ -69,7 +69,7 @@ class CreateAuditTable
    */
   public function buildStatement()
   {
-    $sql          = sprintf("create xtable `%s`.`%s`\n", $this->auditSchemaName, $this->tableName);
+    $sql          = sprintf("create table `%s`.`%s`\n", $this->auditSchemaName, $this->tableName);
     $columns      = $this->columns->getColumns();
     $tableOptions = DataLayer::getTableOptions($this->dataSchemaName, $this->tableName);
 
@@ -94,7 +94,7 @@ class CreateAuditTable
     }
 
     // Create SQL for table options.
-    $sql .= sprintf(') engine=%s default charset=%s default collate=%s;',
+    $sql .= sprintf(') engine=%s default charset=%s default collate=%s',
                     $tableOptions['engine'],
                     $tableOptions['character_set_name'],
                     $tableOptions['table_collation']);
