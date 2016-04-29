@@ -77,10 +77,11 @@ where  trn_id = 4473
 
 | audit_timestamp     | audit_statement | audit_state | audit_uuid         | audit_rownum | audit_ses_id | audit_usr_id | trn_id | trn_name      |
 | ------------------- | --------------- | ----------- | ------------------ | ------------ | ------------ |------------- | ------ | ------------- |
-| 2012-05-05 08:36:06 | INSERT          | NEW         | 310616503508533789 | 2            | 34532889     | 65           | 4773   | Wrong name    |
-| 2013-02-01 10:55:01 | UPDATE          | OLD         | 311037142136521378 | 5            | 564977477    | 107          | 4773   | Wrong name    |  
-| 2013-02-01 10:55:01 | UPDATE          | NEW         | 311037142136521378 | 5            | 564977477    | 107          | 4773   | Correct name  |
-  
+| 2012-05-05&#160;08:36:06 | INSERT          | NEW         | 310616503508533789 | 2            | 34532889     | 65           | 4773   | Wrong&#160;name    |
+| 2013-02-01&#160;10:55:01 | UPDATE          | OLD         | 311037142136521378 | 5            | 564977477    | 107          | 4773   | Wrong&#160;name    |  
+| 2013-02-01&#160;10:55:01 | UPDATE          | NEW         | 311037142136521378 | 5            | 564977477    | 107          | 4773   | Correct&#160;name  |
+
+
 Notice that the audit table has 7 additional columns. You can configure more or less columns and name them to your needs.
 * audit_timestamp The time the statement was executed.
 * audit_statement The type of statement. One of INSERT, UPDATE, OR DELETE.
