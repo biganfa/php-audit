@@ -83,6 +83,11 @@ where  trn_id = 4473
 
 
 Notice that the audit table has 7 additional columns. You can configure more or less columns and name them to your needs.
+| Column          | Remark                               |
+| --------------- | ------------------------------------ |
+| audit_timestamp | The time the statement was executed. |
+| audit_statement | The type of statement. One of INSERT, UPDATE, OR DELETE. |
+
 * audit_timestamp The time the statement was executed.
 * audit_statement The type of statement. One of INSERT, UPDATE, OR DELETE.
 * audit_sate The state of the row. NEW or OLD. 
