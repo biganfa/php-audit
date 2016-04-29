@@ -37,28 +37,6 @@ class Columns
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
-   * Returns previous column of a columns. Returns null if the column name is not found in this Columns.
-   *
-   * @param string $columnName The column name.
-   *
-   * @return null|string
-   */
-  public function getPreviousColumn($columnName)
-  {
-    $columns = array_keys($this->columns);
-    $key     = array_search($columnName, $columns);
-    var_dump($columns);
-
-    if ($key>=1)
-    {
-      return $columns[$key - 1];
-    }
-
-    return null;
-  }
-
-  //--------------------------------------------------------------------------------------------------------------------
-  /**
    * Generate array with audit columns and columns from data table.
    *
    * @param Columns $auditColumnsMetadata   AuditApplication columns for adding to exist columns
@@ -72,18 +50,21 @@ class Columns
 
     foreach ($auditColumnsMetadata->columns as $column)
     {
-      $columns[] = ['column_name' => $column['column_name'], 'column_type' => $column['column_type']];
+      $columns[] = ['column_name' => $column['column_name'],
+                    'column_type' => $column['column_type']];
     }
 
     foreach ($currentColumnsMetadata->columns as $column)
     {
       if ($column['column_type']!='timestamp')
       {
-        $columns[] = ['column_name' => $column['column_name'], 'column_type' => $column['column_type'].' DEFAULT NULL'];
+        $columns[] = ['column_name' => $column['column_name'],
+                      'column_type' => $column['column_type']];
       }
       else
       {
-        $columns[] = ['column_name' => $column['column_name'], 'column_type' => $column['column_type'].' NULL'];
+        $columns[] = ['column_name' => $column['column_name'],
+                      'column_type' => $column['column_type'].' NULL'];
       }
     }
 
@@ -155,6 +136,28 @@ class Columns
   public function getColumns()
   {
     return $this->columns;
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
+   * Returns previous column of a columns. Returns null if the column name is not found in this Columns.
+   *
+   * @param string $columnName The column name.
+   *
+   * @return null|string
+   */
+  public function getPreviousColumn($columnName)
+  {
+    $columns = array_keys($this->columns);
+    $key     = array_search($columnName, $columns);
+    var_dump($columns);
+
+    if ($key>=1)
+    {
+      return $columns[$key - 1];
+    }
+
+    return null;
   }
 
   //--------------------------------------------------------------------------------------------------------------------

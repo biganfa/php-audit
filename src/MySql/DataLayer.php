@@ -84,15 +84,15 @@ class DataLayer
   /**
    * Creates an audit table.
    *
-   * @param string  $auditSchemaName The name of the audit schema.
    * @param string  $dataSchemaName  The name of the data schema.
+   * @param string  $auditSchemaName The name of the audit schema.
    * @param string  $tableName       The name of the table.
    * @param Columns $columns         The metadata of the columns of the audit table (i.e. the audit columns and columns
    *                                 of the data table).
    */
-  public static function createAuditTable($auditSchemaName, $dataSchemaName, $tableName, $columns)
+  public static function createAuditTable($dataSchemaName, $auditSchemaName, $tableName, $columns)
   {
-    $helper = new CreateAuditTable($auditSchemaName, $dataSchemaName, $tableName, $columns);
+    $helper = new CreateAuditTable($dataSchemaName, $auditSchemaName, $tableName, $columns);
     $sql    = $helper->buildStatement();
 
     self::executeNone($sql);
@@ -291,15 +291,17 @@ order by ORDINAL_POSITION',
   public static function getTableOptions($schemaName, $tableName)
   {
     $sql = sprintf('
-SELECT CCSA.character_set_name,T.table_collation,T.`ENGINE` as engine FROM information_schema.`TABLES` T,
-       information_schema.`COLLATION_CHARACTER_SET_APPLICABILITY` CCSA
-WHERE CCSA.collation_name = T.table_collation
-  AND T.table_schema = %s
-  AND T.table_name = %s;',
+SELECT t1.TABLE_COLLATION    as table_collation
+,      t1.ENGINE             as engine
+,      t2.CHARACTER_SET_NAME as character_set_name
+FROM       information_schema.TABLES                                t1
+inner join information_schema.COLLATION_CHARACTER_SET_APPLICABILITY t2  on  t2.COLLATION_NAME = t1.TABLE_COLLATION
+WHERE t1.TABLE_SCHEMA = %s
+AND   t1.TABLE_NAME   = %s',
                    self::$dl->quoteString($schemaName),
                    self::$dl->quoteString($tableName));
 
-    return self::$dl->executeRow0($sql);
+    return self::$dl->executeRow1($sql);
   }
 
   //--------------------------------------------------------------------------------------------------------------------
