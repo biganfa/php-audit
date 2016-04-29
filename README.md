@@ -83,18 +83,16 @@ where  trn_id = 4473
 
 
 Notice that the audit table has 7 additional columns. You can configure more or less columns and name them to your needs.
+
 | Column          | Remark                               |
 | --------------- | ------------------------------------ |
 | audit_timestamp | The time the statement was executed. |
 | audit_statement | The type of statement. One of INSERT, UPDATE, OR DELETE. |
-
-* audit_timestamp The time the statement was executed.
-* audit_statement The type of statement. One of INSERT, UPDATE, OR DELETE.
-* audit_sate The state of the row. NEW or OLD. 
-* audit_uuid A UUID per database connection. Using this ID we can track all changes made during a page request.
-* audit_rownum The number of the audit row within the UUID. Using this column we can track the order in which changes are made during a page request.
-* audit_ses_id The ID the session of the web application.
-* audit_usr_id The ID of the user has made the page request.     
+| audit_sate      | The state of the row. NEW or OLD. |
+| audit_uuid      | A UUID per database connection. Using this ID we can track all changes made during a page request. |
+| audit_rownum    | The number of the audit row within the UUID. Using this column we can track the order in which changes are made during a page request. |
+| audit_ses_id    | The ID the session of the web application. |
+| audit_usr_id    | The ID of the user has made the page request. |
 
 From the audit trail we can see that user 65 has initially entered the tournament with a wrong name. 
 We see that the tournament insert statement was the second statement executed. Using UUID 310616503508533789 we found the first statement was an insert statement of the tournament's location which is stored in another table. 
