@@ -76,6 +76,13 @@ class CreateAuditTrigger
    */
   private $triggerName;
 
+  /**
+   * Indent level.
+   *
+   * @var string
+   */
+  private $indentLevel = '  ';
+
   //--------------------------------------------------------------------------------------------------------------------
   /**
    * Creates a trigger on a table.
@@ -190,7 +197,42 @@ begin
     $sql .= isset($this->skipVariable) ? "end if;\n" : '';
     $sql .= 'end';
 
+    $sql = $this->writeIndent($sql);
+
     return $sql;
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
+   * Returns the SQL statement with indents.
+   *
+   * @param string $sqlStatement The SQL query.
+   *
+   * @return string
+   */
+  private function writeIndent($sqlStatement)
+  {
+    $lines                  = explode("\n", $sqlStatement);
+    $sqlStatementWithIndent = [];
+    $this->indentLevel      = '';
+    foreach ($lines as $key => $line)
+    {
+      if ($key!=0)
+      {
+        if (preg_match("/\bif\b/i", $lines[$key - 1]) || preg_match("/\bbegin\b/i", $lines[$key - 1]))
+        {
+          $this->indentLevel .= '  ';
+        }
+        if (preg_match("/\bend\b/i", $lines[$key - 1]) || preg_match("/\bend\b/i", $lines[$key]))
+        {
+          $this->indentLevel = substr($this->indentLevel, 0, -2);
+        }
+      }
+      $line                     = $this->indentLevel.$line;
+      $sqlStatementWithIndent[] = $line;
+    }
+
+    return implode("\n", $sqlStatementWithIndent);
   }
 
   //--------------------------------------------------------------------------------------------------------------------
@@ -206,29 +248,29 @@ begin
     $columnNames = '';
     foreach ($this->auditColumns->getColumns() as $column)
     {
-      if ($columnNames) $columnNames .= ',';
-      $columnNames .= sprintf('`%s`', $column['column_name']);
+      if ($columnNames) $columnNames .= ",\n";
+      $columnNames .= sprintf('%s`%s`', $this->indentLevel, $column['column_name']);
     }
     foreach ($this->tableColumns->getColumns() as $column)
     {
-      if ($columnNames) $columnNames .= ',';
-      $columnNames .= sprintf('`%s`', $column['column_name']);
+      if ($columnNames) $columnNames .= ",\n";
+      $columnNames .= sprintf('%s`%s`', $this->indentLevel, $column['column_name']);
     }
 
     $values = '';
     foreach ($this->auditColumns->getColumns() as $column)
     {
-      if ($values) $values .= ',';
+      if ($values) $values .= ",\n";
       if (isset($column['audit_value_type']))
       {
         switch ($column['audit_value_type'])
         {
           case 'ACTION':
-            $values .= StaticDataLayer::quoteString($this->triggerAction);
+            $values .= $this->indentLevel.StaticDataLayer::quoteString($this->triggerAction);
             break;
 
           case 'STATE':
-            $values .= StaticDataLayer::quoteString($rowState);
+            $values .= $this->indentLevel.StaticDataLayer::quoteString($rowState);
             break;
 
           default:
@@ -237,18 +279,18 @@ begin
       }
       else
       {
-        $values .= $column['audit_expression'];
+        $values .= $this->indentLevel.$column['audit_expression'];
       }
     }
     foreach ($this->tableColumns->getColumns() as $column)
     {
-      if ($values) $values .= ',';
-      $values .= sprintf('%s.`%s`', $rowState, $column['column_name']);
+      if ($values) $values .= ",\n";
+      $values .= sprintf('%s%s.`%s`', $this->indentLevel, $rowState, $column['column_name']);
     }
 
-    $insertStatement = sprintf('insert into `%s`.`%s`(%s)
-values(%s);
-',
+    $insertStatement = sprintf("insert into `%s`.`%s`(\n%s)
+values(\n%s);
+",
                                $this->auditSchemaName,
                                $this->tableName,
                                $columnNames,
