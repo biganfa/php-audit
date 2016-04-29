@@ -150,7 +150,6 @@ class Columns
   {
     $columns = array_keys($this->columns);
     $key     = array_search($columnName, $columns);
-    var_dump($columns);
 
     if ($key>=1)
     {
