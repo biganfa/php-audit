@@ -188,7 +188,7 @@ class CreateAuditTrigger
       $sql[] = $this->createInsertStatement($rowState[1]);
     }
 
-    $sql[] = isset($this->skipVariable) ? "end if;" : '';
+    $sql[] = isset($this->skipVariable) ? 'end if;' : '';
     $sql[] = 'end';
 
     return $this->writeIndent($sql);
@@ -301,8 +301,6 @@ class CreateAuditTrigger
                                             $this->tableName,
                                             $columnNames]);
     $insertStatement = $this->addStatement($insertStatement, 'values(%s);', $values);
-
-    var_dump($insertStatement);
 
     return implode("\n", $insertStatement);
   }
