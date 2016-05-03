@@ -9,7 +9,7 @@ use SetBased\Audit\MySql\DataLayer;
 /**
  * Class for creating and executing SQL statements for creating audit tables.
  */
-class CreateAuditTable
+class AddNewColumns
 {
   //--------------------------------------------------------------------------------------------------------------------
   /**
@@ -20,21 +20,14 @@ class CreateAuditTable
   private $auditSchemaName;
 
   /**
-   * The name of the table.
+   * The array of new columns for adding to table.
    *
-   * @var Columns
+   * @var array[]
    */
   private $columns;
 
   /**
-   * The name of the data schema.
-   *
-   * @var string
-   */
-  private $dataSchemaName;
-
-  /**
-   * The name of the table.
+   * The name of the audit table.
    *
    * @var string
    */
@@ -44,18 +37,15 @@ class CreateAuditTable
   /**
    * Object constructor.
    *
-   * @param string  $dataSchemaName  The name of the data schema.
    * @param string  $auditSchemaName The name of the audit schema.
    * @param string  $tableName       The name of the table.
-   * @param Columns $columns         The metadata of the columns of the audit table (i.e. the audit columns and columns
+   * @param array[] $columns         The metadata of the columns of the audit table (i.e. the audit columns and columns
    *                                 of the data table).
    */
-  public function __construct($dataSchemaName,
-                              $auditSchemaName,
+  public function __construct($auditSchemaName,
                               $tableName,
                               $columns)
   {
-    $this->dataSchemaName  = $dataSchemaName;
     $this->auditSchemaName = $auditSchemaName;
     $this->tableName       = $tableName;
     $this->columns         = $columns;
@@ -69,35 +59,23 @@ class CreateAuditTable
    */
   public function buildStatement()
   {
-    $sql          = sprintf("create table `%s`.`%s`\n", $this->auditSchemaName, $this->tableName);
-    $columns      = $this->columns->getColumns();
-    $tableOptions = DataLayer::getTableOptions($this->dataSchemaName, $this->tableName);
-
-    // Base format on column with longest name.
-    $width = 0;
-    foreach ($columns as $column)
+    $sql = sprintf('alter table `%s`.`%s`', $this->auditSchemaName, $this->tableName);
+    foreach ($this->columns as $column)
     {
-      $width = max($width, mb_strlen($column['column_name']));
-    }
-    $format = sprintf('  %%-%ds %%s', $width + 2);
-
-    // Create SQL for columns.
-    $sql .= "(\n";
-    foreach ($columns as $column)
-    {
-      $sql .= sprintf($format, '`'.$column['column_name'].'`', $column['column_type']);
-      if (end($columns)!==$column)
+      $sql .= ' add `'.$column['column_name'].'` '.$column['column_type'];
+      if (isset($column['after']))
+      {
+        $sql .= ' after `'.$column['after'].'`';
+      }
+      else
+      {
+        $sql .= ' first';
+      }
+      if (end($this->columns)!==$column)
       {
         $sql .= ',';
       }
-      $sql .= "\n";
     }
-
-    // Create SQL for table options.
-    $sql .= sprintf(') engine=%s default charset=%s default collate=%s',
-                    $tableOptions['engine'],
-                    $tableOptions['character_set_name'],
-                    $tableOptions['table_collation']);
 
     return $sql;
   }
