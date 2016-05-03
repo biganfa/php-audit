@@ -120,18 +120,19 @@ class CreateAuditTrigger
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
-   * Add the if clause for skipping a trigger.
+   * Add the part of sqlStatement.
    *
-   * @param  string[] $sqlStatement The create trigger sql statement.
-   * @param  string   $skipVariable The skip variable (including @).
+   * @param string[]        $sqlStatement       The create trigger sql statement.
+   * @param string          $sqlStatementFormat The format string for sql statement.
+   * @param string[]|string $variables          The array of variables or single variable.
    *
-   * @return string
+   * @return string[]
    */
-  private static function skipStatement($sqlStatement, $skipVariable)
+  private static function addStatement($sqlStatement, $sqlStatementFormat, $variables)
   {
-    if (isset($skipVariable))
+    if (isset($variables))
     {
-      $sqlStatement[] = sprintf("if (%s is null) then", $skipVariable);
+      $sqlStatement[] = vsprintf($sqlStatementFormat, $variables);
     }
 
     return $sqlStatement;
@@ -171,7 +172,7 @@ class CreateAuditTrigger
     $sql[] = 'for each row';
     $sql[] = 'begin';
 
-    $sql = $this->skipStatement($sql, $this->skipVariable);
+    $sql = $this->addStatement($sql, 'if (%s is null) then', $this->skipVariable);
 
     if (is_array($this->additionalSql))
     {
@@ -206,29 +207,33 @@ class CreateAuditTrigger
     $sqlStatementWithIndent = [];
     foreach ($sqlStatement as $key => $line)
     {
-      $words = explode(' ', $sqlStatement[$key]);
-      switch ($words[0])
+      $line  = trim($line);
+      $words = explode(' ', $line);
+      if (count($words)>0)
       {
-        case 'begin':
-          $this->indentLevel += 1;
-          break;
+        switch ($words[0])
+        {
+          case 'begin':
+            $this->indentLevel += 1;
+            break;
 
-        case 'if':
-          $line = str_repeat('  ', $this->indentLevel).$line;
-          $this->indentLevel += 1;
-          break;
+          case 'if':
+            $line = str_repeat('  ', $this->indentLevel).$line;
+            $this->indentLevel += 1;
+            break;
 
-        case 'end':
-          if ($this->indentLevel>0)
-          {
-            $this->indentLevel -= 1;
-          }
-          $line = str_repeat('  ', $this->indentLevel).$line;
-          break;
+          case 'end':
+            if ($this->indentLevel>0)
+            {
+              $this->indentLevel -= 1;
+            }
+            $line = str_repeat('  ', $this->indentLevel).$line;
+            break;
 
-        default:
-          $line = str_repeat('  ', $this->indentLevel).$line;
-          break;
+          default:
+            $line = str_repeat('  ', $this->indentLevel).$line;
+            break;
+        }
       }
       $sqlStatementWithIndent[] = $line;
     }
@@ -289,14 +294,17 @@ class CreateAuditTrigger
       $values .= sprintf('%s.`%s`', $rowState, $column['column_name']);
     }
 
-    $insertStatement = sprintf("insert into `%s`.`%s`(%s)
-values(%s);",
-                               $this->auditSchemaName,
-                               $this->tableName,
-                               $columnNames,
-                               $values);
+    $insertStatement = [];
+    $insertStatement = $this->addStatement($insertStatement,
+                                           'insert into `%s`.`%s`(%s)',
+                                           [$this->auditSchemaName,
+                                            $this->tableName,
+                                            $columnNames]);
+    $insertStatement = $this->addStatement($insertStatement, 'values(%s);', $values);
 
-    return $insertStatement;
+    var_dump($insertStatement);
+
+    return implode("\n", $insertStatement);
   }
 
   //--------------------------------------------------------------------------------------------------------------------
