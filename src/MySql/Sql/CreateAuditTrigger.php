@@ -42,6 +42,13 @@ class CreateAuditTrigger
   private $dataSchemaName;
 
   /**
+   * Indent level.
+   *
+   * @var int
+   */
+  private $indentLevel;
+
+  /**
    * The skip variable.
    *
    * @var string
@@ -75,13 +82,6 @@ class CreateAuditTrigger
    * @var string
    */
   private $triggerName;
-
-  /**
-   * Indent level.
-   *
-   * @var int
-   */
-  private $indentLevel;
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
@@ -120,26 +120,6 @@ class CreateAuditTrigger
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
-   * Add the part of sqlStatement.
-   *
-   * @param string[]        $sqlStatement       The create trigger sql statement.
-   * @param string          $sqlStatementFormat The format string for sql statement.
-   * @param string[]|string $variables          The array of variables or single variable.
-   *
-   * @return string[]
-   */
-  private static function addStatement($sqlStatement, $sqlStatementFormat, $variables)
-  {
-    if (isset($variables))
-    {
-      $sqlStatement[] = vsprintf($sqlStatementFormat, $variables);
-    }
-
-    return $sqlStatement;
-  }
-
-  //--------------------------------------------------------------------------------------------------------------------
-  /**
    * Returns the SQL code for creating an audit trigger.
    *
    * @throws FallenException
@@ -168,11 +148,11 @@ class CreateAuditTrigger
 
     $sql   = [];
     $sql[] = sprintf('create trigger `%s`.`%s`', $this->dataSchemaName, $this->triggerName);
-    $sql[] = sprintf('after %s on `%s`.`%s`', $this->triggerAction, $this->dataSchemaName, $this->tableName);
+    $sql[] = sprintf('after %s on `%s`.`%s`', strtolower($this->triggerAction), $this->dataSchemaName, $this->tableName);
     $sql[] = 'for each row';
     $sql[] = 'begin';
 
-    $sql = $this->addStatement($sql, 'if (%s is null) then', $this->skipVariable);
+    if ($this->skipVariable!==null) $sql[] = sprintf('if (%s is null) then', $this->skipVariable);
 
     if (is_array($this->additionalSql))
     {
@@ -182,16 +162,72 @@ class CreateAuditTrigger
       }
     }
 
-    $sql[] = $this->createInsertStatement($rowState[0]);
+    $this->createInsertStatement($sql, $rowState[0]);
     if (sizeof($rowState)==2)
     {
-      $sql[] = $this->createInsertStatement($rowState[1]);
+      $this->createInsertStatement($sql, $rowState[1]);
     }
 
-    $sql[] = isset($this->skipVariable) ? 'end if;' : '';
+    if ($this->skipVariable!==null) $sql[] = 'end if;';
     $sql[] = 'end';
 
     return $this->writeIndent($sql);
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
+   * Adds insert SQL statement to SQL code for a trigger.
+   *
+   * @param string[] $sql      The SQL code.
+   * @param string   $rowState The row state (i.e. OLD or NEW).
+   */
+  private function createInsertStatement(&$sql, $rowState)
+  {
+    $columnNames = '';
+    foreach ($this->auditColumns->getColumns() as $column)
+    {
+      if ($columnNames) $columnNames .= ',';
+      $columnNames .= sprintf('`%s`', $column['column_name']);
+    }
+    foreach ($this->tableColumns->getColumns() as $column)
+    {
+      if ($columnNames) $columnNames .= ',';
+      $columnNames .= sprintf('`%s`', $column['column_name']);
+    }
+
+    $values = '';
+    foreach ($this->auditColumns->getColumns() as $column)
+    {
+      if ($values) $values .= ',';
+      if (isset($column['audit_value_type']))
+      {
+        switch ($column['audit_value_type'])
+        {
+          case 'ACTION':
+            $values .= StaticDataLayer::quoteString($this->triggerAction);
+            break;
+
+          case 'STATE':
+            $values .= StaticDataLayer::quoteString($rowState);
+            break;
+
+          default:
+            throw new FallenException('audit_value_type', ($column['audit_value_type']));
+        }
+      }
+      else
+      {
+        $values .= $column['audit_expression'];
+      }
+    }
+    foreach ($this->tableColumns->getColumns() as $column)
+    {
+      if ($values) $values .= ',';
+      $values .= sprintf('%s.`%s`', $rowState, $column['column_name']);
+    }
+
+    $sql[] = sprintf('insert into `%s`.`%s`(%s)', $this->auditSchemaName, $this->tableName, $columnNames);
+    $sql[] = sprintf('values(%s);', $values);
   }
 
   //--------------------------------------------------------------------------------------------------------------------
@@ -239,70 +275,6 @@ class CreateAuditTrigger
     }
 
     return implode("\n", $sqlStatementWithIndent);
-  }
-
-  //--------------------------------------------------------------------------------------------------------------------
-  /**
-   * Returns an insert SQL statement for an audit table.
-   *
-   * @param string $rowState The row state (i.e. OLD or NEW).
-   *
-   * @return string
-   */
-  private function createInsertStatement($rowState)
-  {
-    $columnNames = '';
-    foreach ($this->auditColumns->getColumns() as $column)
-    {
-      if ($columnNames) $columnNames .= ',';
-      $columnNames .= sprintf('`%s`', $column['column_name']);
-    }
-    foreach ($this->tableColumns->getColumns() as $column)
-    {
-      if ($columnNames) $columnNames .= ',';
-      $columnNames .= sprintf('`%s`', $column['column_name']);
-    }
-
-    $values = '';
-    foreach ($this->auditColumns->getColumns() as $column)
-    {
-      if ($values) $values .= ',';
-      if (isset($column['audit_value_type']))
-      {
-        switch ($column['audit_value_type'])
-        {
-          case 'ACTION':
-            $values .= StaticDataLayer::quoteString($this->triggerAction);
-            break;
-
-          case 'STATE':
-            $values .= StaticDataLayer::quoteString($rowState);
-            break;
-
-          default:
-            throw new FallenException('audit_value_type', ($column['audit_value_type']));
-        }
-      }
-      else
-      {
-        $values .= $column['audit_expression'];
-      }
-    }
-    foreach ($this->tableColumns->getColumns() as $column)
-    {
-      if ($values) $values .= ',';
-      $values .= sprintf('%s.`%s`', $rowState, $column['column_name']);
-    }
-
-    $insertStatement = [];
-    $insertStatement = $this->addStatement($insertStatement,
-                                           'insert into `%s`.`%s`(%s)',
-                                           [$this->auditSchemaName,
-                                            $this->tableName,
-                                            $columnNames]);
-    $insertStatement = $this->addStatement($insertStatement, 'values(%s);', $values);
-
-    return implode("\n", $insertStatement);
   }
 
   //--------------------------------------------------------------------------------------------------------------------
