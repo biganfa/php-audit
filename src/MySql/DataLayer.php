@@ -3,7 +3,7 @@
 namespace SetBased\Audit\MySql;
 
 use SetBased\Audit\Columns;
-use SetBased\Audit\MySql\Sql\AddNewColumns;
+use SetBased\Audit\MySql\Sql\AlterAuditTableAddColumns;
 use SetBased\Audit\MySql\Sql\CreateAuditTable;
 use SetBased\Audit\MySql\Sql\CreateAuditTrigger;
 use SetBased\Stratum\MySql\StaticDataLayer;
@@ -40,7 +40,7 @@ class DataLayer
    */
   public static function addNewColumns($auditSchemaName, $tableName, $columns)
   {
-    $helper = new AddNewColumns($auditSchemaName, $tableName, $columns);
+    $helper = new AlterAuditTableAddColumns($auditSchemaName, $tableName, $columns);
     $sql    = $helper->buildStatement();
 
     self::executeNone($sql);

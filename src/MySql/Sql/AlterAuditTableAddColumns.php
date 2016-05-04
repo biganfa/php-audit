@@ -3,13 +3,10 @@
 namespace SetBased\Audit\MySql\Sql;
 
 //----------------------------------------------------------------------------------------------------------------------
-use SetBased\Audit\Columns;
-use SetBased\Audit\MySql\DataLayer;
-
 /**
- * Class for creating and executing SQL statements for creating audit tables.
+ * Class for creating SQL statements for adding new columns to an audit table.
  */
-class AddNewColumns
+class AlterAuditTableAddColumns
 {
   //--------------------------------------------------------------------------------------------------------------------
   /**
@@ -39,12 +36,10 @@ class AddNewColumns
    *
    * @param string  $auditSchemaName The name of the audit schema.
    * @param string  $tableName       The name of the table.
-   * @param array[] $columns         The metadata of the columns of the audit table (i.e. the audit columns and columns
-   *                                 of the data table).
+   * @param array[] $columns         The metadata of the new columns of the audit table (i.e. the audit columns and
+   *                                 columns of the data table).
    */
-  public function __construct($auditSchemaName,
-                              $tableName,
-                              $columns)
+  public function __construct($auditSchemaName, $tableName, $columns)
   {
     $this->auditSchemaName = $auditSchemaName;
     $this->tableName       = $tableName;
@@ -53,7 +48,7 @@ class AddNewColumns
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
-   * Returns a SQL statement for creating the audit table.
+   * Returns a SQL statement for adding new columns to the audit table.
    *
    * @return string
    */
