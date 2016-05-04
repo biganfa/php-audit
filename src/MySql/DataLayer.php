@@ -248,7 +248,7 @@ class DataLayer
    * @param string $schemaName The name of the table schema.
    * @param string $tableName  The name of the table.
    *
-   * @return array[]
+   * @return \array[]
    */
   public static function getTableColumns($schemaName, $tableName)
   {
@@ -272,7 +272,7 @@ order by ORDINAL_POSITION',
    * @param string $schemaName The name of the table schema.
    * @param string $tableName  The name of the table.
    *
-   * @return array[]
+   * @return array
    */
   public static function getTableOptions($schemaName, $tableName)
   {
@@ -297,7 +297,7 @@ AND   t1.TABLE_NAME   = %s',
    * @param string $schemaName The name of the table schema.
    * @param string $tableName  The name of the table.
    *
-   * @return array[]
+   * @return \array[]
    */
   public static function getTableTriggers($schemaName, $tableName)
   {
@@ -319,7 +319,7 @@ order by Trigger_Name',
    *
    * @param string $schemaName The name of the schema.
    *
-   * @return array[]
+   * @return \array[]
    */
   public static function getTablesNames($schemaName)
   {

@@ -90,7 +90,7 @@ class BaseCommand extends Command
   {
     $content = file_get_contents($this->configFileName);
 
-    $this->config = json_decode($content, true);
+    $this->config = (array)json_decode($content, true);
     if (json_last_error()!=JSON_ERROR_NONE)
     {
       throw new RuntimeException("Error decoding JSON: '%s'.", json_last_error_msg());

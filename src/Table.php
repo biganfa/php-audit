@@ -196,7 +196,7 @@ class Table
   /**
    * Adds new columns to audit table.
    *
-   * @param array[] $columns Columns array
+   * @param \array[] $columns Columns array
    */
   private function addNewColumns($columns)
   {

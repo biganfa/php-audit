@@ -219,7 +219,7 @@ class DiffCommand extends AuditCommand
       // Remove matching columns unless the full option is used.
       if (!$this->full)
       {
-        $columns = self::removeMatchingColumns($columns);;
+        $columns = self::removeMatchingColumns($columns);
       }
 
       if (!empty($columns))
