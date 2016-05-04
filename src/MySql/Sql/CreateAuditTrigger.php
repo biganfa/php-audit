@@ -76,6 +76,13 @@ class CreateAuditTrigger
    */
   private $triggerName;
 
+  /**
+   * Indent level.
+   *
+   * @var int
+   */
+  private $indentLevel;
+
   //--------------------------------------------------------------------------------------------------------------------
   /**
    * Creates a trigger on a table.
@@ -113,21 +120,22 @@ class CreateAuditTrigger
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
-   * Returns the if clause for skipping a trigger.
+   * Add the part of sqlStatement.
    *
-   * @param  string $skipVariable The skip variable (including @).
+   * @param string[]        $sqlStatement       The create trigger sql statement.
+   * @param string          $sqlStatementFormat The format string for sql statement.
+   * @param string[]|string $variables          The array of variables or single variable.
    *
-   * @return string
+   * @return string[]
    */
-  private static function skipStatement($skipVariable)
+  private static function addStatement($sqlStatement, $sqlStatementFormat, $variables)
   {
-    $statement = '';
-    if (isset($skipVariable))
+    if (isset($variables))
     {
-      $statement = sprintf("if (%s is null) then\n", $skipVariable);
+      $sqlStatement[] = vsprintf($sqlStatementFormat, $variables);
     }
 
-    return $statement;
+    return $sqlStatement;
   }
 
   //--------------------------------------------------------------------------------------------------------------------
@@ -158,39 +166,79 @@ class CreateAuditTrigger
         throw new FallenException('action', $this->triggerAction);
     }
 
-    $sql = sprintf('
-create trigger `%s`.`%s`
-after %s on `%s`.`%s`
-for each row
-begin
-',
-                   $this->dataSchemaName,
-                   $this->triggerName,
-                   $this->triggerAction,
-                   $this->dataSchemaName,
-                   $this->tableName);
+    $sql   = [];
+    $sql[] = sprintf('create trigger `%s`.`%s`', $this->dataSchemaName, $this->triggerName);
+    $sql[] = sprintf('after %s on `%s`.`%s`', $this->triggerAction, $this->dataSchemaName, $this->tableName);
+    $sql[] = 'for each row';
+    $sql[] = 'begin';
 
-    $sql .= $this->skipStatement($this->skipVariable);
+    $sql = $this->addStatement($sql, 'if (%s is null) then', $this->skipVariable);
 
     if (is_array($this->additionalSql))
     {
       foreach ($this->additionalSql as $line)
       {
-        $sql .= $line;
-        $sql .= "\n";
+        $sql[] = $line;
       }
     }
 
-    $sql .= $this->createInsertStatement($rowState[0]);
+    $sql[] = $this->createInsertStatement($rowState[0]);
     if (sizeof($rowState)==2)
     {
-      $sql .= $this->createInsertStatement($rowState[1]);
+      $sql[] = $this->createInsertStatement($rowState[1]);
     }
 
-    $sql .= isset($this->skipVariable) ? "end if;\n" : '';
-    $sql .= 'end';
+    $sql[] = isset($this->skipVariable) ? 'end if;' : '';
+    $sql[] = 'end';
 
-    return $sql;
+    return $this->writeIndent($sql);
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
+   * Returns the SQL statement with indents.
+   *
+   * @param string[] $sqlStatement The SQL query.
+   *
+   * @return string
+   */
+  private function writeIndent($sqlStatement)
+  {
+    $sqlStatementWithIndent = [];
+    foreach ($sqlStatement as $key => $line)
+    {
+      $line  = trim($line);
+      $words = explode(' ', $line);
+      if (count($words)>0)
+      {
+        switch ($words[0])
+        {
+          case 'begin':
+            $this->indentLevel += 1;
+            break;
+
+          case 'if':
+            $line = str_repeat('  ', $this->indentLevel).$line;
+            $this->indentLevel += 1;
+            break;
+
+          case 'end':
+            if ($this->indentLevel>0)
+            {
+              $this->indentLevel -= 1;
+            }
+            $line = str_repeat('  ', $this->indentLevel).$line;
+            break;
+
+          default:
+            $line = str_repeat('  ', $this->indentLevel).$line;
+            break;
+        }
+      }
+      $sqlStatementWithIndent[] = $line;
+    }
+
+    return implode("\n", $sqlStatementWithIndent);
   }
 
   //--------------------------------------------------------------------------------------------------------------------
@@ -246,15 +294,15 @@ begin
       $values .= sprintf('%s.`%s`', $rowState, $column['column_name']);
     }
 
-    $insertStatement = sprintf('insert into `%s`.`%s`(%s)
-values(%s);
-',
-                               $this->auditSchemaName,
-                               $this->tableName,
-                               $columnNames,
-                               $values);
+    $insertStatement = [];
+    $insertStatement = $this->addStatement($insertStatement,
+                                           'insert into `%s`.`%s`(%s)',
+                                           [$this->auditSchemaName,
+                                            $this->tableName,
+                                            $columnNames]);
+    $insertStatement = $this->addStatement($insertStatement, 'values(%s);', $values);
 
-    return $insertStatement;
+    return implode("\n", $insertStatement);
   }
 
   //--------------------------------------------------------------------------------------------------------------------
