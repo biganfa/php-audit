@@ -25,6 +25,9 @@
       "SetBased\\Audit\\": "src/"
     }
   },
+  "bin": [
+    "bin/audit"
+  ],
   "config": {
     "bin-dir": "bin"
   }
