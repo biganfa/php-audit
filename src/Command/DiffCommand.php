@@ -94,6 +94,14 @@ class DiffCommand extends AuditCommand
     $style = new OutputFormatterStyle('yellow');
     $output->getFormatter()->setStyle('mm_type', $style);
 
+    // Style for obsolete tables.
+    $style = new OutputFormatterStyle('yellow');
+    $output->getFormatter()->setStyle('obsolete_table', $style);
+
+    // Style for missing tables.
+    $style = new OutputFormatterStyle('red');
+    $output->getFormatter()->setStyle('miss_table', $style);
+
     $this->configFileName = $input->getArgument('config file');
     $this->readConfigFile();
 
@@ -207,6 +215,28 @@ class DiffCommand extends AuditCommand
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
+   * Writes the difference between the audit tables and metadata tables to the output.
+   *
+   * @param OutputInterface $output The output.
+   */
+  private function diffTables($output)
+  {
+    foreach ($this->config['tables'] as $tableName => $table)
+    {
+      $res = StaticDataLayer::searchInRowSet('table_name', $tableName, $this->auditSchemaTables);
+      if ($table['audit'] && !isset($res))
+      {
+        $output->writeln(sprintf('<miss_table>%s</>', $tableName));
+      }
+      else if (!$table['audit'] && isset($res))
+      {
+        $output->writeln(sprintf('<obsolete_table>%s</>', $tableName));
+      }
+    }
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
    * Writes the difference between the audit and data tables to the output.
    *
    * @param OutputInterface $output The output.
@@ -214,37 +244,41 @@ class DiffCommand extends AuditCommand
   private function printDiff($output)
   {
     $first = true;
-    foreach ($this->diffColumns as $tableName => $columns)
+    if (isset($this->diffColumns))
     {
-      // Remove matching columns unless the full option is used.
-      if (!$this->full)
+      foreach ($this->diffColumns as $tableName => $columns)
       {
-        $columns = self::removeMatchingColumns($columns);
-      }
-
-      if (!empty($columns))
-      {
-        // Add an empty line between tables.
-        if ($first)
+        // Remove matching columns unless the full option is used.
+        if (!$this->full)
         {
-          $first = false;
-        }
-        else
-        {
-          $output->writeln('');
+          $columns = self::removeMatchingColumns($columns);
         }
 
-        // Write table name.
-        $output->writeln($tableName);
+        if (!empty($columns))
+        {
+          // Add an empty line between tables.
+          if ($first)
+          {
+            $first = false;
+          }
+          else
+          {
+            $output->writeln('');
+          }
 
-        // Write table with columns.
-        $columns = $this->addHighlighting($columns);
-        $table   = new Table($output);
-        $table->setHeaders(['column name', 'data table type', 'audit table type'])
-              ->setRows($columns);
-        $table->render();
+          // Write table name.
+          $output->writeln($tableName);
+
+          // Write table with columns.
+          $columns = $this->addHighlighting($columns);
+          $table   = new Table($output);
+          $table->setHeaders(['column name', 'data table type', 'audit table type'])
+                ->setRows($columns);
+          $table->render();
+        }
       }
     }
+    $this->diffTables($output);
   }
 
   //--------------------------------------------------------------------------------------------------------------------
