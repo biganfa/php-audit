@@ -11,6 +11,7 @@ use Symfony\Component\Console\Formatter\OutputFormatterStyle;
 use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -74,7 +75,7 @@ class DiffCommand extends AuditCommand
     $this->setName('diff')
          ->setDescription('Compares data tables and audit tables')
          ->addArgument('config file', InputArgument::OPTIONAL, 'The audit configuration file', 'etc/audit.json')
-         ->addOption('full', 'f', InputArgument::OPTIONAL, 'Show all columns');
+         ->addOption('full', 'f', InputOption::VALUE_NONE, 'Show all columns');
   }
 
   //--------------------------------------------------------------------------------------------------------------------
