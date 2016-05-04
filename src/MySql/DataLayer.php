@@ -3,6 +3,7 @@
 namespace SetBased\Audit\MySql;
 
 use SetBased\Audit\Columns;
+use SetBased\Audit\MySql\Sql\AddNewColumns;
 use SetBased\Audit\MySql\Sql\CreateAuditTable;
 use SetBased\Audit\MySql\Sql\CreateAuditTrigger;
 use SetBased\Stratum\MySql\StaticDataLayer;
@@ -35,29 +36,14 @@ class DataLayer
    *
    * @param string $auditSchemaName The name of audit schema.
    * @param string $tableName       The name of the table.
-   * @param array  $columns         The metadata of the new columns.
+   * @param array[]  $columns         The metadata of the new columns.
    */
   public static function addNewColumns($auditSchemaName, $tableName, $columns)
   {
-    $sql = sprintf('alter table `%s`.`%s`', $auditSchemaName, $tableName);
-    foreach ($columns as $column)
-    {
-      $sql .= ' add `'.$column['column_name'].'` '.$column['column_type'];
-      if (isset($column['after']))
-      {
-        $sql .= ' after `'.$column['after'].'`';
-      }
-      else
-      {
-        $sql .= ' first';
-      }
-      if (end($columns)!==$column)
-      {
-        $sql .= ',';
-      }
-    }
+    $helper = new AddNewColumns($auditSchemaName, $tableName, $columns);
+    $sql    = $helper->buildStatement();
 
-    self::$dl->executeNone($sql);
+    self::executeNone($sql);
   }
 
   //--------------------------------------------------------------------------------------------------------------------
