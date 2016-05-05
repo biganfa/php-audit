@@ -6,6 +6,7 @@ use SetBased\Audit\Command\AboutCommand;
 use SetBased\Audit\Command\DiffCommand;
 use SetBased\Audit\MySql\Command\AuditCommand;
 use Symfony\Component\Console\Application;
+use Symfony\Component\Console\Command\Command;
 
 //----------------------------------------------------------------------------------------------------------------------
 /**
@@ -26,7 +27,7 @@ class AuditApplication extends Application
   /**
    * Gets the default commands that should always be available.
    *
-   * @return array An array of default Command instances
+   * @return Command[] An array of default Command instances.
    */
   protected function getDefaultCommands()
   {

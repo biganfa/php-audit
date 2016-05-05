@@ -36,7 +36,7 @@ class CompoundSyntaxStore
   /**
    * Object constructor.
    */
-  public function __constructor()
+  public function __construct()
   {
     // Nothing to do.
   }
@@ -65,7 +65,7 @@ class CompoundSyntaxStore
         break;
 
       default:
-        throw new RuntimeException("Nor a string or array.");
+        throw new RuntimeException('Nor a string or array.');
     }
   }
 
