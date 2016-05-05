@@ -4,6 +4,7 @@ namespace SetBased\Audit\MySql\Sql;
 
 use SetBased\Audit\Columns;
 use SetBased\Exception\FallenException;
+use SetBased\Exception\RuntimeException;
 use SetBased\Stratum\MySql\StaticDataLayer;
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -252,7 +253,7 @@ class CreateAuditTrigger
           break;
 
         default:
-          throw new FallenException('column_type', var_dump($column, true));
+          throw new RuntimeException('None of audit_value_type and audit_expression are set.');
       }
     }
 
