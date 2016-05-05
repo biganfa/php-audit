@@ -2,6 +2,8 @@
 //----------------------------------------------------------------------------------------------------------------------
 namespace SetBased\Audit\MySql\Sql;
 
+use SetBased\Audit\MySql\Helper\CompoundSyntaxStore;
+
 //----------------------------------------------------------------------------------------------------------------------
 /**
  * Class for creating SQL statements for adding new columns to an audit table.
@@ -54,25 +56,27 @@ class AlterAuditTableAddColumns
    */
   public function buildStatement()
   {
-    $sql = sprintf('alter table `%s`.`%s`', $this->auditSchemaName, $this->tableName);
+    $code = new CompoundSyntaxStore();
+
+    $code->append(sprintf('alter table `%s`.`%s`', $this->auditSchemaName, $this->tableName));
     foreach ($this->columns as $column)
     {
-      $sql .= ' add `'.$column['column_name'].'` '.$column['column_type'];
+      $code->append(sprintf('  add `%s` %s', $column['column_name'], $column['column_type']), false);
       if (isset($column['after']))
       {
-        $sql .= ' after `'.$column['after'].'`';
+        $code->appendToLastLine(sprintf(' after `%s`', $column['after']));
       }
       else
       {
-        $sql .= ' first';
+        $code->appendToLastLine(' first');
       }
       if (end($this->columns)!==$column)
       {
-        $sql .= ',';
+        $code->appendToLastLine(',');
       }
     }
 
-    return $sql;
+    return $code->getCode();
   }
 
   //--------------------------------------------------------------------------------------------------------------------

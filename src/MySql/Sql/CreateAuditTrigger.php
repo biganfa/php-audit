@@ -3,6 +3,7 @@
 namespace SetBased\Audit\MySql\Sql;
 
 use SetBased\Audit\Columns;
+use SetBased\Audit\MySql\Helper\CompoundSyntaxStore;
 use SetBased\Exception\FallenException;
 use SetBased\Exception\RuntimeException;
 use SetBased\Stratum\MySql\StaticDataLayer;
@@ -36,18 +37,18 @@ class CreateAuditTrigger
   private $auditSchemaName;
 
   /**
+   * The generated code.
+   *
+   * @var CompoundSyntaxStore
+   */
+  private $code;
+
+  /**
    * The name of the data schema.
    *
    * @var string
    */
   private $dataSchemaName;
-
-  /**
-   * Indent level.
-   *
-   * @var int
-   */
-  private $indentLevel;
 
   /**
    * The skip variable.
@@ -127,6 +128,8 @@ class CreateAuditTrigger
    */
   public function buildStatement()
   {
+    $this->code = new CompoundSyntaxStore();
+
     $rowState = [];
     switch ($this->triggerAction)
     {
@@ -147,54 +150,44 @@ class CreateAuditTrigger
         throw new FallenException('action', $this->triggerAction);
     }
 
-    $sql   = [];
-    $sql[] = sprintf('create trigger `%s`.`%s`', $this->dataSchemaName, $this->triggerName);
-    $sql[] = sprintf('after %s on `%s`.`%s`', strtolower($this->triggerAction), $this->dataSchemaName, $this->tableName);
-    $sql[] = 'for each row';
-    $sql[] = 'begin';
+    $this->code->append(sprintf('create trigger `%s`.`%s`', $this->dataSchemaName, $this->triggerName));
+    $this->code->append(sprintf('after %s on `%s`.`%s`', strtolower($this->triggerAction), $this->dataSchemaName, $this->tableName));
+    $this->code->append('for each row');
+    $this->code->append('begin');
 
-    if ($this->skipVariable!==null) $sql[] = sprintf('if (%s is null) then', $this->skipVariable);
+    if ($this->skipVariable!==null) $this->code->append(sprintf('if (%s is null) then', $this->skipVariable));
 
-    if (is_array($this->additionalSql))
-    {
-      foreach ($this->additionalSql as $line)
-      {
-        $sql[] = $line;
-      }
-    }
+    $this->code->append($this->additionalSql);
 
-    $this->createInsertStatement($sql, $rowState[0]);
+    $this->createInsertStatement($rowState[0]);
     if (sizeof($rowState)==2)
     {
-      $this->createInsertStatement($sql, $rowState[1]);
+      $this->createInsertStatement($rowState[1]);
     }
 
-    if ($this->skipVariable!==null) $sql[] = 'end if;';
-    $sql[] = 'end';
+    if ($this->skipVariable!==null) $this->code->append('end if;');
+    $this->code->append('end');
 
-    return $this->writeIndent($sql);
+    return $this->code->getCode();
   }
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
    * Adds an insert SQL statement to SQL code for a trigger.
    *
-   * @param string[] $sql      The SQL code.
-   * @param string   $rowState The row state (i.e. OLD or NEW).
+   * @param string $rowState The row state (i.e. OLD or NEW).
    */
-  private function createInsertStatement(&$sql, $rowState)
+  private function createInsertStatement($rowState)
   {
-    $this->createInsertStatementInto($sql);
-    $this->createInsertStatementValues($sql, $rowState);
+    $this->createInsertStatementInto();
+    $this->createInsertStatementValues($rowState);
   }
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
    * Adds the "insert into" part of an insert SQL statement to SQL code for a trigger.
-   *
-   * @param string[] $sql      The SQL code.
    */
-  private function createInsertStatementInto(&$sql)
+  private function createInsertStatementInto()
   {
     $columnNames = '';
 
@@ -212,17 +205,16 @@ class CreateAuditTrigger
       $columnNames .= sprintf('`%s`', $column['column_name']);
     }
 
-    $sql[] = sprintf('insert into `%s`.`%s`(%s)', $this->auditSchemaName, $this->tableName, $columnNames);
+    $this->code->append(sprintf('insert into `%s`.`%s`(%s)', $this->auditSchemaName, $this->tableName, $columnNames));
   }
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
    * Adds the "values" part of an insert SQL statement to SQL code for a trigger.
    *
-   * @param string[] $sql      The SQL code.
-   * @param string   $rowState The row state (i.e. OLD or NEW).
+   * @param string $rowState The row state (i.e. OLD or NEW).
    */
-  private function createInsertStatementValues(&$sql, $rowState)
+  private function createInsertStatementValues($rowState)
   {
     $values = '';
 
@@ -264,54 +256,7 @@ class CreateAuditTrigger
       $values .= sprintf('%s.`%s`', $rowState, $column['column_name']);
     }
 
-    $sql[] = sprintf('values(%s);', $values);
-  }
-
-  //--------------------------------------------------------------------------------------------------------------------
-  /**
-   * Returns the SQL statement with indents.
-   *
-   * @param string[] $sqlStatement The SQL query.
-   *
-   * @return string
-   */
-  private  function writeIndent($sqlStatement)
-  {
-    $sqlStatementWithIndent = [];
-    foreach ($sqlStatement as $key => $line)
-    {
-      $line  = trim($line);
-      $words = explode(' ', $line);
-      if (count($words)>0)
-      {
-        switch ($words[0])
-        {
-          case 'begin':
-            $this->indentLevel += 1;
-            break;
-
-          case 'if':
-            $line = str_repeat('  ', $this->indentLevel).$line;
-            $this->indentLevel += 1;
-            break;
-
-          case 'end':
-            if ($this->indentLevel>0)
-            {
-              $this->indentLevel -= 1;
-            }
-            $line = str_repeat('  ', $this->indentLevel).$line;
-            break;
-
-          default:
-            $line = str_repeat('  ', $this->indentLevel).$line;
-            break;
-        }
-      }
-      $sqlStatementWithIndent[] = $line;
-    }
-
-    return implode("\n", $sqlStatementWithIndent);
+    $this->code->append(sprintf('values(%s);', $values));
   }
 
   //--------------------------------------------------------------------------------------------------------------------

@@ -4,6 +4,7 @@ namespace SetBased\Audit\MySql\Sql;
 
 use SetBased\Audit\Columns;
 use SetBased\Audit\MySql\DataLayer;
+use SetBased\Audit\MySql\Helper\CompoundSyntaxStore;
 
 //----------------------------------------------------------------------------------------------------------------------
 /**
@@ -69,12 +70,13 @@ class CreateAuditTable
    */
   public function buildStatement()
   {
-    $sql          = sprintf("create table `%s`.`%s`\n", $this->auditSchemaName, $this->tableName);
-    $columns      = $this->columns->getColumns();
-    $tableOptions = DataLayer::getTableOptions($this->dataSchemaName, $this->tableName);
+    $code = new CompoundSyntaxStore();
+
+    $code->append(sprintf('create table `%s`.`%s`', $this->auditSchemaName, $this->tableName));
 
     // Base format on column with longest name.
-    $width = 0;
+    $columns = $this->columns->getColumns();
+    $width   = 0;
     foreach ($columns as $column)
     {
       $width = max($width, mb_strlen($column['column_name']));
@@ -82,24 +84,24 @@ class CreateAuditTable
     $format = sprintf('  %%-%ds %%s', $width + 2);
 
     // Create SQL for columns.
-    $sql .= "(\n";
+    $code->append('(');
     foreach ($columns as $column)
     {
-      $sql .= sprintf($format, '`'.$column['column_name'].'`', $column['column_type']);
+      $code->append(sprintf($format, '`'.$column['column_name'].'`', $column['column_type']), false);
       if (end($columns)!==$column)
       {
-        $sql .= ',';
+        $code->appendToLastLine(',');
       }
-      $sql .= "\n";
     }
 
     // Create SQL for table options.
-    $sql .= sprintf(') engine=%s default charset=%s default collate=%s',
-                    $tableOptions['engine'],
-                    $tableOptions['character_set_name'],
-                    $tableOptions['table_collation']);
+    $tableOptions = DataLayer::getTableOptions($this->dataSchemaName, $this->tableName);
+    $code->append(sprintf(') engine=%s default charset=%s default collate=%s',
+                          $tableOptions['engine'],
+                          $tableOptions['character_set_name'],
+                          $tableOptions['table_collation']));
 
-    return $sql;
+    return $code->getCode();
   }
 
   //--------------------------------------------------------------------------------------------------------------------
