@@ -196,7 +196,7 @@ class Table
   /**
    * Adds new columns to audit table.
    *
-   * @param \array[] $columns Columns array
+   * @param Columns $columns Columns array
    */
   private function addNewColumns($columns)
   {
@@ -254,7 +254,7 @@ class Table
   /**
    * Compares columns types from table in data_schema with columns in config file.
    *
-   * @return array[]
+   * @return Columns
    */
   private function getAlteredColumns()
   {
@@ -296,24 +296,26 @@ class Table
     $this->loggingColumnInfo($newColumns, $obsoleteColumns, $alteredColumns);
     $this->addNewColumns($newColumns);
 
-    return ['full_columns'     => $this->getTableColumnsFromConfig($newColumns, $obsoleteColumns),
-            'new_columns'      => $newColumns,
-            'obsolete_columns' => $obsoleteColumns,
-            'altered_columns'  => $alteredColumns];
+    return ['full_columns'     => $this->getTableColumnsFromConfig($newColumns, $obsoleteColumns)->getColumns(),
+            'new_columns'      => $newColumns->getColumns(),
+            'obsolete_columns' => $obsoleteColumns->getColumns(),
+            'altered_columns'  => $alteredColumns->getColumns()];
   }
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
    * Check for know what columns array returns.
    *
-   * @param array[] $newColumns
-   * @param array[] $obsoleteColumns
+   * @param Columns $newColumns
+   * @param Columns $obsoleteColumns
    *
    * @return Columns
    */
   private function getTableColumnsFromConfig($newColumns, $obsoleteColumns)
   {
-    if (!empty($newColumns) && !empty($obsoleteColumns))
+    $new      = $newColumns->getColumns();
+    $obsolete = $obsoleteColumns->getColumns();
+    if (!empty($new) && !empty($obsolete))
     {
       return $this->dataTableColumnsConfig;
     }
@@ -349,37 +351,39 @@ class Table
   /**
    * Logging new and obsolete columns.
    *
-   * @param array[] $newColumns
-   * @param array[] $obsoleteColumns
-   * @param array[] $alteredColumns
+   * @param Columns $newColumns
+   * @param Columns $obsoleteColumns
+   * @param Columns $alteredColumns
    */
   private function loggingColumnInfo($newColumns, $obsoleteColumns, $alteredColumns)
   {
-    if (!empty($newColumns) && !empty($obsoleteColumns))
+    $new      = $newColumns->getColumns();
+    $obsolete = $obsoleteColumns->getColumns();
+    if (!empty($new) && !empty($obsolete))
     {
       $this->io->logInfo('Found both new and obsolete columns for table %s', $this->tableName);
       $this->io->logInfo('No action taken');
-      foreach ($newColumns as $column)
+      foreach ($newColumns->getColumns() as $column)
       {
         $this->io->logInfo('New column %s', $column['column_name']);
       }
-      foreach ($obsoleteColumns as $column)
+      foreach ($obsoleteColumns->getColumns() as $column)
       {
         $this->io->logInfo('Obsolete column %s', $column['column_name']);
       }
     }
 
-    foreach ($obsoleteColumns as $column)
+    foreach ($obsoleteColumns->getColumns() as $column)
     {
       $this->io->logInfo('Obsolete column %s.%s', $this->tableName, $column['column_name']);
     }
 
-    foreach ($newColumns as $column)
+    foreach ($newColumns->getColumns() as $column)
     {
       $this->io->logInfo('New column %s.%s', $this->tableName, $column['column_name']);
     }
 
-    foreach ($alteredColumns as $column)
+    foreach ($alteredColumns->getColumns() as $column)
     {
       $this->io->logInfo('Type of <dbo>%s.%s</dbo> has been altered to <dbo>%s</dbo>',
                          $this->tableName,

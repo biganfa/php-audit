@@ -49,7 +49,7 @@ class AuditCommand extends MySqlCommand
   public function getColumns($tableName, $columns)
   {
     $new_columns = [];
-    foreach ($columns->getColumns() as $column)
+    foreach ($columns as $column)
     {
       $new_columns[] = ['column_name' => $column['column_name'],
                         'column_type' => $column['column_type']];

@@ -2,6 +2,7 @@
 //----------------------------------------------------------------------------------------------------------------------
 namespace SetBased\Audit\MySql\Sql;
 
+use SetBased\Audit\Columns;
 use SetBased\Audit\MySql\Helper\CompoundSyntaxStore;
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -21,7 +22,7 @@ class AlterAuditTableAddColumns
   /**
    * The array of new columns for adding to table.
    *
-   * @var array[]
+   * @var Columns
    */
   private $columns;
 
@@ -38,7 +39,7 @@ class AlterAuditTableAddColumns
    *
    * @param string  $auditSchemaName The name of the audit schema.
    * @param string  $tableName       The name of the table.
-   * @param array[] $columns         The metadata of the new columns of the audit table (i.e. the audit columns and
+   * @param Columns $columns         The metadata of the new columns of the audit table (i.e. the audit columns and
    *                                 columns of the data table).
    */
   public function __construct($auditSchemaName, $tableName, $columns)
@@ -59,7 +60,7 @@ class AlterAuditTableAddColumns
     $code = new CompoundSyntaxStore();
 
     $code->append(sprintf('alter table `%s`.`%s`', $this->auditSchemaName, $this->tableName));
-    foreach ($this->columns as $column)
+    foreach ($this->columns->getColumns() as $column)
     {
       $code->append(sprintf('  add `%s` %s', $column['column_name'], $column['column_type']), false);
       if (isset($column['after']))
@@ -70,7 +71,8 @@ class AlterAuditTableAddColumns
       {
         $code->appendToLastLine(' first');
       }
-      if (end($this->columns)!==$column)
+      $columns = $this->columns->getColumns();
+      if (end($columns)!==$column)
       {
         $code->appendToLastLine(',');
       }
