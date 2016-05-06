@@ -255,6 +255,7 @@ class DataLayer
     $sql = sprintf('
 select COLUMN_NAME as column_name
 ,      COLUMN_TYPE as column_type
+,      IS_NULLABLE as is_nullable
 from   information_schema.COLUMNS
 where  TABLE_SCHEMA = %s
 and    TABLE_NAME   = %s

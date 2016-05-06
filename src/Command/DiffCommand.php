@@ -57,7 +57,7 @@ class DiffCommand extends AuditCommand
     $cleaned = [];
     foreach ($columns as $column)
     {
-      if ($column['data_table_type']!=$column['audit_table_type'])
+      if (($column['data_table_type']!=$column['audit_table_type'] && $column['audit_table_type']!=$column['config_type']) || ($column['audit_table_type']!=$column['config_type'] && !empty($column['config_type'])))
       {
         $cleaned[] = $column;
       }
@@ -129,20 +129,48 @@ class DiffCommand extends AuditCommand
     foreach ($columns as $column)
     {
       $styledColumn = $column;
-      if (isset($column['data_table_type']) && !isset($column['audit_table_type']))
+      // Highlighting for data table column types and audit.
+      if (!empty($column['data_table_type']))
       {
-        $styledColumn['column_name']     = sprintf('<mm_column>%s</>', $styledColumn['column_name']);
-        $styledColumn['data_table_type'] = sprintf('<mm_type>%s</>', $styledColumn['data_table_type']);
+        if (isset($column['data_table_type']) && !isset($column['audit_table_type']))
+        {
+          $styledColumn['column_name']     = sprintf('<mm_column>%s</>', $styledColumn['column_name']);
+          $styledColumn['data_table_type'] = sprintf('<mm_type>%s</>', $styledColumn['data_table_type']);
+        }
+        else if (!isset($column['data_table_type']) && isset($column['audit_table_type']))
+        {
+          $styledColumn['audit_table_type'] = sprintf('<mm_type>%s</>', $styledColumn['audit_table_type']);
+        }
+        else if (strcmp($column['data_table_type'], $column['audit_table_type']) && !isset($configType))
+        {
+          $styledColumn['column_name']      = sprintf('<mm_column>%s</>', $styledColumn['column_name']);
+          $styledColumn['data_table_type']  = sprintf('<mm_type>%s</>', $styledColumn['data_table_type']);
+          $styledColumn['audit_table_type'] = sprintf('<mm_type>%s</>', $styledColumn['audit_table_type']);
+        }
       }
-      else if (!isset($column['data_table_type']) && isset($column['audit_table_type']))
+      else
       {
-        $styledColumn['audit_table_type'] = sprintf('<mm_type>%s</>', $styledColumn['audit_table_type']);
-      }
-      else if (strcmp($column['data_table_type'], $column['audit_table_type']))
-      {
-        $styledColumn['column_name']      = sprintf('<mm_column>%s</>', $styledColumn['column_name']);
-        $styledColumn['data_table_type']  = sprintf('<mm_type>%s</>', $styledColumn['data_table_type']);
-        $styledColumn['audit_table_type'] = sprintf('<mm_type>%s</>', $styledColumn['audit_table_type']);
+        // Highlighting for audit table column types and audit_columns in config file.
+        $searchColumn = StaticDataLayer::searchInRowSet('column_name', $styledColumn['column_name'], $this->config['audit_columns']);
+        if (isset($searchColumn))
+        {
+          $configType = $this->config['audit_columns'][$searchColumn]['column_type'];
+          if (isset($configType) && !isset($column['audit_table_type']))
+          {
+            $styledColumn['column_name'] = sprintf('<mm_column>%s</>', $styledColumn['column_name']);
+            $styledColumn['config_type'] = sprintf('<mm_type>%s</>', $styledColumn['config_type']);
+          }
+          else if (!isset($configType) && isset($column['audit_table_type']))
+          {
+            $styledColumn['audit_table_type'] = sprintf('<mm_type>%s</>', $column['audit_table_type']);
+          }
+          else if (strcmp($configType, $column['audit_table_type']))
+          {
+            $styledColumn['column_name']      = sprintf('<mm_column>%s</>', $styledColumn['column_name']);
+            $styledColumn['audit_table_type'] = sprintf('<mm_type>%s</>', $column['audit_table_type']);
+            $styledColumn['config_type']      = sprintf('<mm_type>%s</>', $styledColumn['config_type']);
+          }
+        }
       }
       $styledColumns[] = $styledColumn;
     }
@@ -167,7 +195,8 @@ class DiffCommand extends AuditCommand
     {
       $columns[$column['column_name']] = ['column_name'      => $column['column_name'],
                                           'data_table_type'  => $column['column_type'],
-                                          'audit_table_type' => null];
+                                          'audit_table_type' => null,
+                                          'config_type'      => null];
     }
 
     foreach ($auditColumns->getColumns() as $column)
@@ -176,7 +205,19 @@ class DiffCommand extends AuditCommand
 
       $columns[$column['column_name']] = ['column_name'      => $column['column_name'],
                                           'data_table_type'  => $data_table_type,
-                                          'audit_table_type' => $column['column_type']];
+                                          'audit_table_type' => $column['column_type'],
+                                          'config_type'      => null];
+    }
+
+    foreach ($this->config['audit_columns'] as $column)
+    {
+      $data_table_type  = isset($columns[$column['column_name']]) ? $columns[$column['column_name']]['data_table_type'] : null;
+      $audit_table_type = isset($columns[$column['column_name']]) ? $columns[$column['column_name']]['audit_table_type'] : null;
+
+      $columns[$column['column_name']] = ['column_name'      => $column['column_name'],
+                                          'data_table_type'  => $data_table_type,
+                                          'audit_table_type' => $audit_table_type,
+                                          'config_type'      => $column['column_type']];
     }
 
     return $columns;
@@ -197,20 +238,41 @@ class DiffCommand extends AuditCommand
         {
           $dataColumns  = new Columns(DataLayer::getTableColumns($this->config['database']['data_schema'], $table['table_name']));
           $auditColumns = DataLayer::getTableColumns($this->config['database']['audit_schema'], $table['table_name']);
-
-          // Removing audit columns.
-          $auditColumns = array_udiff($auditColumns,
-                                      $this->config['audit_columns'],
-            function ($a, $b)
-            {
-              return strcmp($a['column_name'], $b['column_name']);
-            });
+          $auditColumns = $this->addNotNull($auditColumns);
           $auditColumns = new Columns($auditColumns);
 
           $this->diffColumns[$table['table_name']] = $this->createDiffArray($dataColumns, $auditColumns);
         }
       }
     }
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
+   * Add not null to audit columns if it not nullable.
+   *
+   * @param array $theColumns Audit columns.
+   *
+   * @return array
+   */
+  private function addNotNull($theColumns)
+  {
+    $modifiedColumns = [];
+    foreach ($theColumns as $column)
+    {
+      $modifiedColumn = $column;
+      $auditColumn    = StaticDataLayer::searchInRowSet('column_name', $modifiedColumn['column_name'], $this->config['audit_columns']);
+      if (isset($auditColumn))
+      {
+        if ($modifiedColumn['is_nullable']==='NO')
+        {
+          $modifiedColumn['column_type'] = sprintf('%s not null', $modifiedColumn['column_type']);
+        }
+      }
+      $modifiedColumns[] = $modifiedColumn;
+    }
+
+    return $modifiedColumns;
   }
 
   //--------------------------------------------------------------------------------------------------------------------
@@ -272,7 +334,7 @@ class DiffCommand extends AuditCommand
           // Write table with columns.
           $columns = $this->addHighlighting($columns);
           $table   = new Table($output);
-          $table->setHeaders(['column name', 'data table type', 'audit table type'])
+          $table->setHeaders(['column name', 'data table type', 'audit table type', 'config'])
                 ->setRows($columns);
           $table->render();
         }
