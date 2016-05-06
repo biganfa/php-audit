@@ -335,7 +335,7 @@ class DiffCommand extends AuditCommand
           // Write table with columns.
           $columns = $this->addHighlighting($columns);
           $table   = new Table($output);
-          $table->setHeaders(['column name', 'data table type', 'audit table type', 'config'])
+          $table->setHeaders(['column', 'data table', 'audit table', 'config'])
                 ->setRows($columns);
           $table->render();
         }
