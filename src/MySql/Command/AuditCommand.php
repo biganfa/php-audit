@@ -43,8 +43,8 @@ class AuditCommand extends MySqlCommand
   /**
    * Compares the tables listed in the config file and the tables found in the audit schema
    *
-   * @param string  $tableName Name of table
-   * @param Columns $columns   The table columns.
+   * @param string   $tableName Name of table
+   * @param \array[] $columns   The table columns.
    */
   public function getColumns($tableName, $columns)
   {

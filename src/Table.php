@@ -281,7 +281,7 @@ class Table
   /**
    * Compare columns from table in data_schema with columns in config file.
    *
-   * @return array[]
+   * @return \array[]
    */
   private function getTableColumnInfo()
   {
