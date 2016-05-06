@@ -57,7 +57,7 @@ class DiffCommand extends AuditCommand
     $cleaned = [];
     foreach ($columns as $column)
     {
-      if (($column['data_table_type']!=$column['audit_table_type'] && $column['audit_table_type']!=$column['config']) || ($column['audit_table_type']!=$column['config'] && !empty($column['config'])))
+      if (($column['data_table_type']!=$column['audit_table_type'] && $column['audit_table_type']!=$column['config_type']) || ($column['audit_table_type']!=$column['config_type'] && !empty($column['config_type'])))
       {
         $cleaned[] = $column;
       }
@@ -158,7 +158,7 @@ class DiffCommand extends AuditCommand
           if (isset($configType) && !isset($column['audit_table_type']))
           {
             $styledColumn['column_name'] = sprintf('<mm_column>%s</>', $styledColumn['column_name']);
-            $styledColumn['config']      = sprintf('<mm_type>%s</>', $styledColumn['config']);
+            $styledColumn['config_type'] = sprintf('<mm_type>%s</>', $styledColumn['config_type']);
           }
           else if (!isset($configType) && isset($column['audit_table_type']))
           {
@@ -168,7 +168,7 @@ class DiffCommand extends AuditCommand
           {
             $styledColumn['column_name']      = sprintf('<mm_column>%s</>', $styledColumn['column_name']);
             $styledColumn['audit_table_type'] = sprintf('<mm_type>%s</>', $column['audit_table_type']);
-            $styledColumn['config']           = sprintf('<mm_type>%s</>', $styledColumn['config']);
+            $styledColumn['config_type']      = sprintf('<mm_type>%s</>', $styledColumn['config_type']);
           }
         }
       }
@@ -196,7 +196,7 @@ class DiffCommand extends AuditCommand
       $columns[$column['column_name']] = ['column_name'      => $column['column_name'],
                                           'data_table_type'  => $column['column_type'],
                                           'audit_table_type' => null,
-                                          'config'           => null];
+                                          'config_type'      => null];
     }
 
     foreach ($auditColumns->getColumns() as $column)
@@ -206,7 +206,7 @@ class DiffCommand extends AuditCommand
       $columns[$column['column_name']] = ['column_name'      => $column['column_name'],
                                           'data_table_type'  => $data_table_type,
                                           'audit_table_type' => $column['column_type'],
-                                          'config'           => null];
+                                          'config_type'      => null];
     }
 
     foreach ($this->config['audit_columns'] as $column)
@@ -217,7 +217,7 @@ class DiffCommand extends AuditCommand
       $columns[$column['column_name']] = ['column_name'      => $column['column_name'],
                                           'data_table_type'  => $data_table_type,
                                           'audit_table_type' => $audit_table_type,
-                                          'config'           => $column['column_type']];
+                                          'config_type'      => $column['column_type']];
     }
 
     return $columns;
@@ -264,7 +264,7 @@ class DiffCommand extends AuditCommand
       $auditColumn    = StaticDataLayer::searchInRowSet('column_name', $modifiedColumn['column_name'], $this->config['audit_columns']);
       if (isset($auditColumn))
       {
-        if ($modifiedColumn['is_null']==='NO')
+        if ($modifiedColumn['is_nullable']==='NO')
         {
           $modifiedColumn['column_type'] = sprintf('%s not null', $modifiedColumn['column_type']);
         }
