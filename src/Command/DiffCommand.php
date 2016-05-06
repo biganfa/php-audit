@@ -189,38 +189,39 @@ class DiffCommand extends AuditCommand
    */
   private function createDiffArray($dataColumns, $auditColumns)
   {
-    $columns = [];
 
-    foreach ($dataColumns->getColumns() as $column)
+    $diff = [];
+
+    foreach ($this->config['audit_columns'] as $column)
     {
-      $columns[$column['column_name']] = ['column_name'      => $column['column_name'],
-                                          'data_table_type'  => $column['column_type'],
-                                          'audit_table_type' => null,
-                                          'config_type'      => null];
+      $diff[$column['column_name']] = ['column_name'      => $column['column_name'],
+                                       'data_table_type'  => null,
+                                       'audit_table_type' => null,
+                                       'config_type'      => $column['column_type']];
     }
 
     foreach ($auditColumns->getColumns() as $column)
     {
-      $data_table_type = isset($columns[$column['column_name']]) ? $columns[$column['column_name']]['data_table_type'] : null;
+      $config_type = isset($diff[$column['column_name']]) ? $diff[$column['column_name']]['config_type'] : null;
 
-      $columns[$column['column_name']] = ['column_name'      => $column['column_name'],
-                                          'data_table_type'  => $data_table_type,
-                                          'audit_table_type' => $column['column_type'],
-                                          'config_type'      => null];
+      $diff[$column['column_name']] = ['column_name'      => $column['column_name'],
+                                       'data_table_type'  => null,
+                                       'audit_table_type' => $column['column_type'],
+                                       'config_type'      => $config_type];
     }
 
-    foreach ($this->config['audit_columns'] as $column)
+    foreach ($dataColumns->getColumns() as $column)
     {
-      $data_table_type  = isset($columns[$column['column_name']]) ? $columns[$column['column_name']]['data_table_type'] : null;
-      $audit_table_type = isset($columns[$column['column_name']]) ? $columns[$column['column_name']]['audit_table_type'] : null;
+      $config_type      = isset($diff[$column['column_name']]) ? $diff[$column['column_name']]['config_type'] : null;
+      $audit_table_type = isset($diff[$column['column_name']]) ? $diff[$column['column_name']]['audit_table_type'] : null;
 
-      $columns[$column['column_name']] = ['column_name'      => $column['column_name'],
-                                          'data_table_type'  => $data_table_type,
-                                          'audit_table_type' => $audit_table_type,
-                                          'config_type'      => $column['column_type']];
+      $diff[$column['column_name']] = ['column_name'      => $column['column_name'],
+                                       'data_table_type'  => $column['column_type'],
+                                       'audit_table_type' => $audit_table_type,
+                                       'config_type'      => $config_type];
     }
 
-    return $columns;
+    return $diff;
   }
 
   //--------------------------------------------------------------------------------------------------------------------
