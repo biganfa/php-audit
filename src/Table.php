@@ -181,9 +181,12 @@ class Table
       $comparedColumns = $this->getTableColumnInfo();
     }
 
-    if (empty($comparedColumns['new_columns']) && empty($comparedColumns['obsolete_columns']))
+    $newColumns      = $comparedColumns['new_columns']->getColumns();
+    $obsoleteColumns = $comparedColumns['obsolete_columns']->getColumns();
+    if (empty($newColumns) && empty($obsoleteColumns))
     {
-      if (empty($comparedColumns['altered_columns']))
+      $alteredColumns = $comparedColumns['altered_columns']->getColumns();
+      if (empty($alteredColumns))
       {
         $this->createTriggers($additionalSql);
       }
@@ -296,10 +299,10 @@ class Table
     $this->loggingColumnInfo($newColumns, $obsoleteColumns, $alteredColumns);
     $this->addNewColumns($newColumns);
 
-    return ['full_columns'     => $this->getTableColumnsFromConfig($newColumns, $obsoleteColumns)->getColumns(),
-            'new_columns'      => $newColumns->getColumns(),
-            'obsolete_columns' => $obsoleteColumns->getColumns(),
-            'altered_columns'  => $alteredColumns->getColumns()];
+    return ['full_columns'     => $this->getTableColumnsFromConfig($newColumns, $obsoleteColumns),
+            'new_columns'      => $newColumns,
+            'obsolete_columns' => $obsoleteColumns,
+            'altered_columns'  => $alteredColumns];
   }
 
   //--------------------------------------------------------------------------------------------------------------------
