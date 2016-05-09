@@ -34,9 +34,9 @@ class DataLayer
   /**
    * Adds new columns to an audit table.
    *
-   * @param string $auditSchemaName The name of audit schema.
-   * @param string $tableName       The name of the table.
-   * @param array[]  $columns         The metadata of the new columns.
+   * @param string  $auditSchemaName The name of audit schema.
+   * @param string  $tableName       The name of the table.
+   * @param array[] $columns         The metadata of the new columns.
    */
   public static function addNewColumns($auditSchemaName, $tableName, $columns)
   {
@@ -253,9 +253,11 @@ class DataLayer
   public static function getTableColumns($schemaName, $tableName)
   {
     $sql = sprintf('
-select COLUMN_NAME as column_name
-,      COLUMN_TYPE as column_type
-,      IS_NULLABLE as is_nullable
+select COLUMN_NAME        as column_name
+,      COLUMN_TYPE        as column_type
+,      IS_NULLABLE        as is_nullable
+,      CHARACTER_SET_NAME as char_set
+,      COLLATION_NAME     as collation
 from   information_schema.COLUMNS
 where  TABLE_SCHEMA = %s
 and    TABLE_NAME   = %s

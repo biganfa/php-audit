@@ -29,6 +29,8 @@ class Columns
       $this->columns[$column['column_name']] = [
         'column_name'      => $column['column_name'],
         'column_type'      => $column['column_type'],
+        'char_set'         => isset($column['char_set']) ? $column['char_set'] : null,
+        'collation'        => isset($column['collation']) ? $column['collation'] : null,
         'audit_expression' => isset($column['expression']) ? $column['expression'] : null,
         'audit_value_type' => isset($column['value_type']) ? $column['value_type'] : null
       ];
@@ -140,20 +142,24 @@ class Columns
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
-   * Returns previous column of a columns. Returns null if the column name is not found in this Columns.
+   * Return column type with character set and collation.
    *
    * @param string $columnName The column name.
    *
    * @return null|string
    */
-  public function getPreviousColumn($columnName)
+  public function getColumnTypeWithCharSetCollation($columnName)
   {
     $columns = array_keys($this->columns);
     $key     = array_search($columnName, $columns);
 
-    if ($key>=1)
+    if ($key!==false)
     {
-      return $columns[$key - 1];
+      $column              = $this->columns[$columns[$key]];
+      $column['char_set']  = isset($column['char_set']) ? ' '.$column['char_set'] : '';
+      $column['collation'] = isset($column['collation']) ? ' '.$column['collation'] : '';
+
+      return sprintf('%s%s%s', $column['column_type'], $column['char_set'], $column['collation']);
     }
 
     return null;

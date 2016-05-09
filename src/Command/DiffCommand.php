@@ -141,7 +141,7 @@ class DiffCommand extends AuditCommand
         {
           $styledColumn['audit_table_type'] = sprintf('<mm_type>%s</>', $styledColumn['audit_table_type']);
         }
-        else if (strcmp($column['data_table_type'], $column['audit_table_type']) && !isset($configType))
+        else if (strcmp($column['data_table_type'], $column['audit_table_type']))
         {
           $styledColumn['column_name']      = sprintf('<mm_column>%s</>', $styledColumn['column_name']);
           $styledColumn['data_table_type']  = sprintf('<mm_type>%s</>', $styledColumn['data_table_type']);
@@ -189,7 +189,6 @@ class DiffCommand extends AuditCommand
    */
   private function createDiffArray($dataColumns, $auditColumns)
   {
-
     $diff = [];
 
     foreach ($this->config['audit_columns'] as $column)
@@ -206,7 +205,7 @@ class DiffCommand extends AuditCommand
 
       $diff[$column['column_name']] = ['column_name'      => $column['column_name'],
                                        'data_table_type'  => null,
-                                       'audit_table_type' => $column['column_type'],
+                                       'audit_table_type' => $auditColumns->getColumnTypeWithCharSetCollation($column['column_name']),
                                        'config_type'      => $config_type];
     }
 
@@ -216,7 +215,7 @@ class DiffCommand extends AuditCommand
       $audit_table_type = isset($diff[$column['column_name']]) ? $diff[$column['column_name']]['audit_table_type'] : null;
 
       $diff[$column['column_name']] = ['column_name'      => $column['column_name'],
-                                       'data_table_type'  => $column['column_type'],
+                                       'data_table_type'  => $dataColumns->getColumnTypeWithCharSetCollation($column['column_name']),
                                        'audit_table_type' => $audit_table_type,
                                        'config_type'      => $config_type];
     }
