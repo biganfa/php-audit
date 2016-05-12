@@ -34,9 +34,9 @@ class DataLayer
   /**
    * Adds new columns to an audit table.
    *
-   * @param string $auditSchemaName The name of audit schema.
-   * @param string $tableName       The name of the table.
-   * @param array[]  $columns         The metadata of the new columns.
+   * @param string  $auditSchemaName The name of audit schema.
+   * @param string  $tableName       The name of the table.
+   * @param Columns $columns         The metadata of the new columns.
    */
   public static function addNewColumns($auditSchemaName, $tableName, $columns)
   {

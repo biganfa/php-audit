@@ -48,13 +48,13 @@ class AuditCommand extends MySqlCommand
    */
   public function getColumns($tableName, $columns)
   {
-    $new_columns = [];
+    $newColumns = [];
     foreach ($columns->getColumns() as $column)
     {
-      $new_columns[] = ['column_name' => $column['column_name'],
-                        'column_type' => $column['column_type']];
+      $newColumns[] = ['column_name' => $column['column_name'],
+                       'column_type' => $column['column_type']];
     }
-    $this->config['table_columns'][$tableName] = $new_columns;
+    $this->config['table_columns'][$tableName] = $newColumns;
 
     if ($this->pruneOption)
     {
@@ -159,8 +159,9 @@ class AuditCommand extends MySqlCommand
           $currentTable->createMissingAuditTable();
         }
 
-        $columns = $currentTable->main($this->config['additional_sql']);
-        if (empty($columns['altered_columns']))
+        $columns        = $currentTable->main($this->config['additional_sql']);
+        $alteredColumns = $columns['altered_columns']->getColumns();
+        if (empty($alteredColumns))
         {
           $this->getColumns($currentTable->getTableName(), $columns['full_columns']);
         }
