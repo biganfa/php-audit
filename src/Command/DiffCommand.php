@@ -5,6 +5,7 @@ namespace SetBased\Audit\Command;
 use SetBased\Audit\Columns;
 use SetBased\Audit\MySql\Command\AuditCommand;
 use SetBased\Audit\MySql\DataLayer;
+use SetBased\Audit\MySql\Helper\TableHelper;
 use SetBased\Stratum\MySql\StaticDataLayer;
 use SetBased\Stratum\Style\StratumStyle;
 use Symfony\Component\Console\Formatter\OutputFormatterStyle;
@@ -333,9 +334,11 @@ class DiffCommand extends AuditCommand
 
           // Write table with columns.
           $columns = $this->addHighlighting($columns);
-          $table   = new Table($output);
+          $rows    = new TableHelper($this->config['database']['data_schema'], $this->config['database']['audit_schema'], $tableName);
+          $rows->appendRows($columns);
+          $table = new Table($output);
           $table->setHeaders(['column', 'data table', 'audit table', 'config'])
-                ->setRows($columns);
+                ->setRows($rows->getRows());
           $table->render();
         }
       }
