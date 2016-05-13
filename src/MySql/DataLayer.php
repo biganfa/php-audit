@@ -256,8 +256,8 @@ class DataLayer
 select COLUMN_NAME        as column_name
 ,      COLUMN_TYPE        as column_type
 ,      IS_NULLABLE        as is_nullable
-,      CHARACTER_SET_NAME as char_set
-,      COLLATION_NAME     as collation
+,      CHARACTER_SET_NAME as character_set_name
+,      COLLATION_NAME     as collation_name
 from   information_schema.COLUMNS
 where  TABLE_SCHEMA = %s
 and    TABLE_NAME   = %s

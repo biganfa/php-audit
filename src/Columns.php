@@ -27,12 +27,12 @@ class Columns
     foreach ($columns as $column)
     {
       $this->columns[$column['column_name']] = [
-        'column_name'      => $column['column_name'],
-        'column_type'      => $column['column_type'],
-        'char_set'         => isset($column['char_set']) ? $column['char_set'] : null,
-        'collation'        => isset($column['collation']) ? $column['collation'] : null,
-        'audit_expression' => isset($column['expression']) ? $column['expression'] : null,
-        'audit_value_type' => isset($column['value_type']) ? $column['value_type'] : null
+        'column_name'        => $column['column_name'],
+        'column_type'        => $column['column_type'],
+        'character_set_name' => isset($column['character_set_name']) ? $column['character_set_name'] : null,
+        'collation_name'     => isset($column['collation_name']) ? $column['collation_name'] : null,
+        'audit_expression'   => isset($column['expression']) ? $column['expression'] : null,
+        'audit_value_type'   => isset($column['value_type']) ? $column['value_type'] : null
       ];
     }
   }
@@ -155,11 +155,11 @@ class Columns
 
     if ($key!==false)
     {
-      $column              = $this->columns[$columns[$key]];
-      $column['char_set']  = isset($column['char_set']) ? ' '.$column['char_set'] : '';
-      $column['collation'] = isset($column['collation']) ? ' '.$column['collation'] : '';
+      $column                       = $this->columns[$columns[$key]];
+      $column['character_set_name'] = isset($column['character_set_name']) ? ' '.$column['character_set_name'] : '';
+      $column['collation_name']     = isset($column['collation_name']) ? ' '.$column['collation_name'] : '';
 
-      return sprintf('%s%s%s', $column['column_type'], $column['char_set'], $column['collation']);
+      return sprintf('%s%s%s', $column['column_type'], $column['character_set_name'], $column['collation_name']);
     }
 
     return null;
