@@ -81,7 +81,7 @@ class Columns
    * @param Columns $columns1 The first Columns object.
    * @param Columns $columns2 The second Columns object.
    *
-   * @return array[]
+   * @return Columns
    */
   public static function differentColumnTypes($columns1, $columns2)
   {
@@ -98,7 +98,7 @@ class Columns
       }
     }
 
-    return $diff;
+    return new Columns($diff);
   }
 
   //--------------------------------------------------------------------------------------------------------------------
@@ -109,7 +109,7 @@ class Columns
    * @param Columns $columns1 The first Columns object.
    * @param Columns $columns2 The second Columns object.
    *
-   * @return array[]
+   * @return Columns
    */
   public static function notInOtherSet($columns1, $columns2)
   {
@@ -126,7 +126,7 @@ class Columns
       }
     }
 
-    return $diff;
+    return new Columns($diff);
   }
 
   //--------------------------------------------------------------------------------------------------------------------
