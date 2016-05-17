@@ -51,11 +51,16 @@ class TableHelper
   /**
    * Append row with table option.
    *
-   * @param string $theOption
+   * @param string      $theOption The option.
+   * @param null|string $theName   Display name.
    */
-  public function appendTableOption($theOption)
+  public function appendTableOption($theOption, $theName = null)
   {
-    $this->rows[$theOption] = ['column_name'      => $theOption,
+    if ($theName===null)
+    {
+      $theName = $theOption;
+    }
+    $this->rows[$theOption] = ['column_name'      => $theName,
                                'data_table_type'  => $this->dataTableOptions[$theOption],
                                'audit_table_type' => $this->auditTableOptions[$theOption],
                                'config_type'      => null];
@@ -65,17 +70,22 @@ class TableHelper
   /**
    * Appends rows.
    *
-   * @param \array[] $theRows
+   * @param \array[]    $theRows       Rows array.
+   * @param null|string $theOptionFlag If not null append table options to rows.
    */
-  public function appendRows($theRows)
+  public function appendRows($theRows, $theOptionFlag)
   {
     foreach ($theRows as $row)
     {
       $this->rows[] = $row;
     }
-    $this->rows[] = new TableSeparator();
-    $this->appendTableOption('engine');
-    $this->appendTableOption('character_set_name');
+    if ($theOptionFlag)
+    {
+      $this->rows[] = new TableSeparator();
+      $this->appendTableOption('engine');
+      $this->appendTableOption('character_set_name', 'character set');
+      $this->appendTableOption('table_collation', 'collation');
+    }
   }
 
   //--------------------------------------------------------------------------------------------------------------------
