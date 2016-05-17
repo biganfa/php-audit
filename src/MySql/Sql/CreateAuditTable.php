@@ -96,7 +96,7 @@ class CreateAuditTable
 
     // Create SQL for table options.
     $tableOptions = DataLayer::getTableOptions($this->dataSchemaName, $this->tableName);
-    $code->append(sprintf(') engine=%s default charset=%s default collate=%s',
+    $code->append(sprintf(') engine=%s character set=%s collate=%s',
                           $tableOptions['engine'],
                           $tableOptions['character_set_name'],
                           $tableOptions['table_collation']));
