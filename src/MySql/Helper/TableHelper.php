@@ -70,8 +70,8 @@ class TableHelper
   /**
    * Appends rows.
    *
-   * @param \array[]    $theRows       Rows array.
-   * @param null|string $theOptionFlag If not null append table options to rows.
+   * @param \array[] $theRows       Rows array.
+   * @param bool     $theOptionFlag If not null append table options to rows.
    */
   public function appendRows($theRows, $theOptionFlag)
   {
