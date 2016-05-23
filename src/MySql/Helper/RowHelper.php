@@ -68,8 +68,6 @@ class RowHelper
                  'audit_table_type' => isset($theRow['audit_column_type']) ? $theRow['audit_column_type'] : null,
                  'config_type'      => isset($theRow['config_column_type']) ? $theRow['config_column_type'] : null];
 
-    var_dump($tableRow);
-
     return $tableRow;
   }
 
