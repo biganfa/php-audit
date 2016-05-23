@@ -224,8 +224,8 @@ class CreateAuditTrigger
       if ($values) $values .= ',';
       switch (true)
       {
-        case (isset($column['audit_value_type'])):
-          switch ($column['audit_value_type'])
+        case (isset($column['value_type'])):
+          switch ($column['value_type'])
           {
             case 'ACTION':
               $values .= StaticDataLayer::quoteString($this->triggerAction);
@@ -236,12 +236,12 @@ class CreateAuditTrigger
               break;
 
             default:
-              throw new FallenException('audit_value_type', ($column['audit_value_type']));
+              throw new FallenException('audit_value_type', ($column['value_type']));
           }
           break;
 
-        case (isset($column['audit_expression'])):
-          $values .= $column['audit_expression'];
+        case (isset($column['expression'])):
+          $values .= $column['expression'];
           break;
 
         default:
