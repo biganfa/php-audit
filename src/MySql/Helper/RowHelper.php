@@ -43,7 +43,7 @@ class RowHelper
    * @param $theCharacterSetName
    * @param $theCollationName
    *
-   * @return \string
+   * @return string
    */
   public static function styledOptionsRow($theCharacterSetName, $theCollationName)
   {
