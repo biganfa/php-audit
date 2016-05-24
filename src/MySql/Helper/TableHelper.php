@@ -33,6 +33,20 @@ class TableHelper
    */
   private $dataTableOptions;
 
+  /**
+   * Full option.
+   *
+   * @var bool
+   */
+  private $fullOption;
+
+  /**
+   * Check existing separator.
+   *
+   * @var bool
+   */
+  private $existSeparator = false;
+
   //--------------------------------------------------------------------------------------------------------------------
   /**
    * Object constructor.
@@ -40,9 +54,11 @@ class TableHelper
    * @param string $dataSchema  Data schema name.
    * @param string $auditSchema Audit schema name.
    * @param string $tableName   The table name.
+   * @param bool   $fullOption  If set append table options to rows.
    */
-  public function __construct($dataSchema, $auditSchema, $tableName)
+  public function __construct($dataSchema, $auditSchema, $tableName, $fullOption)
   {
+    $this->fullOption        = $fullOption;
     $this->auditTableOptions = DataLayer::getTableOptions($auditSchema, $tableName);
     $this->dataTableOptions  = DataLayer::getTableOptions($dataSchema, $tableName);
   }
@@ -51,21 +67,34 @@ class TableHelper
   /**
    * Append row with table option.
    *
-   * @param string $theOption
+   * @param string      $theOption The option.
+   * @param null|string $theName   Display name.
    */
-  public function appendTableOption($theOption)
+  public function appendTableOption($theOption, $theName = null)
   {
-    $this->rows[$theOption] = ['column_name'      => $theOption,
-                               'data_table_type'  => $this->dataTableOptions[$theOption],
-                               'audit_table_type' => $this->auditTableOptions[$theOption],
-                               'config_type'      => null];
+    if ($this->dataTableOptions[$theOption]!=$this->auditTableOptions[$theOption] || $this->fullOption)
+    {
+      if (!$this->existSeparator)
+      {
+        $this->rows[]         = new TableSeparator();
+        $this->existSeparator = true;
+      }
+      if ($theName===null)
+      {
+        $theName = $theOption;
+      }
+      $this->rows[$theOption] = ['column_name'      => $theName,
+                                 'data_table_type'  => $this->dataTableOptions[$theOption],
+                                 'audit_table_type' => $this->auditTableOptions[$theOption],
+                                 'config_type'      => null];
+    }
   }
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
    * Appends rows.
    *
-   * @param \array[] $theRows
+   * @param \array[] $theRows Rows array.
    */
   public function appendRows($theRows)
   {
@@ -73,9 +102,9 @@ class TableHelper
     {
       $this->rows[] = $row;
     }
-    $this->rows[] = new TableSeparator();
     $this->appendTableOption('engine');
-    $this->appendTableOption('character_set_name');
+    $this->appendTableOption('character_set_name', 'character set');
+    $this->appendTableOption('table_collation', 'collation');
   }
 
   //--------------------------------------------------------------------------------------------------------------------
@@ -88,7 +117,6 @@ class TableHelper
   {
     return $this->rows;
   }
-
 
   //--------------------------------------------------------------------------------------------------------------------
 }

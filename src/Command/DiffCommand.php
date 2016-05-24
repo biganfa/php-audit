@@ -41,7 +41,7 @@ class DiffCommand extends AuditCommand
   /**
    * If set all tables and columns are shown.
    *
-   * @var string
+   * @var boolean
    */
   private $full;
 
@@ -334,7 +334,7 @@ class DiffCommand extends AuditCommand
 
           // Write table with columns.
           $columns = $this->addHighlighting($columns);
-          $rows    = new TableHelper($this->config['database']['data_schema'], $this->config['database']['audit_schema'], $tableName);
+          $rows    = new TableHelper($this->config['database']['data_schema'], $this->config['database']['audit_schema'], $tableName, $this->full);
           $rows->appendRows($columns);
           $table = new Table($output);
           $table->setHeaders(['column', 'data table', 'audit table', 'config'])
