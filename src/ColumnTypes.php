@@ -34,8 +34,6 @@ class ColumnTypes
    *
    * @param array[] $columnTypes The metadata of the column.
    * @param string  $typePrefix  Prefix for column type name.
-   *
-   * @return \array[]
    */
   public function appendColumnTypes($columnTypes, $typePrefix = null)
   {

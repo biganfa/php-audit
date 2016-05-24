@@ -94,8 +94,6 @@ class TableHelper
   //--------------------------------------------------------------------------------------------------------------------
   /**
    * Add highlighting to columns.
-   *
-   * @return array[]
    */
   public function addHighlighting()
   {

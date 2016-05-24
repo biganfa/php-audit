@@ -57,11 +57,30 @@ class DiffCommand extends AuditCommand
   private static function removeMatchingColumns($columns)
   {
     $cleaned = [];
+    /** @var ColumnTypes $column */
     foreach ($columns as $column)
     {
-      if (($column['data_table_type']!=$column['audit_table_type'] && $column['audit_table_type']!=$column['config_type']) || ($column['audit_table_type']!=$column['config_type'] && !empty($column['config_type'])))
+      $columnsArray = $column->getTypes();
+      if (!isset($columnsArray['data_column_type']))
       {
-        $cleaned[] = $column;
+        if ($columnsArray['audit_column_type']!=$columnsArray['config_column_type'])
+        {
+          $cleaned[] = $column;
+        }
+      }
+      elseif (!isset($columnsArray['config_column_type']))
+      {
+        if (($columnsArray['audit_column_type']!=$columnsArray['data_column_type']) || ($columnsArray['audit_character_set_name']!=$columnsArray['data_character_set_name'] || $columnsArray['audit_collation_name']!=$columnsArray['data_collation_name']))
+        {
+          $cleaned[] = $column;
+        }
+      }
+      else
+      {
+        if (($columnsArray['data_column_type']!=$columnsArray['audit_column_type'] && $columnsArray['audit_column_type']!=$columnsArray['config_column_type']) || ($columnsArray['audit_column_type']!=$columnsArray['config_column_type'] && !empty($columnsArray['config_column_type'])))
+        {
+          $cleaned[] = $column;
+        }
       }
     }
 
@@ -87,7 +106,6 @@ class DiffCommand extends AuditCommand
   protected function execute(InputInterface $input, OutputInterface $output)
   {
     $this->io = new StratumStyle($input, $output);
-
     // Style for column names with miss matched column types.
     $style = new OutputFormatterStyle(null, 'red');
     $output->getFormatter()->setStyle('mm_column', $style);
