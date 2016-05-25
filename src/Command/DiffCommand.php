@@ -42,7 +42,7 @@ class DiffCommand extends AuditCommand
   /**
    * If set all tables and columns are shown.
    *
-   * @var string
+   * @var boolean
    */
   private $full;
 

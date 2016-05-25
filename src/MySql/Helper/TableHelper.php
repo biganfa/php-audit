@@ -42,6 +42,20 @@ class TableHelper
    */
   private $dataTableOptions;
 
+  /**
+   * Full option.
+   *
+   * @var bool
+   */
+  private $fullOption;
+
+  /**
+   * Check existing separator.
+   *
+   * @var bool
+   */
+  private $existSeparator = false;
+
   //--------------------------------------------------------------------------------------------------------------------
   /**
    * Object constructor.
@@ -62,9 +76,10 @@ class TableHelper
   /**
    * Append row with table option.
    *
-   * @param string $theOption
+   * @param string      $theOption The option.
+   * @param null|string $theName   Display name.
    */
-  public function appendTableOption($theOption)
+  public function appendTableOption($theOption, $theName = null)
   {
     $tableRow               = ['column_name'        => $theOption,
                                'data_column_type'   => $this->dataTableOptions[$theOption],
@@ -77,7 +92,7 @@ class TableHelper
   /**
    * Appends rows.
    *
-   * @param \array[] $theRows
+   * @param \array[] $theRows Rows array.
    */
   public function appendRows($theRows)
   {
@@ -86,9 +101,9 @@ class TableHelper
     {
       RowHelper::appendRow($this->rows, $row);
     }
-    $this->rows[] = new TableSeparator();
     $this->appendTableOption('engine');
-    $this->appendTableOption('character_set_name');
+    $this->appendTableOption('character_set_name', 'character set');
+    $this->appendTableOption('table_collation', 'collation');
   }
 
   //--------------------------------------------------------------------------------------------------------------------
