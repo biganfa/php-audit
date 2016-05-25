@@ -64,10 +64,12 @@ class TableHelper
    * @param string  $auditSchema     Audit schema name.
    * @param string  $tableName       The table name.
    * @param array[] $theAuditColumns Audit columns from config file.
+   * @param bool    $fullOption      If set append table options to rows.
    */
-  public function __construct($dataSchema, $auditSchema, $tableName, $theAuditColumns)
+  public function __construct($dataSchema, $auditSchema, $tableName, $theAuditColumns, $fullOption)
   {
     $this->auditColumns      = $theAuditColumns;
+    $this->fullOption        = $fullOption;
     $this->auditTableOptions = DataLayer::getTableOptions($auditSchema, $tableName);
     $this->dataTableOptions  = DataLayer::getTableOptions($dataSchema, $tableName);
   }
@@ -81,11 +83,23 @@ class TableHelper
    */
   public function appendTableOption($theOption, $theName = null)
   {
-    $tableRow               = ['column_name'        => $theOption,
-                               'data_column_type'   => $this->dataTableOptions[$theOption],
-                               'audit_column_type'  => $this->auditTableOptions[$theOption],
-                               'config_column_type' => null];
-    $this->rows[$theOption] = RowHelper::createTableRow($tableRow);
+    if ($this->dataTableOptions[$theOption]!=$this->auditTableOptions[$theOption] || $this->fullOption)
+    {
+      if (!$this->existSeparator)
+      {
+        $this->rows[]         = new TableSeparator();
+        $this->existSeparator = true;
+      }
+      if ($theName===null)
+      {
+        $theName = $theOption;
+      }
+      $tableRow               = ['column_name'        => $theName,
+                                 'data_column_type'   => $this->dataTableOptions[$theOption],
+                                 'audit_column_type'  => $this->auditTableOptions[$theOption],
+                                 'config_column_type' => null];
+      $this->rows[$theOption] = RowHelper::createTableRow($tableRow);
+    }
   }
 
   //--------------------------------------------------------------------------------------------------------------------

@@ -292,7 +292,7 @@ class DiffCommand extends AuditCommand
           $output->writeln($tableName);
 
           // Write table with columns.
-          $rows = new TableHelper($this->config['database']['data_schema'], $this->config['database']['audit_schema'], $tableName, $this->config['audit_columns']);
+          $rows = new TableHelper($this->config['database']['data_schema'], $this->config['database']['audit_schema'], $tableName, $this->config['audit_columns'], $this->full);
           $rows->appendRows($columns);
           $rows->addHighlighting();
           $table = new Table($output);
