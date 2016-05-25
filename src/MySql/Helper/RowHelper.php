@@ -17,7 +17,7 @@ class RowHelper
    *
    * @param array[] $theRow Data for table row.
    *
-   * @return array[]
+   * @return array<string,null|string>
    */
   public static function createColumnOptionsRow($theRow)
   {
@@ -59,7 +59,7 @@ class RowHelper
    *
    * @param array[] $theRow Data for table row.
    *
-   * @return array[]
+   * @return array<string,null|string>
    */
   public static function createTableRow($theRow)
   {
