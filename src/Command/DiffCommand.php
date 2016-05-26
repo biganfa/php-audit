@@ -129,6 +129,8 @@ class DiffCommand extends AuditCommand
 
     $this->connect($this->config);
 
+    $this->auditColumnTypes();
+
     $this->listOfTables();
 
     $this->getDiff();

@@ -3,6 +3,7 @@
 namespace SetBased\Audit\MySql;
 
 use SetBased\Audit\Columns;
+use SetBased\Audit\MySql\Helper\CompoundSyntaxStore;
 use SetBased\Audit\MySql\Sql\AlterAuditTableAddColumns;
 use SetBased\Audit\MySql\Sql\CreateAuditTable;
 use SetBased\Audit\MySql\Sql\CreateAuditTrigger;
@@ -291,6 +292,48 @@ AND   t1.TABLE_NAME   = %s',
                    self::$dl->quoteString($tableName));
 
     return self::$dl->executeRow1($sql);
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
+   * Create temp table for getting column type information for audit columns.
+   *
+   * @param string  $schemaName   The name of the table schema.
+   * @param array[] $auditColumns Audit columns from config file.
+   *
+   * @return array
+   */
+  public static function createTempTable($schemaName, $auditColumns)
+  {
+    $sql = new CompoundSyntaxStore();
+    $sql->append(sprintf('CREATE TABLE %s.temp (', $schemaName));
+    foreach ($auditColumns as $column)
+    {
+      $sql->append(sprintf('%s %s', $column['column_name'], $column['column_type']));
+      if (end($auditColumns)!==$column)
+      {
+        $sql->appendToLastLine(',');
+      }
+    }
+    $sql->append(')');
+
+    return self::$dl->executeNone($sql->getCode());
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
+   * Drop table.
+   *
+   * @param string $schemaName The name of the table schema.
+   * @param string $tableName  The name of the table.
+   *
+   * @return array
+   */
+  public static function dropTable($schemaName, $tableName)
+  {
+    $sql = sprintf('drop table %s.%s', $schemaName, $tableName);
+
+    return self::$dl->executeNone($sql);
   }
 
   //--------------------------------------------------------------------------------------------------------------------
