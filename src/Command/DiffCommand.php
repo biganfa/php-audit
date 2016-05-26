@@ -3,6 +3,7 @@
 namespace SetBased\Audit\Command;
 
 use SetBased\Audit\Columns;
+use SetBased\Audit\ColumnTypes;
 use SetBased\Audit\MySql\Command\AuditCommand;
 use SetBased\Audit\MySql\DataLayer;
 use SetBased\Audit\MySql\Helper\TableHelper;
@@ -56,11 +57,30 @@ class DiffCommand extends AuditCommand
   private static function removeMatchingColumns($columns)
   {
     $cleaned = [];
+    /** @var ColumnTypes $column */
     foreach ($columns as $column)
     {
-      if (($column['data_table_type']!=$column['audit_table_type'] && $column['audit_table_type']!=$column['config_type']) || ($column['audit_table_type']!=$column['config_type'] && !empty($column['config_type'])))
+      $columnsArray = $column->getTypes();
+      if (!isset($columnsArray['data_column_type']))
       {
-        $cleaned[] = $column;
+        if ($columnsArray['audit_column_type']!=$columnsArray['config_column_type'])
+        {
+          $cleaned[] = $column;
+        }
+      }
+      elseif (!isset($columnsArray['config_column_type']))
+      {
+        if (($columnsArray['audit_column_type']!=$columnsArray['data_column_type']) || ($columnsArray['audit_character_set_name']!=$columnsArray['data_character_set_name'] || $columnsArray['audit_collation_name']!=$columnsArray['data_collation_name']))
+        {
+          $cleaned[] = $column;
+        }
+      }
+      else
+      {
+        if (($columnsArray['data_column_type']!=$columnsArray['audit_column_type'] && $columnsArray['audit_column_type']!=$columnsArray['config_column_type']) || ($columnsArray['audit_column_type']!=$columnsArray['config_column_type'] && !empty($columnsArray['config_column_type'])))
+        {
+          $cleaned[] = $column;
+        }
       }
     }
 
@@ -86,7 +106,6 @@ class DiffCommand extends AuditCommand
   protected function execute(InputInterface $input, OutputInterface $output)
   {
     $this->io = new StratumStyle($input, $output);
-
     // Style for column names with miss matched column types.
     $style = new OutputFormatterStyle(null, 'red');
     $output->getFormatter()->setStyle('mm_column', $style);
@@ -118,75 +137,12 @@ class DiffCommand extends AuditCommand
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
-   * Add highlighting to columns.
-   *
-   * @param array[] $columns The metadata of the columns.
-   *
-   * @return array[]
-   */
-  private function addHighlighting($columns)
-  {
-    $styledColumns = [];
-    foreach ($columns as $column)
-    {
-      $styledColumn = $column;
-      // Highlighting for data table column types and audit.
-      if (!empty($column['data_table_type']))
-      {
-        if (isset($column['data_table_type']) && !isset($column['audit_table_type']))
-        {
-          $styledColumn['column_name']     = sprintf('<mm_column>%s</>', $styledColumn['column_name']);
-          $styledColumn['data_table_type'] = sprintf('<mm_type>%s</>', $styledColumn['data_table_type']);
-        }
-        else if (!isset($column['data_table_type']) && isset($column['audit_table_type']))
-        {
-          $styledColumn['audit_table_type'] = sprintf('<mm_type>%s</>', $styledColumn['audit_table_type']);
-        }
-        else if (strcmp($column['data_table_type'], $column['audit_table_type']))
-        {
-          $styledColumn['column_name']      = sprintf('<mm_column>%s</>', $styledColumn['column_name']);
-          $styledColumn['data_table_type']  = sprintf('<mm_type>%s</>', $styledColumn['data_table_type']);
-          $styledColumn['audit_table_type'] = sprintf('<mm_type>%s</>', $styledColumn['audit_table_type']);
-        }
-      }
-      else
-      {
-        // Highlighting for audit table column types and audit_columns in config file.
-        $searchColumn = StaticDataLayer::searchInRowSet('column_name', $styledColumn['column_name'], $this->config['audit_columns']);
-        if (isset($searchColumn))
-        {
-          $configType = $this->config['audit_columns'][$searchColumn]['column_type'];
-          if (isset($configType) && !isset($column['audit_table_type']))
-          {
-            $styledColumn['column_name'] = sprintf('<mm_column>%s</>', $styledColumn['column_name']);
-            $styledColumn['config_type'] = sprintf('<mm_type>%s</>', $styledColumn['config_type']);
-          }
-          else if (!isset($configType) && isset($column['audit_table_type']))
-          {
-            $styledColumn['audit_table_type'] = sprintf('<mm_type>%s</>', $column['audit_table_type']);
-          }
-          else if (strcmp($configType, $column['audit_table_type']))
-          {
-            $styledColumn['column_name']      = sprintf('<mm_column>%s</>', $styledColumn['column_name']);
-            $styledColumn['audit_table_type'] = sprintf('<mm_type>%s</>', $column['audit_table_type']);
-            $styledColumn['config_type']      = sprintf('<mm_type>%s</>', $styledColumn['config_type']);
-          }
-        }
-      }
-      $styledColumns[] = $styledColumn;
-    }
-
-    return $styledColumns;
-  }
-
-  //--------------------------------------------------------------------------------------------------------------------
-  /**
    * Get the difference between data and audit tables.
    *
    * @param Columns $dataColumns  The table columns from data schema.
    * @param Columns $auditColumns The table columns from audit schema.
    *
-   * @return array[]
+   * @return \array[]
    */
   private function createDiffArray($dataColumns, $auditColumns)
   {
@@ -194,31 +150,34 @@ class DiffCommand extends AuditCommand
 
     foreach ($this->config['audit_columns'] as $column)
     {
-      $diff[$column['column_name']] = ['column_name'      => $column['column_name'],
-                                       'data_table_type'  => null,
-                                       'audit_table_type' => null,
-                                       'config_type'      => $column['column_type']];
+      $columnTypes                  = new ColumnTypes($column, 'config');
+      $diff[$column['column_name']] = $columnTypes;
     }
 
     foreach ($auditColumns->getColumns() as $column)
     {
-      $config_type = isset($diff[$column['column_name']]) ? $diff[$column['column_name']]['config_type'] : null;
-
-      $diff[$column['column_name']] = ['column_name'      => $column['column_name'],
-                                       'data_table_type'  => null,
-                                       'audit_table_type' => $auditColumns->getColumnTypeWithCharSetCollation($column['column_name']),
-                                       'config_type'      => $config_type];
+      if (isset($diff[$column['column_name']]))
+      {
+        $diff[$column['column_name']]->appendColumnTypes($column, 'audit');
+      }
+      else
+      {
+        $columnTypes                  = new ColumnTypes($column, 'audit');
+        $diff[$column['column_name']] = $columnTypes;
+      }
     }
 
     foreach ($dataColumns->getColumns() as $column)
     {
-      $config_type      = isset($diff[$column['column_name']]) ? $diff[$column['column_name']]['config_type'] : null;
-      $audit_table_type = isset($diff[$column['column_name']]) ? $diff[$column['column_name']]['audit_table_type'] : null;
-
-      $diff[$column['column_name']] = ['column_name'      => $column['column_name'],
-                                       'data_table_type'  => $dataColumns->getColumnTypeWithCharSetCollation($column['column_name']),
-                                       'audit_table_type' => $audit_table_type,
-                                       'config_type'      => $config_type];
+      if (isset($diff[$column['column_name']]))
+      {
+        $diff[$column['column_name']]->appendColumnTypes($column, 'data');
+      }
+      else
+      {
+        $columnTypes                  = new ColumnTypes($column, 'data');
+        $diff[$column['column_name']] = $columnTypes;
+      }
     }
 
     return $diff;
@@ -333,9 +292,9 @@ class DiffCommand extends AuditCommand
           $output->writeln($tableName);
 
           // Write table with columns.
-          $columns = $this->addHighlighting($columns);
-          $rows    = new TableHelper($this->config['database']['data_schema'], $this->config['database']['audit_schema'], $tableName, $this->full);
+          $rows = new TableHelper($this->config['database']['data_schema'], $this->config['database']['audit_schema'], $tableName, $this->config['audit_columns'], $this->full);
           $rows->appendRows($columns);
+          $rows->addHighlighting();
           $table = new Table($output);
           $table->setHeaders(['column', 'data table', 'audit table', 'config'])
                 ->setRows($rows->getRows());

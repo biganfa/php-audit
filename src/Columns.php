@@ -26,14 +26,8 @@ class Columns
   {
     foreach ($columns as $column)
     {
-      $this->columns[$column['column_name']] = [
-        'column_name'        => $column['column_name'],
-        'column_type'        => $column['column_type'],
-        'character_set_name' => isset($column['character_set_name']) ? $column['character_set_name'] : null,
-        'collation_name'     => isset($column['collation_name']) ? $column['collation_name'] : null,
-        'audit_expression'   => isset($column['expression']) ? $column['expression'] : null,
-        'audit_value_type'   => isset($column['value_type']) ? $column['value_type'] : null
-      ];
+      $columnTypes                           = new ColumnTypes($column);
+      $this->columns[$column['column_name']] = $columnTypes->getTypes();
     }
   }
 
@@ -160,6 +154,27 @@ class Columns
       $column['collation_name']     = isset($column['collation_name']) ? ' '.$column['collation_name'] : '';
 
       return sprintf('%s%s%s', $column['column_type'], $column['character_set_name'], $column['collation_name']);
+    }
+
+    return null;
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
+   * Returns previous column of a columns. Returns null if the column name is not found in this Columns.
+   *
+   * @param string $columnName The column name.
+   *
+   * @return null|string
+   */
+  public function getPreviousColumn($columnName)
+  {
+    $columns = array_keys($this->columns);
+    $key     = array_search($columnName, $columns);
+
+    if ($key>=1)
+    {
+      return $columns[$key - 1];
     }
 
     return null;
