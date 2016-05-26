@@ -301,7 +301,7 @@ AND   t1.TABLE_NAME   = %s',
    * @param string  $schemaName   The name of the table schema.
    * @param array[] $auditColumns Audit columns from config file.
    *
-   * @return array
+   * @return int
    */
   public static function createTempTable($schemaName, $auditColumns)
   {
@@ -327,7 +327,7 @@ AND   t1.TABLE_NAME   = %s',
    * @param string $schemaName The name of the table schema.
    * @param string $tableName  The name of the table.
    *
-   * @return array
+   * @return int
    */
   public static function dropTable($schemaName, $tableName)
   {
