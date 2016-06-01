@@ -1,10 +1,10 @@
 <?php
 //----------------------------------------------------------------------------------------------------------------------
-namespace SetBased\Audit;
+namespace SetBased\Audit\MySql\Table;
 
 //----------------------------------------------------------------------------------------------------------------------
 /**
- * Class for metadata of (table) columns.
+ * Class for metadata of table columns.
  */
 class Columns
 {
@@ -12,7 +12,7 @@ class Columns
   /**
    * The metadata of the columns.
    *
-   * @var array[]
+   * @var array<string,ColumnType>
    */
   private $columns = [];
 
@@ -20,14 +20,13 @@ class Columns
   /**
    * Object constructor.
    *
-   * @param array[] $columns The metadata of the columns.
+   * @param array[] $columns The metadata of the columns as returned by DataLayer::getTableColumns().
    */
   public function __construct($columns)
   {
     foreach ($columns as $column)
     {
-      $columnTypes                           = new ColumnTypes($column);
-      $this->columns[$column['column_name']] = $columnTypes->getTypes();
+      $this->columns[$column['column_name']] = new ColumnType($column);
     }
   }
 
@@ -46,22 +45,12 @@ class Columns
 
     foreach ($auditColumnsMetadata->columns as $column)
     {
-      $columns[] = ['column_name' => $column['column_name'],
-                    'column_type' => $column['column_type']];
+      $columns[] = $column;
     }
 
     foreach ($currentColumnsMetadata->columns as $column)
     {
-      if ($column['column_type']!='timestamp')
-      {
-        $columns[] = ['column_name' => $column['column_name'],
-                      'column_type' => $column['column_type']];
-      }
-      else
-      {
-        $columns[] = ['column_name' => $column['column_name'],
-                      'column_type' => $column['column_type'].' NULL'];
-      }
+      $columns[] = $column;
     }
 
     return new Columns($columns);
@@ -114,8 +103,7 @@ class Columns
       {
         if (!isset($columns2->columns[$column1['column_name']]))
         {
-          $diff[] = ['column_name' => $column1['column_name'],
-                     'column_type' => $column1['column_type']];
+          $diff[] = $column1;
         }
       }
     }

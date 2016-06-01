@@ -2,10 +2,7 @@
 //----------------------------------------------------------------------------------------------------------------------
 namespace SetBased\Audit\MySql\Helper;
 
-
 //----------------------------------------------------------------------------------------------------------------------
-use SetBased\Audit\ColumnTypes;
-
 /**
  * A helper class for column types.
  */
@@ -26,7 +23,6 @@ class RowHelper
 
     $auditCharsetName   = isset($theRow['audit_character_set_name']) ? $theRow['audit_character_set_name'] : null;
     $auditCollationName = isset($theRow['audit_collation_name']) ? $theRow['audit_collation_name'] : null;
-
 
     $tableRow = ['column_name'      => null,
                  'data_table_type'  => self::styledOptionsRow($dataCharsetName, $dataCollationName),
@@ -105,8 +101,8 @@ class RowHelper
   /**
    * Append a row.
    *
-   * @param \array[]    $theExistRows Exist rows array for appending.
-   * @param ColumnTypes $theRow       Row for append.
+   * @param \array[]          $theExistRows Exist rows array for appending.
+   * @param ColumnTypesHelper $theRow       Row for append.
    */
   public static function appendRow(&$theExistRows, $theRow)
   {
@@ -115,6 +111,7 @@ class RowHelper
     if (self::checkOptions($theRow))
     {
       $theRow         = self::createColumnOptionsRow($theRow);
+
       $theExistRows[] = $theRow;
     }
   }

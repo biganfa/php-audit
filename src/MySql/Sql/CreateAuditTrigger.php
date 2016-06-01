@@ -2,8 +2,8 @@
 //----------------------------------------------------------------------------------------------------------------------
 namespace SetBased\Audit\MySql\Sql;
 
-use SetBased\Audit\Columns;
 use SetBased\Audit\MySql\Helper\CompoundSyntaxStore;
+use SetBased\Audit\MySql\Table\Columns;
 use SetBased\Exception\FallenException;
 use SetBased\Exception\RuntimeException;
 use SetBased\Stratum\MySql\StaticDataLayer;
@@ -25,7 +25,7 @@ class CreateAuditTrigger
   /**
    * AuditApplication columns from metadata.
    *
-   * @var Columns
+   * @var \SetBased\Audit\MySql\Table\Columns
    */
   private $auditColumns;
 
@@ -60,7 +60,7 @@ class CreateAuditTrigger
   /**
    * Table columns from metadata.
    *
-   * @var Columns
+   * @var \SetBased\Audit\MySql\Table\Columns
    */
   private $tableColumns;
 
@@ -89,15 +89,15 @@ class CreateAuditTrigger
   /**
    * Creates a trigger on a table.
    *
-   * @param string   $dataSchemaName  The name of the data schema.
-   * @param string   $auditSchemaName The name of the audit schema.
-   * @param string   $tableName       The name of the table.
-   * @param string   $triggerAction   The trigger action (i.e. INSERT, UPDATE, or DELETE).
-   * @param string   $triggerName     The name of the trigger.
-   * @param Columns  $tableColumns    The data table columns.
-   * @param Columns  $auditColumns    The audit table columns.
-   * @param string   $skipVariable    The skip variable.
-   * @param string[] $additionalSql   Additional SQL statements.
+   * @param string                              $dataSchemaName  The name of the data schema.
+   * @param string                              $auditSchemaName The name of the audit schema.
+   * @param string                              $tableName       The name of the table.
+   * @param string                              $triggerAction   The trigger action (i.e. INSERT, UPDATE, or DELETE).
+   * @param string                              $triggerName     The name of the trigger.
+   * @param \SetBased\Audit\MySql\Table\Columns $tableColumns    The data table columns.
+   * @param \SetBased\Audit\MySql\Table\Columns $auditColumns    The audit table columns.
+   * @param string                              $skipVariable    The skip variable.
+   * @param string[]                            $additionalSql   Additional SQL statements.
    */
   public function __construct($dataSchemaName,
                               $auditSchemaName,

@@ -1,6 +1,6 @@
 <?php
 //----------------------------------------------------------------------------------------------------------------------
-namespace SetBased\Audit;
+namespace SetBased\Audit\MySQl\Table;
 
 use SetBased\Audit\MySql\DataLayer;
 use SetBased\Stratum\Style\StratumStyle;
@@ -99,7 +99,7 @@ class Table
   {
     $this->io                       = $io;
     $this->tableName                = $tableName;
-    $this->dataTableColumnsConfig   = new Columns($configColumnsMetadata);
+    $this->dataTableColumnsConfig   = new Columns($configColumnsMetadata);  // XXX
     $this->dataSchemaName           = $dataSchema;
     $this->auditSchemaName          = $auditSchema;
     $this->dataTableColumnsDatabase = new Columns($this->getColumnsFromInformationSchema());

@@ -2,11 +2,12 @@
 //----------------------------------------------------------------------------------------------------------------------
 namespace SetBased\Audit\Command;
 
-use SetBased\Audit\Columns;
-use SetBased\Audit\ColumnTypes;
 use SetBased\Audit\MySql\Command\AuditCommand;
 use SetBased\Audit\MySql\DataLayer;
+use SetBased\Audit\MySql\Helper\ColumnTypesExtended;
+use SetBased\Audit\MySql\Helper\ColumnTypesHelper;
 use SetBased\Audit\MySql\Helper\TableHelper;
+use SetBased\Audit\MySql\Table\Columns;
 use SetBased\Stratum\MySql\StaticDataLayer;
 use SetBased\Stratum\Style\StratumStyle;
 use Symfony\Component\Console\Formatter\OutputFormatterStyle;
@@ -57,7 +58,7 @@ class DiffCommand extends AuditCommand
   private static function removeMatchingColumns($columns)
   {
     $cleaned = [];
-    /** @var ColumnTypes $column */
+    /** @var ColumnTypesHelper $column */
     foreach ($columns as $column)
     {
       $columnsArray = $column->getTypes();
@@ -148,39 +149,7 @@ class DiffCommand extends AuditCommand
    */
   private function createDiffArray($dataColumns, $auditColumns)
   {
-    $diff = [];
-
-    foreach ($this->config['audit_columns'] as $column)
-    {
-      $columnTypes                  = new ColumnTypes($column, 'config');
-      $diff[$column['column_name']] = $columnTypes;
-    }
-
-    foreach ($auditColumns->getColumns() as $column)
-    {
-      if (isset($diff[$column['column_name']]))
-      {
-        $diff[$column['column_name']]->appendColumnTypes($column, 'audit');
-      }
-      else
-      {
-        $columnTypes                  = new ColumnTypes($column, 'audit');
-        $diff[$column['column_name']] = $columnTypes;
-      }
-    }
-
-    foreach ($dataColumns->getColumns() as $column)
-    {
-      if (isset($diff[$column['column_name']]))
-      {
-        $diff[$column['column_name']]->appendColumnTypes($column, 'data');
-      }
-      else
-      {
-        $columnTypes                  = new ColumnTypes($column, 'data');
-        $diff[$column['column_name']] = $columnTypes;
-      }
-    }
+    $diff = new ColumnTypesExtended($this->config['audit_columns'], $auditColumns, $dataColumns);
 
     return $diff;
   }
@@ -270,11 +239,16 @@ class DiffCommand extends AuditCommand
     $first = true;
     if (isset($this->diffColumns))
     {
+      /**
+       * @var ColumnTypesExtended $columns
+       */
       foreach ($this->diffColumns as $tableName => $columns)
       {
+        $columns = $columns->getTypes();
         // Remove matching columns unless the full option is used.
         if (!$this->full)
         {
+          /** @var array[] $columns */
           $columns = self::removeMatchingColumns($columns);
         }
 

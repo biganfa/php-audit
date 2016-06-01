@@ -3,7 +3,6 @@
 namespace SetBased\Audit\MySql\Helper;
 
 //----------------------------------------------------------------------------------------------------------------------
-use SetBased\Audit\ColumnTypes;
 use SetBased\Audit\MySql\DataLayer;
 use SetBased\Stratum\MySql\StaticDataLayer;
 use Symfony\Component\Console\Helper\TableSeparator;
@@ -110,7 +109,6 @@ class TableHelper
    */
   public function appendRows($theRows)
   {
-    /** @var ColumnTypes $row */
     foreach ($theRows as $row)
     {
       RowHelper::appendRow($this->rows, $row);
@@ -127,7 +125,7 @@ class TableHelper
   public function addHighlighting()
   {
     $styledColumns = [];
-    foreach ($this->rows as $column)
+    foreach ($this->rows as $key => $column)
     {
       $styledColumn = $column;
       if (is_array($column))
@@ -137,6 +135,10 @@ class TableHelper
         {
           if (isset($column['data_table_type']) && !isset($column['audit_table_type']))
           {
+            if (!isset($column['column_name']))
+            {
+              $styledColumns[$key - 1]['column_name'] = sprintf('<mm_column>%s</>', $styledColumns[$key - 1]['column_name']);
+            }
             $styledColumn['column_name']     = sprintf('<mm_column>%s</>', $styledColumn['column_name']);
             $styledColumn['data_table_type'] = sprintf('<mm_type>%s</>', $styledColumn['data_table_type']);
           }
@@ -146,6 +148,10 @@ class TableHelper
           }
           else if (strcmp($column['data_table_type'], $column['audit_table_type']))
           {
+            if (!isset($column['column_name']))
+            {
+              $styledColumns[$key - 1]['column_name'] = sprintf('<mm_column>%s</>', $styledColumns[$key - 1]['column_name']);
+            }
             $styledColumn['column_name']      = sprintf('<mm_column>%s</>', $styledColumn['column_name']);
             $styledColumn['data_table_type']  = sprintf('<mm_type>%s</>', $styledColumn['data_table_type']);
             $styledColumn['audit_table_type'] = sprintf('<mm_type>%s</>', $styledColumn['audit_table_type']);

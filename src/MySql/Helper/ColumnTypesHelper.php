@@ -1,42 +1,46 @@
 <?php
 //----------------------------------------------------------------------------------------------------------------------
-namespace SetBased\Audit;
+namespace SetBased\Audit\MySql\Helper;
 
 //----------------------------------------------------------------------------------------------------------------------
+use SetBased\Audit\MySql\Table\Columns;
+use SetBased\Audit\MySQl\Table\ColumnType;
+
 /**
  * Class for metadata of (table) column types.
  */
-class ColumnTypes
+class ColumnTypesHelper
 {
   //--------------------------------------------------------------------------------------------------------------------
   /**
-   * The metadata of the columns.
+   * The metadata of the column.
    *
    * @var array[]
    */
-  private $columnTypes = [];
+  protected $columnTypes = [];
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
    * Object constructor.
    *
-   * @param array[]     $columnTypes The metadata of the column.
-   * @param null|string $typePrefix  Prefix for column type name.
+   * @param array[]|ColumnType $columnTypes The metadata of the column.
+   * @param null|string        $typePrefix  Prefix for column type name.
    */
-  public function __construct($columnTypes, $typePrefix = null)
+  public function __construct($columnTypes, $typePrefix)
   {
-    $this->appendColumnTypes($columnTypes, $typePrefix);
+    $this->extendColumnTypes($columnTypes, $typePrefix);
   }
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
-   * Return array with all columns types.
+   * Create array with all columns types.
    *
-   * @param array[] $columnTypes The metadata of the column.
-   * @param string}null  $typePrefix  Prefix for column type name.
+   * @param array[]|ColumnType $columnTypes The metadata of the column.
+   * @param null|string     $typePrefix  Prefix for column type name.
    */
-  public function appendColumnTypes($columnTypes, $typePrefix = null)
+  public function extendColumnTypes($columnTypes, $typePrefix)
   {
+    $columnTypes = $columnTypes->getType();
     foreach ($columnTypes as $typeName => $typeValue)
     {
       if ($typeName=='column_name')
@@ -63,9 +67,9 @@ class ColumnTypes
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
-   * Get columns types.
+   * Get columns type.
    *
-   * @return array[]
+   * @return \array[]
    */
   public function getTypes()
   {

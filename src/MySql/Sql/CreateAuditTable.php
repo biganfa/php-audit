@@ -2,9 +2,9 @@
 //----------------------------------------------------------------------------------------------------------------------
 namespace SetBased\Audit\MySql\Sql;
 
-use SetBased\Audit\Columns;
 use SetBased\Audit\MySql\DataLayer;
 use SetBased\Audit\MySql\Helper\CompoundSyntaxStore;
+use SetBased\Audit\MySql\Table\Columns;
 
 //----------------------------------------------------------------------------------------------------------------------
 /**
