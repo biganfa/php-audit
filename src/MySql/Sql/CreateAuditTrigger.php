@@ -3,7 +3,7 @@
 namespace SetBased\Audit\MySql\Sql;
 
 use SetBased\Audit\MySql\Helper\CompoundSyntaxStore;
-use SetBased\Audit\MySql\Table\Columns;
+use SetBased\Audit\MySql\Table\ColumnType;
 use SetBased\Exception\FallenException;
 use SetBased\Exception\RuntimeException;
 use SetBased\Stratum\MySql\StaticDataLayer;
@@ -192,17 +192,19 @@ class CreateAuditTrigger
     $columnNames = '';
 
     // First the audit columns.
+    /** @var ColumnType $column */
     foreach ($this->auditColumns->getColumns() as $column)
     {
       if ($columnNames) $columnNames .= ',';
-      $columnNames .= sprintf('`%s`', $column['column_name']);
+      $columnNames .= sprintf('`%s`', $column->getProperty('column_name'));
     }
 
     // Second the audit columns.
+    /** @var ColumnType $column */
     foreach ($this->tableColumns->getColumns() as $column)
     {
       if ($columnNames) $columnNames .= ',';
-      $columnNames .= sprintf('`%s`', $column['column_name']);
+      $columnNames .= sprintf('`%s`', $column->getProperty('column_name'));
     }
 
     $this->code->append(sprintf('insert into `%s`.`%s`(%s)', $this->auditSchemaName, $this->tableName, $columnNames));
@@ -219,8 +221,10 @@ class CreateAuditTrigger
     $values = '';
 
     // First the values for the audit columns.
+    /** @var ColumnType $column */
     foreach ($this->auditColumns->getColumns() as $column)
     {
+      $column = $column->getType();
       if ($values) $values .= ',';
       switch (true)
       {
@@ -250,10 +254,11 @@ class CreateAuditTrigger
     }
 
     // Second the values for the audit columns.
+    /** @var ColumnType $column */
     foreach ($this->tableColumns->getColumns() as $column)
     {
       if ($values) $values .= ',';
-      $values .= sprintf('%s.`%s`', $rowState, $column['column_name']);
+      $values .= sprintf('%s.`%s`', $rowState, $column->getProperty('column_name'));
     }
 
     $this->code->append(sprintf('values(%s);', $values));

@@ -4,6 +4,7 @@ namespace SetBased\Audit\MySql\Sql;
 
 use SetBased\Audit\MySql\Helper\CompoundSyntaxStore;
 use SetBased\Audit\MySql\Table\Columns;
+use SetBased\Audit\MySql\Table\ColumnType;
 
 //----------------------------------------------------------------------------------------------------------------------
 /**
@@ -60,12 +61,14 @@ class AlterAuditTableAddColumns
     $code = new CompoundSyntaxStore();
 
     $code->append(sprintf('alter table `%s`.`%s`', $this->auditSchemaName, $this->tableName));
+    /** @var ColumnType $column */
     foreach ($this->columns->getColumns() as $column)
     {
-      $code->append(sprintf('  add `%s` %s', $column['column_name'], $column['column_type']), false);
-      if (isset($column['after']))
+      $code->append(sprintf('  add `%s` %s', $column->getProperty('column_name'), $column->getProperty('column_type')), false);
+      $after = $column->getProperty('after');
+      if (isset($after))
       {
-        $code->appendToLastLine(sprintf(' after `%s`', $column['after']));
+        $code->appendToLastLine(sprintf(' after `%s`', $after));
       }
       else
       {

@@ -3,6 +3,7 @@
 namespace SetBased\Audit\MySql\Command;
 
 use SetBased\Audit\MySql\DataLayer;
+use SetBased\Audit\MySql\Table\ColumnType;
 use SetBased\Audit\MySql\Table\Table;
 use SetBased\Stratum\MySql\StaticDataLayer;
 use SetBased\Stratum\Style\StratumStyle;
@@ -48,10 +49,10 @@ class AuditCommand extends MySqlCommand
   public function getColumns($tableName, $columns)
   {
     $newColumns = [];
+    /** @var ColumnType $column */
     foreach ($columns->getColumns() as $column)
     {
-      $newColumns[] = ['column_name' => $column['column_name'],
-                       'column_type' => $column['column_type']];
+      $newColumns[] = $column->getType();
     }
     $this->config['table_columns'][$tableName] = $newColumns;
 

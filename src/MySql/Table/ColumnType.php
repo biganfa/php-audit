@@ -1,6 +1,6 @@
 <?php
 //----------------------------------------------------------------------------------------------------------------------
-namespace SetBased\Audit\MySQl\Table;
+namespace SetBased\Audit\MySql\Table;
 
 //----------------------------------------------------------------------------------------------------------------------
 /**
@@ -39,7 +39,7 @@ class ColumnType
   /**
    * Get columns type.
    *
-   * @return \array[]
+   * @return array[]
    */
   public function getType()
   {
