@@ -62,7 +62,6 @@ class DiffCommand extends AuditCommand
     foreach ($columns as $column)
     {
       $columnsArray = $column->getTypes();
-      var_dump($columnsArray);
       if (!isset($columnsArray['data_column_type']))
       {
         if ($columnsArray['audit_column_type']!=$columnsArray['config_column_type'])
