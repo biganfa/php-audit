@@ -93,7 +93,10 @@ class AuditCommand extends MySqlCommand
         {
           if ($this->config['tables'][$table['table_name']]['audit'])
           {
-            $this->config['tables'][$table['table_name']]['alias'] = Table::getRandomAlias();
+            if(!isset($this->config['tables'][$table['table_name']]['alias']))
+            {
+              $this->config['tables'][$table['table_name']]['alias'] = Table::getRandomAlias();
+            }
           }
         }
       }
