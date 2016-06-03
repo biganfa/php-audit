@@ -1,10 +1,10 @@
 <?php
 //----------------------------------------------------------------------------------------------------------------------
-namespace SetBased\Audit;
+namespace SetBased\Audit\MySql\Table;
 
 //----------------------------------------------------------------------------------------------------------------------
 /**
- * Class for metadata of (table) columns.
+ * Class for metadata of table columns.
  */
 class Columns
 {
@@ -12,7 +12,7 @@ class Columns
   /**
    * The metadata of the columns.
    *
-   * @var array[]
+   * @var array<string,ColumnType>
    */
   private $columns = [];
 
@@ -20,14 +20,19 @@ class Columns
   /**
    * Object constructor.
    *
-   * @param array[] $columns The metadata of the columns.
+   * @param array[] $columns The metadata of the columns as returned by DataLayer::getTableColumns().
    */
   public function __construct($columns)
   {
     foreach ($columns as $column)
     {
-      $columnTypes                           = new ColumnTypes($column);
-      $this->columns[$column['column_name']] = $columnTypes->getTypes();
+      if (!is_array($column))
+      {
+        /** @var ColumnType $column */
+        $column = $column->getType();
+      }
+      /** @var array $column */
+      $this->columns[$column['column_name']] = new ColumnType($column);
     }
   }
 
@@ -46,22 +51,12 @@ class Columns
 
     foreach ($auditColumnsMetadata->columns as $column)
     {
-      $columns[] = ['column_name' => $column['column_name'],
-                    'column_type' => $column['column_type']];
+      $columns[] = $column;
     }
 
     foreach ($currentColumnsMetadata->columns as $column)
     {
-      if ($column['column_type']!='timestamp')
-      {
-        $columns[] = ['column_name' => $column['column_name'],
-                      'column_type' => $column['column_type']];
-      }
-      else
-      {
-        $columns[] = ['column_name' => $column['column_name'],
-                      'column_type' => $column['column_type'].' NULL'];
-      }
+      $columns[] = $column;
     }
 
     return new Columns($columns);
@@ -82,9 +77,19 @@ class Columns
     $diff = [];
     foreach ($columns2->columns as $column2)
     {
+      if (!is_array($column2))
+      {
+        /** @var ColumnType $column2 */
+        $column2 = $column2->getType();
+      }
       if (isset($columns1->columns[$column2['column_name']]))
       {
         $column1 = $columns1->columns[$column2['column_name']];
+        if (!is_array($column1))
+        {
+          /** @var ColumnType $column1 */
+          $column1 = $column1->getType();
+        }
         if ($column2['column_type']!=$column1['column_type'])
         {
           $diff[] = $column1;
@@ -112,10 +117,14 @@ class Columns
     {
       foreach ($columns1->columns as $column1)
       {
+        if (!is_array($column1))
+        {
+          /** @var ColumnType $column1 */
+          $column1 = $column1->getType();
+        }
         if (!isset($columns2->columns[$column1['column_name']]))
         {
-          $diff[] = ['column_name' => $column1['column_name'],
-                     'column_type' => $column1['column_type']];
+          $diff[] = $column1;
         }
       }
     }

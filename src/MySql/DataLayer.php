@@ -2,11 +2,11 @@
 //----------------------------------------------------------------------------------------------------------------------
 namespace SetBased\Audit\MySql;
 
-use SetBased\Audit\Columns;
 use SetBased\Audit\MySql\Helper\CompoundSyntaxStore;
 use SetBased\Audit\MySql\Sql\AlterAuditTableAddColumns;
 use SetBased\Audit\MySql\Sql\CreateAuditTable;
 use SetBased\Audit\MySql\Sql\CreateAuditTrigger;
+use SetBased\Audit\MySql\Table\Columns;
 use SetBased\Stratum\MySql\StaticDataLayer;
 use SetBased\Stratum\Style\StratumStyle;
 
@@ -35,9 +35,9 @@ class DataLayer
   /**
    * Adds new columns to an audit table.
    *
-   * @param string  $auditSchemaName The name of audit schema.
-   * @param string  $tableName       The name of the table.
-   * @param Columns $columns         The metadata of the new columns.
+   * @param string                              $auditSchemaName The name of audit schema.
+   * @param string                              $tableName       The name of the table.
+   * @param \SetBased\Audit\MySql\Table\Columns $columns         The metadata of the new columns.
    */
   public static function addNewColumns($auditSchemaName, $tableName, $columns)
   {
@@ -89,15 +89,15 @@ class DataLayer
   /**
    * Creates a trigger on a table.
    *
-   * @param string   $dataSchemaName  The name of the data schema.
-   * @param string   $auditSchemaName The name of the audit schema.
-   * @param string   $tableName       The name of the table.
-   * @param string   $triggerAction   The trigger action (i.e. INSERT, UPDATE, or DELETE).
-   * @param string   $triggerName     The name of the trigger.
-   * @param Columns  $tableColumns    The data table columns.
-   * @param Columns  $auditColumns    The audit table columns.
-   * @param string   $skipVariable    The skip variable.
-   * @param string[] $additionSql     Additional SQL statements.
+   * @param string                              $dataSchemaName  The name of the data schema.
+   * @param string                              $auditSchemaName The name of the audit schema.
+   * @param string                              $tableName       The name of the table.
+   * @param string                              $triggerAction   The trigger action (i.e. INSERT, UPDATE, or DELETE).
+   * @param string                              $triggerName     The name of the trigger.
+   * @param \SetBased\Audit\MySql\Table\Columns $tableColumns    The data table columns.
+   * @param \SetBased\Audit\MySql\Table\Columns $auditColumns    The audit table columns.
+   * @param string                              $skipVariable    The skip variable.
+   * @param string[]                            $additionSql     Additional SQL statements.
    */
   public static function createAuditTrigger($dataSchemaName,
                                             $auditSchemaName,
@@ -299,14 +299,13 @@ AND   t1.TABLE_NAME   = %s',
    * Create temp table for getting column type information for audit columns.
    *
    * @param string  $schemaName   The name of the table schema.
+   * @param string  $tableName    The table name.
    * @param array[] $auditColumns Audit columns from config file.
-   *
-   * @return int
    */
-  public static function createTempTable($schemaName, $auditColumns)
+  public static function createTemporaryTable($schemaName, $tableName, $auditColumns)
   {
     $sql = new CompoundSyntaxStore();
-    $sql->append(sprintf('CREATE TABLE %s.temp (', $schemaName));
+    $sql->append(sprintf('create temporary table `%s`.`%s` (', $schemaName, $tableName));
     foreach ($auditColumns as $column)
     {
       $sql->append(sprintf('%s %s', $column['column_name'], $column['column_type']));
@@ -317,7 +316,7 @@ AND   t1.TABLE_NAME   = %s',
     }
     $sql->append(')');
 
-    return self::$dl->executeNone($sql->getCode());
+    self::$dl->executeNone($sql->getCode());
   }
 
   //--------------------------------------------------------------------------------------------------------------------
@@ -327,13 +326,27 @@ AND   t1.TABLE_NAME   = %s',
    * @param string $schemaName The name of the table schema.
    * @param string $tableName  The name of the table.
    *
-   * @return int
+   * @return \array[]
    */
-  public static function dropTable($schemaName, $tableName)
+  public static function showColumns($schemaName, $tableName)
   {
-    $sql = sprintf('drop table %s.%s', $schemaName, $tableName);
+    $sql = sprintf('SHOW COLUMNS FROM `%s`.`%s`', $schemaName, $tableName);
 
-    return self::$dl->executeNone($sql);
+    return self::$dl->executeRows($sql);
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
+   * Drop table.
+   *
+   * @param string $schemaName The name of the table schema.
+   * @param string $tableName  The name of the table.
+   */
+  public static function dropTemporaryTable($schemaName, $tableName)
+  {
+    $sql = sprintf('drop temporary table `%s`.`%s`', $schemaName, $tableName);
+
+    self::$dl->executeNone($sql);
   }
 
   //--------------------------------------------------------------------------------------------------------------------

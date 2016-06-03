@@ -2,9 +2,9 @@
 //----------------------------------------------------------------------------------------------------------------------
 namespace SetBased\Audit\MySql\Command;
 
-use SetBased\Audit\Columns;
 use SetBased\Audit\MySql\DataLayer;
-use SetBased\Audit\Table;
+use SetBased\Audit\MySql\Table\ColumnType;
+use SetBased\Audit\MySql\Table\Table;
 use SetBased\Stratum\MySql\StaticDataLayer;
 use SetBased\Stratum\Style\StratumStyle;
 use Symfony\Component\Console\Input\InputArgument;
@@ -43,16 +43,16 @@ class AuditCommand extends MySqlCommand
   /**
    * Compares the tables listed in the config file and the tables found in the audit schema
    *
-   * @param string  $tableName Name of table
-   * @param Columns $columns   The table columns.
+   * @param string                              $tableName Name of table
+   * @param \SetBased\Audit\MySql\Table\Columns $columns   The table columns.
    */
   public function getColumns($tableName, $columns)
   {
     $newColumns = [];
+    /** @var ColumnType $column */
     foreach ($columns->getColumns() as $column)
     {
-      $newColumns[] = ['column_name' => $column['column_name'],
-                       'column_type' => $column['column_type']];
+      $newColumns[] = $column->getType();
     }
     $this->config['table_columns'][$tableName] = $newColumns;
 
@@ -185,23 +185,23 @@ class AuditCommand extends MySqlCommand
    */
   protected function auditColumnTypes()
   {
-    $schema = $this->config['database']['audit_schema'];
-    $table  = 'temp';
-    DataLayer::createTempTable($schema, $this->config['audit_columns']);
-    $auditColumns = DataLayer::getTableColumns($schema, $table);
+    $schema    = $this->config['database']['audit_schema'];
+    $tableName = 'TMP_'.uniqid();
+    DataLayer::createTemporaryTable($schema, $tableName, $this->config['audit_columns']);
+    $auditColumns = DataLayer::showColumns($schema, $tableName);
     foreach ($auditColumns as $column)
     {
-      $key = StaticDataLayer::searchInRowSet('column_name', $column['column_name'], $this->config['audit_columns']);
+      $key = StaticDataLayer::searchInRowSet('column_name', $column['Field'], $this->config['audit_columns']);
       if (isset($key))
       {
-        $this->config['audit_columns'][$key]['column_type'] = $column['column_type'];
-        if ($column['is_nullable']==='NO')
+        $this->config['audit_columns'][$key]['column_type'] = $column['Type'];
+        if ($column['Null']==='NO')
         {
           $this->config['audit_columns'][$key]['column_type'] = sprintf('%s not null', $this->config['audit_columns'][$key]['column_type']);
         }
       }
     }
-    DataLayer::dropTable($schema, $table);
+    DataLayer::dropTemporaryTable($schema, $tableName);
   }
 
   //--------------------------------------------------------------------------------------------------------------------

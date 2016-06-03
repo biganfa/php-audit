@@ -2,9 +2,10 @@
 //----------------------------------------------------------------------------------------------------------------------
 namespace SetBased\Audit\MySql\Sql;
 
-use SetBased\Audit\Columns;
 use SetBased\Audit\MySql\DataLayer;
 use SetBased\Audit\MySql\Helper\CompoundSyntaxStore;
+use SetBased\Audit\MySql\Table\Columns;
+use SetBased\Audit\MySql\Table\ColumnType;
 
 //----------------------------------------------------------------------------------------------------------------------
 /**
@@ -77,9 +78,10 @@ class CreateAuditTable
     // Base format on column with longest name.
     $columns = $this->columns->getColumns();
     $width   = 0;
+    /** @var ColumnType $column */
     foreach ($columns as $column)
     {
-      $width = max($width, mb_strlen($column['column_name']));
+      $width = max($width, mb_strlen($column->getProperty('column_name')));
     }
     $format = sprintf('  %%-%ds %%s', $width + 2);
 
@@ -87,7 +89,7 @@ class CreateAuditTable
     $code->append('(');
     foreach ($columns as $column)
     {
-      $code->append(sprintf($format, '`'.$column['column_name'].'`', $column['column_type']), false);
+      $code->append(sprintf($format, '`'.$column->getProperty('column_name').'`', $column->getProperty('column_type')), false);
       if (end($columns)!==$column)
       {
         $code->appendToLastLine(',');

@@ -1,6 +1,6 @@
 <?php
 //----------------------------------------------------------------------------------------------------------------------
-namespace SetBased\Audit;
+namespace SetBased\Audit\MySql\Table;
 
 use SetBased\Audit\MySql\DataLayer;
 use SetBased\Stratum\Style\StratumStyle;
@@ -366,24 +366,28 @@ class Table
     {
       $this->io->logInfo('Found both new and obsolete columns for table %s', $this->tableName);
       $this->io->logInfo('No action taken');
+
+      /** @var ColumnType $column */
       foreach ($newColumns->getColumns() as $column)
       {
-        $this->io->logInfo('New column %s', $column['column_name']);
+        $this->io->logInfo('New column %s', $column->getProperty('column_name'));
       }
       foreach ($obsoleteColumns->getColumns() as $column)
       {
-        $this->io->logInfo('Obsolete column %s', $column['column_name']);
+        $this->io->logInfo('Obsolete column %s', $column->getProperty('column_name'));
       }
     }
 
+    /** @var ColumnType $column */
     foreach ($obsoleteColumns->getColumns() as $column)
     {
-      $this->io->logInfo('Obsolete column %s.%s', $this->tableName, $column['column_name']);
+      $this->io->logInfo('Obsolete column %s.%s', $this->tableName, $column->getProperty('column_name'));
     }
 
+    /** @var ColumnType $column */
     foreach ($newColumns->getColumns() as $column)
     {
-      $this->io->logInfo('New column %s.%s', $this->tableName, $column['column_name']);
+      $this->io->logInfo('New column %s.%s', $this->tableName, $column->getProperty('column_name'));
     }
 
     foreach ($alteredColumns->getColumns() as $column)
