@@ -2,6 +2,7 @@
 //----------------------------------------------------------------------------------------------------------------------
 namespace SetBased\Audit\Command;
 
+use SetBased\Audit\MySql\DataLayer;
 use SetBased\Exception\RuntimeException;
 use SetBased\Stratum\Style\StratumStyle;
 use Symfony\Component\Console\Command\Command;

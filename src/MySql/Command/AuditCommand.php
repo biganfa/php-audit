@@ -135,6 +135,8 @@ class AuditCommand extends MySqlCommand
     // Create database connection with params from config file
     $this->connect($this->config);
 
+    $this->auditColumnTypes();
+
     $this->listOfTables();
 
     $this->unknownTables();
@@ -175,6 +177,31 @@ class AuditCommand extends MySqlCommand
     DataLayer::disconnect();
 
     $this->rewriteConfig();
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
+   * Get canonical column types for audit columns.
+   */
+  protected function auditColumnTypes()
+  {
+    $schema = $this->config['database']['audit_schema'];
+    $table  = 'temp';
+    DataLayer::createTempTable($schema, $this->config['audit_columns']);
+    $auditColumns = DataLayer::getTableColumns($schema, $table);
+    foreach ($auditColumns as $column)
+    {
+      $key = StaticDataLayer::searchInRowSet('column_name', $column['column_name'], $this->config['audit_columns']);
+      if (isset($key))
+      {
+        $this->config['audit_columns'][$key]['column_type'] = $column['column_type'];
+        if ($column['is_nullable']==='NO')
+        {
+          $this->config['audit_columns'][$key]['column_type'] = sprintf('%s not null', $this->config['audit_columns'][$key]['column_type']);
+        }
+      }
+    }
+    DataLayer::dropTable($schema, $table);
   }
 
   //--------------------------------------------------------------------------------------------------------------------
