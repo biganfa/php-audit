@@ -125,6 +125,31 @@ class DataLayer
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
+   * Create temp table for getting column type information for audit columns.
+   *
+   * @param string  $schemaName   The name of the table schema.
+   * @param string  $tableName    The table name.
+   * @param array[] $auditColumns Audit columns from config file.
+   */
+  public static function createTemporaryTable($schemaName, $tableName, $auditColumns)
+  {
+    $sql = new CompoundSyntaxStore();
+    $sql->append(sprintf('create temporary table `%s`.`%s` (', $schemaName, $tableName));
+    foreach ($auditColumns as $column)
+    {
+      $sql->append(sprintf('%s %s', $column['column_name'], $column['column_type']));
+      if (end($auditColumns)!==$column)
+      {
+        $sql->appendToLastLine(',');
+      }
+    }
+    $sql->append(')');
+
+    self::executeNone($sql->getCode());
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
    * Closes the connection to the MySQL instance, if connected.
    */
   public static function disconnect()
@@ -134,6 +159,20 @@ class DataLayer
       self::$dl->disconnect();
       self::$dl = null;
     }
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
+   * Drop table.
+   *
+   * @param string $schemaName The name of the table schema.
+   * @param string $tableName  The name of the table.
+   */
+  public static function dropTemporaryTable($schemaName, $tableName)
+  {
+    $sql = sprintf('drop temporary table `%s`.`%s`', $schemaName, $tableName);
+
+    self::executeNone($sql);
   }
 
   //--------------------------------------------------------------------------------------------------------------------
@@ -266,7 +305,7 @@ order by ORDINAL_POSITION',
                    self::$dl->quoteString($schemaName),
                    self::$dl->quoteString($tableName));
 
-    return self::$dl->executeRows($sql);
+    return self::executeRows($sql);
   }
 
   //--------------------------------------------------------------------------------------------------------------------
@@ -291,62 +330,7 @@ AND   t1.TABLE_NAME   = %s',
                    self::$dl->quoteString($schemaName),
                    self::$dl->quoteString($tableName));
 
-    return self::$dl->executeRow1($sql);
-  }
-
-  //--------------------------------------------------------------------------------------------------------------------
-  /**
-   * Create temp table for getting column type information for audit columns.
-   *
-   * @param string  $schemaName   The name of the table schema.
-   * @param string  $tableName    The table name.
-   * @param array[] $auditColumns Audit columns from config file.
-   */
-  public static function createTemporaryTable($schemaName, $tableName, $auditColumns)
-  {
-    $sql = new CompoundSyntaxStore();
-    $sql->append(sprintf('create temporary table `%s`.`%s` (', $schemaName, $tableName));
-    foreach ($auditColumns as $column)
-    {
-      $sql->append(sprintf('%s %s', $column['column_name'], $column['column_type']));
-      if (end($auditColumns)!==$column)
-      {
-        $sql->appendToLastLine(',');
-      }
-    }
-    $sql->append(')');
-
-    self::$dl->executeNone($sql->getCode());
-  }
-
-  //--------------------------------------------------------------------------------------------------------------------
-  /**
-   * Drop table.
-   *
-   * @param string $schemaName The name of the table schema.
-   * @param string $tableName  The name of the table.
-   *
-   * @return \array[]
-   */
-  public static function showColumns($schemaName, $tableName)
-  {
-    $sql = sprintf('SHOW COLUMNS FROM `%s`.`%s`', $schemaName, $tableName);
-
-    return self::$dl->executeRows($sql);
-  }
-
-  //--------------------------------------------------------------------------------------------------------------------
-  /**
-   * Drop table.
-   *
-   * @param string $schemaName The name of the table schema.
-   * @param string $tableName  The name of the table.
-   */
-  public static function dropTemporaryTable($schemaName, $tableName)
-  {
-    $sql = sprintf('drop temporary table `%s`.`%s`', $schemaName, $tableName);
-
-    self::$dl->executeNone($sql);
+    return self::executeRow1($sql);
   }
 
   //--------------------------------------------------------------------------------------------------------------------
@@ -369,7 +353,7 @@ order by Trigger_Name',
                    self::$dl->quoteString($schemaName),
                    self::$dl->quoteString($tableName));
 
-    return self::$dl->executeRows($sql);
+    return self::executeRows($sql);
   }
 
   //--------------------------------------------------------------------------------------------------------------------
@@ -389,7 +373,7 @@ where  TABLE_SCHEMA = %s
 and    TABLE_TYPE   = 'BASE TABLE'
 order by TABLE_NAME", self::$dl->quoteString($schemaName));
 
-    return self::$dl->executeRows($sql);
+    return self::executeRows($sql);
   }
 
   //--------------------------------------------------------------------------------------------------------------------
@@ -402,7 +386,7 @@ order by TABLE_NAME", self::$dl->quoteString($schemaName));
   {
     $sql = sprintf('lock tables `%s` write', $tableName);
 
-    self::$dl->executeNone($sql);
+    self::executeNone($sql);
   }
 
   //--------------------------------------------------------------------------------------------------------------------
@@ -418,13 +402,29 @@ order by TABLE_NAME", self::$dl->quoteString($schemaName));
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
+   * Drop table.
+   *
+   * @param string $schemaName The name of the table schema.
+   * @param string $tableName  The name of the table.
+   *
+   * @return \array[]
+   */
+  public static function showColumns($schemaName, $tableName)
+  {
+    $sql = sprintf('SHOW COLUMNS FROM `%s`.`%s`', $schemaName, $tableName);
+
+    return self::executeRows($sql);
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
    * Releases all table locks.
    */
   public static function unlockTables()
   {
     $sql = 'unlock tables';
 
-    self::$dl->executeNone($sql);
+    self::executeNone($sql);
   }
 
   //--------------------------------------------------------------------------------------------------------------------
