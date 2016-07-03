@@ -1,0 +1,9 @@
+{
+  "database": {
+    "host_name": "localhost",
+    "user_name": "test",
+    "password": "test",
+    "data_schema": "test_data",
+    "audit_schema": "test_audit"
+  }
+}

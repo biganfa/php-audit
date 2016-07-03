@@ -134,17 +134,6 @@ class Columns
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
-   * Returns the underlying array with metadata of the columns.
-   *
-   * @return array[]
-   */
-  public function getColumns()
-  {
-    return $this->columns;
-  }
-
-  //--------------------------------------------------------------------------------------------------------------------
-  /**
    * Return column type with character set and collation.
    *
    * @param string $columnName The column name.
@@ -166,6 +155,17 @@ class Columns
     }
 
     return null;
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
+   * Returns the underlying array with metadata of the columns.
+   *
+   * @return array[]
+   */
+  public function getColumns()
+  {
+    return $this->columns;
   }
 
   //--------------------------------------------------------------------------------------------------------------------

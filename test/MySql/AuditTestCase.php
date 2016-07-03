@@ -1,8 +1,11 @@
 <?php
 //----------------------------------------------------------------------------------------------------------------------
+namespace SetBased\Audit\Test\MySql;
+
 use SetBased\Stratum\MySql\StaticDataLayer;
 
-class AuditTestCase extends PHPUnit_Framework_TestCase
+//----------------------------------------------------------------------------------------------------------------------
+class AuditTestCase extends \PHPUnit_Framework_TestCase
 {
   protected static $ourAuditSchema = 'test_audit';
 

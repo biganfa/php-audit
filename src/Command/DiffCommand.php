@@ -140,46 +140,6 @@ class DiffCommand extends AuditCommand
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
-   * Get the difference between data and audit tables.
-   *
-   * @param Columns $dataColumns  The table columns from data schema.
-   * @param Columns $auditColumns The table columns from audit schema.
-   *
-   * @return \array[]
-   */
-  private function createDiffArray($dataColumns, $auditColumns)
-  {
-    $diff = new ColumnTypesExtended($this->config['audit_columns'], $auditColumns, $dataColumns);
-
-    return $diff;
-  }
-
-  //--------------------------------------------------------------------------------------------------------------------
-  /**
-   * Computes the difference between data and audit tables.
-   */
-  private function getDiff()
-  {
-    foreach ($this->dataSchemaTables as $table)
-    {
-      if ($this->config['tables'][$table['table_name']]['audit'])
-      {
-        $res = StaticDataLayer::searchInRowSet('table_name', $table['table_name'], $this->auditSchemaTables);
-        if (isset($res))
-        {
-          $dataColumns  = new Columns(DataLayer::getTableColumns($this->config['database']['data_schema'], $table['table_name']));
-          $auditColumns = DataLayer::getTableColumns($this->config['database']['audit_schema'], $table['table_name']);
-          $auditColumns = $this->addNotNull($auditColumns);
-          $auditColumns = new Columns($auditColumns);
-
-          $this->diffColumns[$table['table_name']] = $this->createDiffArray($dataColumns, $auditColumns);
-        }
-      }
-    }
-  }
-
-  //--------------------------------------------------------------------------------------------------------------------
-  /**
    * Add not null to audit columns if it not nullable.
    *
    * @param array $theColumns Audit columns.
@@ -208,6 +168,22 @@ class DiffCommand extends AuditCommand
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
+   * Get the difference between data and audit tables.
+   *
+   * @param Columns $dataColumns  The table columns from data schema.
+   * @param Columns $auditColumns The table columns from audit schema.
+   *
+   * @return \array[]
+   */
+  private function createDiffArray($dataColumns, $auditColumns)
+  {
+    $diff = new ColumnTypesExtended($this->config['audit_columns'], $auditColumns, $dataColumns);
+
+    return $diff;
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
    * Writes the difference between the audit tables and metadata tables to the output.
    *
    * @param OutputInterface $output The output.
@@ -224,6 +200,30 @@ class DiffCommand extends AuditCommand
       else if (!$table['audit'] && isset($res))
       {
         $output->writeln(sprintf('<obsolete_table>%s</>', $tableName));
+      }
+    }
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
+   * Computes the difference between data and audit tables.
+   */
+  private function getDiff()
+  {
+    foreach ($this->dataSchemaTables as $table)
+    {
+      if ($this->config['tables'][$table['table_name']]['audit'])
+      {
+        $res = StaticDataLayer::searchInRowSet('table_name', $table['table_name'], $this->auditSchemaTables);
+        if (isset($res))
+        {
+          $dataColumns  = new Columns(DataLayer::getTableColumns($this->config['database']['data_schema'], $table['table_name']));
+          $auditColumns = DataLayer::getTableColumns($this->config['database']['audit_schema'], $table['table_name']);
+          $auditColumns = $this->addNotNull($auditColumns);
+          $auditColumns = new Columns($auditColumns);
+
+          $this->diffColumns[$table['table_name']] = $this->createDiffArray($dataColumns, $auditColumns);
+        }
       }
     }
   }

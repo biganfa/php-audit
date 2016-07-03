@@ -35,9 +35,9 @@ class DataLayer
   /**
    * Adds new columns to an audit table.
    *
-   * @param string                              $auditSchemaName The name of audit schema.
-   * @param string                              $tableName       The name of the table.
-   * @param \SetBased\Audit\MySql\Table\Columns $columns         The metadata of the new columns.
+   * @param string  $auditSchemaName The name of audit schema.
+   * @param string  $tableName       The name of the table.
+   * @param Columns $columns         The metadata of the new columns.
    */
   public static function addNewColumns($auditSchemaName, $tableName, $columns)
   {
@@ -89,15 +89,15 @@ class DataLayer
   /**
    * Creates a trigger on a table.
    *
-   * @param string                              $dataSchemaName  The name of the data schema.
-   * @param string                              $auditSchemaName The name of the audit schema.
-   * @param string                              $tableName       The name of the table.
-   * @param string                              $triggerAction   The trigger action (i.e. INSERT, UPDATE, or DELETE).
-   * @param string                              $triggerName     The name of the trigger.
-   * @param \SetBased\Audit\MySql\Table\Columns $tableColumns    The data table columns.
-   * @param \SetBased\Audit\MySql\Table\Columns $auditColumns    The audit table columns.
-   * @param string                              $skipVariable    The skip variable.
-   * @param string[]                            $additionSql     Additional SQL statements.
+   * @param string   $dataSchemaName  The name of the data schema.
+   * @param string   $auditSchemaName The name of the audit schema.
+   * @param string   $tableName       The name of the table.
+   * @param string   $triggerAction   The trigger action (i.e. INSERT, UPDATE, or DELETE).
+   * @param string   $triggerName     The name of the trigger.
+   * @param Columns  $tableColumns    The data table columns.
+   * @param Columns  $auditColumns    The audit table columns.
+   * @param string   $skipVariable    The skip variable.
+   * @param string[] $additionSql     Additional SQL statements.
    */
   public static function createAuditTrigger($dataSchemaName,
                                             $auditSchemaName,

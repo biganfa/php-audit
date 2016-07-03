@@ -10,6 +10,25 @@ class RowHelper
 {
   //--------------------------------------------------------------------------------------------------------------------
   /**
+   * Append a row.
+   *
+   * @param \array[]          $theExistRows Exist rows array for appending.
+   * @param ColumnTypesHelper $theRow       Row for append.
+   */
+  public static function appendRow(&$theExistRows, $theRow)
+  {
+    $theRow         = $theRow->getTypes();
+    $theExistRows[] = self::createTableRow($theRow);
+    if (self::checkOptions($theRow))
+    {
+      $theRow = self::createColumnOptionsRow($theRow);
+
+      $theExistRows[] = $theRow;
+    }
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
    * Create table row.
    *
    * @param array[] $theRow Data for table row.
@@ -36,23 +55,6 @@ class RowHelper
   /**
    * Create table row.
    *
-   * @param $theCharacterSetName
-   * @param $theCollationName
-   *
-   * @return string
-   */
-  public static function styledOptionsRow($theCharacterSetName, $theCollationName)
-  {
-    $charsetName   = isset($theCharacterSetName) ? '['.$theCharacterSetName.']' : null;
-    $collationName = isset($theCollationName) ? '['.$theCollationName.']' : null;
-
-    return trim(sprintf('%s %s', $charsetName, $collationName));
-  }
-
-  //--------------------------------------------------------------------------------------------------------------------
-  /**
-   * Create table row.
-   *
    * @param array[] $theRow Data for table row.
    *
    * @return array<string,null|string>
@@ -65,6 +67,23 @@ class RowHelper
                  'config_type'      => isset($theRow['config_column_type']) ? $theRow['config_column_type'] : null];
 
     return $tableRow;
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
+   * Create table row.
+   *
+   * @param $theCharacterSetName
+   * @param $theCollationName
+   *
+   * @return string
+   */
+  public static function styledOptionsRow($theCharacterSetName, $theCollationName)
+  {
+    $charsetName   = isset($theCharacterSetName) ? '['.$theCharacterSetName.']' : null;
+    $collationName = isset($theCollationName) ? '['.$theCollationName.']' : null;
+
+    return trim(sprintf('%s %s', $charsetName, $collationName));
   }
 
   //--------------------------------------------------------------------------------------------------------------------
@@ -95,25 +114,6 @@ class RowHelper
     }
 
     return false;
-  }
-
-  //--------------------------------------------------------------------------------------------------------------------
-  /**
-   * Append a row.
-   *
-   * @param \array[]          $theExistRows Exist rows array for appending.
-   * @param ColumnTypesHelper $theRow       Row for append.
-   */
-  public static function appendRow(&$theExistRows, $theRow)
-  {
-    $theRow         = $theRow->getTypes();
-    $theExistRows[] = self::createTableRow($theRow);
-    if (self::checkOptions($theRow))
-    {
-      $theRow         = self::createColumnOptionsRow($theRow);
-
-      $theExistRows[] = $theRow;
-    }
   }
 
   //--------------------------------------------------------------------------------------------------------------------

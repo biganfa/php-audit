@@ -12,7 +12,7 @@
   "prefer-stable": true,
   "require-dev": {
     "phpunit/phpunit": "*",
-    "setbased/phing-extensions": "2.*"
+    "phing/phing": "2.*"
   },
   "require": {
     "php": ">=5.4.0",
@@ -23,6 +23,11 @@
   "autoload": {
     "psr-4": {
       "SetBased\\Audit\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "SetBased\\Audit\\Test\\": "test/"
     }
   },
   "bin": [

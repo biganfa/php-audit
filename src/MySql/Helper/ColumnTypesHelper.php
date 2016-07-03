@@ -2,10 +2,9 @@
 //----------------------------------------------------------------------------------------------------------------------
 namespace SetBased\Audit\MySql\Helper;
 
-//----------------------------------------------------------------------------------------------------------------------
-use SetBased\Audit\MySql\Table\Columns;
 use SetBased\Audit\MySQl\Table\ColumnType;
 
+//----------------------------------------------------------------------------------------------------------------------
 /**
  * Class for metadata of (table) column types.
  */
@@ -36,7 +35,7 @@ class ColumnTypesHelper
    * Create array with all columns types.
    *
    * @param array[]|ColumnType $columnTypes The metadata of the column.
-   * @param null|string     $typePrefix  Prefix for column type name.
+   * @param null|string        $typePrefix  Prefix for column type name.
    */
   public function extendColumnTypes($columnTypes, $typePrefix)
   {

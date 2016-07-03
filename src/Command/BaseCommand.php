@@ -2,7 +2,6 @@
 //----------------------------------------------------------------------------------------------------------------------
 namespace SetBased\Audit\Command;
 
-use SetBased\Audit\MySql\DataLayer;
 use SetBased\Exception\RuntimeException;
 use SetBased\Stratum\Style\StratumStyle;
 use Symfony\Component\Console\Command\Command;
@@ -35,6 +34,13 @@ class BaseCommand extends Command
    * @var StratumStyle
    */
   protected $io;
+
+  /**
+   * If set (the default) the config file must be rewritten. Set to false for testing only.
+   *
+   * @var bool
+   */
+  private $rewriteConfigFile = true;
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
@@ -116,6 +122,30 @@ class BaseCommand extends Command
     {
       $this->config['tables'][$table_name]['audit'] = filter_var($params['audit'], FILTER_VALIDATE_BOOLEAN);
     }
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
+   * Use for testing only.
+   *
+   * @param bool $rewriteConfigFile If true the config file must be rewritten. Otherwise the config must not be
+   *                                rewritten.
+   */
+  public function setRewriteConfigFile($rewriteConfigFile)
+  {
+    $this->rewriteConfigFile = $rewriteConfigFile;
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
+   * Rewrites the config file with updated data.
+   */
+  protected function rewriteConfig()
+  {
+    // Return immediately when the config file must not be rewritten. 
+    if (!$this->rewriteConfigFile) return;
+
+    $this->writeTwoPhases($this->configFileName, json_encode($this->config, JSON_PRETTY_PRINT));
   }
 
   //--------------------------------------------------------------------------------------------------------------------

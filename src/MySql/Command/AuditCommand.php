@@ -3,6 +3,7 @@
 namespace SetBased\Audit\MySql\Command;
 
 use SetBased\Audit\MySql\DataLayer;
+use SetBased\Audit\MySql\Table\Columns;
 use SetBased\Audit\MySql\Table\ColumnType;
 use SetBased\Audit\MySql\Table\Table;
 use SetBased\Stratum\MySql\StaticDataLayer;
@@ -43,8 +44,8 @@ class AuditCommand extends MySqlCommand
   /**
    * Compares the tables listed in the config file and the tables found in the audit schema
    *
-   * @param string                              $tableName Name of table
-   * @param \SetBased\Audit\MySql\Table\Columns $columns   The table columns.
+   * @param string  $tableName Name of table
+   * @param Columns $columns   The table columns.
    */
   public function getColumns($tableName, $columns)
   {
@@ -93,7 +94,7 @@ class AuditCommand extends MySqlCommand
         {
           if ($this->config['tables'][$table['table_name']]['audit'])
           {
-            if(!isset($this->config['tables'][$table['table_name']]['alias']))
+            if (!isset($this->config['tables'][$table['table_name']]['alias']))
             {
               $this->config['tables'][$table['table_name']]['alias'] = Table::getRandomAlias();
             }
@@ -112,13 +113,38 @@ class AuditCommand extends MySqlCommand
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
+   * Get canonical column types for audit columns.
+   */
+  protected function auditColumnTypes()
+  {
+    $schema    = $this->config['database']['audit_schema'];
+    $tableName = 'TMP_'.uniqid();
+    DataLayer::createTemporaryTable($schema, $tableName, $this->config['audit_columns']);
+    $auditColumns = DataLayer::showColumns($schema, $tableName);
+    foreach ($auditColumns as $column)
+    {
+      $key = StaticDataLayer::searchInRowSet('column_name', $column['Field'], $this->config['audit_columns']);
+      if (isset($key))
+      {
+        $this->config['audit_columns'][$key]['column_type'] = $column['Type'];
+        if ($column['Null']==='NO')
+        {
+          $this->config['audit_columns'][$key]['column_type'] = sprintf('%s not null', $this->config['audit_columns'][$key]['column_type']);
+        }
+      }
+    }
+    DataLayer::dropTemporaryTable($schema, $tableName);
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
    * {@inheritdoc}
    */
   protected function configure()
   {
     $this->setName('audit')
          ->setDescription('Create (missing) audit table and (re)creates audit triggers')
-         ->addArgument('config file', InputArgument::OPTIONAL, 'The audit configuration file', 'etc/audit.json');
+         ->addArgument('config file', InputArgument::OPTIONAL, 'The audit configuration file');
   }
 
   //--------------------------------------------------------------------------------------------------------------------
@@ -177,40 +203,6 @@ class AuditCommand extends MySqlCommand
     DataLayer::disconnect();
 
     $this->rewriteConfig();
-  }
-
-  //--------------------------------------------------------------------------------------------------------------------
-  /**
-   * Get canonical column types for audit columns.
-   */
-  protected function auditColumnTypes()
-  {
-    $schema    = $this->config['database']['audit_schema'];
-    $tableName = 'TMP_'.uniqid();
-    DataLayer::createTemporaryTable($schema, $tableName, $this->config['audit_columns']);
-    $auditColumns = DataLayer::showColumns($schema, $tableName);
-    foreach ($auditColumns as $column)
-    {
-      $key = StaticDataLayer::searchInRowSet('column_name', $column['Field'], $this->config['audit_columns']);
-      if (isset($key))
-      {
-        $this->config['audit_columns'][$key]['column_type'] = $column['Type'];
-        if ($column['Null']==='NO')
-        {
-          $this->config['audit_columns'][$key]['column_type'] = sprintf('%s not null', $this->config['audit_columns'][$key]['column_type']);
-        }
-      }
-    }
-    DataLayer::dropTemporaryTable($schema, $tableName);
-  }
-
-  //--------------------------------------------------------------------------------------------------------------------
-  /**
-   * Write new data to config file.
-   */
-  private function rewriteConfig()
-  {
-    $this->writeTwoPhases($this->configFileName, json_encode($this->config, JSON_PRETTY_PRINT));
   }
 
   //--------------------------------------------------------------------------------------------------------------------
