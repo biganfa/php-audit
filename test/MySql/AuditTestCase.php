@@ -7,26 +7,28 @@ use SetBased\Stratum\MySql\StaticDataLayer;
 //----------------------------------------------------------------------------------------------------------------------
 class AuditTestCase extends \PHPUnit_Framework_TestCase
 {
-  protected static $ourAuditSchema = 'test_audit';
+  protected static $auditSchema = 'test_audit';
 
-  protected static$ourDataSchema = 'test_data';
+  protected static $dataSchema = 'test_data';
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
    * Connects to the MySQL server.
    */
-  public  static function setUpBeforeClass()
+  public static function setUpBeforeClass()
   {
     parent::setUpBeforeClass();
 
-    StaticDataLayer::connect('localhost', 'test', 'test', self::$ourDataSchema);
+    StaticDataLayer::connect('localhost', 'test', 'test', self::$dataSchema);
+
+    self::dropAllTables();
   }
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
    * Drops all tables in test_data and test_audit.
    */
-  protected function dropAllTables()
+  protected static function dropAllTables()
   {
     $sql = "
 select TABLE_SCHEMA as table_schema
@@ -35,17 +37,15 @@ from   information_schema.TABLES
 where TABLE_SCHEMA in (%s,%s)";
 
     $sql = sprintf($sql,
-                   StaticDataLayer::quoteString(self::$ourDataSchema),
-                   StaticDataLayer::quoteString(self::$ourAuditSchema));
+                   StaticDataLayer::quoteString(self::$dataSchema),
+                   StaticDataLayer::quoteString(self::$auditSchema));
 
     $tables = StaticDataLayer::executeRows($sql);
 
-    foreach($tables as $table)
+    foreach ($tables as $table)
     {
       $sql = "drop table `%s`.`%s`";
       $sql = sprintf($sql, $table['table_schema'], $table['table_name']);
-
-      echo $sql, "\n";
 
       StaticDataLayer::executeNone($sql);
     }
