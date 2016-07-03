@@ -21,7 +21,7 @@ before_install:
   - mysql -u root -e "grant all on test_data.*  to 'test'@'localhost';"
   - mysql -u root -e "set global binlog_format = 'row';"
   - mysql -u root -e "set global log_bin_trust_function_creators = 1;"
-  - mysql_tzinfo_to_sql /usr/share/zoneinfo | mysql -u root
+  - mysql_tzinfo_to_sql /usr/share/zoneinfo | mysql -u root mysql
   
 install:
   - composer self-update
