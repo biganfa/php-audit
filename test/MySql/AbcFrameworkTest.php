@@ -137,6 +137,7 @@ select *
 from   `test_audit`.`AUT_COMPANY`
 where  `audit_statement` = 'INSERT'");
 
+    StaticDataLayer::query("SET time_zone = 'Europe/Amsterdam'");
     $rows = StaticDataLayer::executeRows($sql);
 
     // We expect 1 row.
@@ -183,6 +184,7 @@ select *
 from   `test_audit`.`AUT_COMPANY`
 where  `audit_statement` = 'UPDATE'");
 
+    StaticDataLayer::query("SET time_zone = 'Europe/Amsterdam'");
     $rows = StaticDataLayer::executeRows($sql);
 
     // We expect 2 rows.
@@ -237,6 +239,7 @@ select *
 from   `test_audit`.`AUT_COMPANY`
 where  audit_statement = 'DELETE'");
 
+    StaticDataLayer::query("SET time_zone = 'Europe/Amsterdam'");
     $rows = StaticDataLayer::executeRows($sql);
 
     // We expect 1 row.
