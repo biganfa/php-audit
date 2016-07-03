@@ -1,5 +1,13 @@
 build:
     tests:
+        before:
+            - mysql --version
+            - mysql -u root -e "create database if not exists test_audit;"
+            - mysql -u root -e "create database if not exists test_data;"
+            - mysql -u root -e "create user 'test'@'localhost' identified by 'test';"
+            - mysql -u root -e "grant all on test_audit.* to 'test'@'localhost';"
+            - mysql -u root -e "grant all on test_data.*  to 'test'@'localhost';"
+
         override:
             -
                 command: './bin/phing unit'
