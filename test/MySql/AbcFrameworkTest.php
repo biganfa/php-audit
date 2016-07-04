@@ -248,8 +248,9 @@ where  audit_statement = 'DELETE'");
 
     // Tests on fields.
     $time = new \DateTime();
-    $this->assertLessThanOrEqual(date_format($time->add(new \DateInterval('P1M')), 'Y-m-d H:i:s'), $row['audit_timestamp']);
-    $this->assertGreaterThanOrEqual(date_format($time->sub(new \DateInterval('P1M')), 'Y-m-d H:i:s'), $row['audit_timestamp']);
+    $this->assertLessThanOrEqual(date_format($time->add(new \DateInterval('PT1M')), 'Y-m-d H:i:s'), $row['audit_timestamp']);
+    $time = new \DateTime();
+    $this->assertGreaterThanOrEqual(date_format($time->sub(new \DateInterval('PT1M')), 'Y-m-d H:i:s'), $row['audit_timestamp']);
     $this->assertEquals('OLD', $row['audit_type']);
     $this->assertNotEmpty($row['audit_uuid']);
     $this->assertEquals(3, $row['audit_rownum']);
