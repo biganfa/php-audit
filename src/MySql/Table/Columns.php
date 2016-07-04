@@ -170,11 +170,11 @@ class Columns
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
-   * Returns $columns count.
+   * Returns the number of columns.
    *
    * @return int
    */
-  public function getCount()
+  public function getNumberOfColumns()
   {
     return count($this->columns);
   }
