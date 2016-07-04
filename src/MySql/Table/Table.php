@@ -297,11 +297,7 @@ class Table
     $alteredColumns  = $this->getAlteredColumns();
 
     $this->loggingColumnInfo($newColumns, $obsoleteColumns, $alteredColumns);
-    $checkNewColumns = $newColumns->getColumns();
-    if (!empty($checkNewColumns))
-    {
-      $this->addNewColumns($newColumns);
-    }
+    $this->addNewColumns($newColumns);
 
     return ['full_columns'     => $this->getTableColumnsFromConfig($newColumns, $obsoleteColumns),
             'new_columns'      => $newColumns,

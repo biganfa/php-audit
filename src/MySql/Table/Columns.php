@@ -170,6 +170,17 @@ class Columns
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
+   * Returns $columns count.
+   *
+   * @return int
+   */
+  public function getCount()
+  {
+    return count($this->columns);
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
    * Returns previous column of a columns. Returns null if the column name is not found in this Columns.
    *
    * @param string $columnName The column name.
