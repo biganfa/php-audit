@@ -117,23 +117,26 @@ class AuditCommand extends MySqlCommand
    */
   protected function auditColumnTypes()
   {
-    $schema    = $this->config['database']['audit_schema'];
-    $tableName = 'TMP_'.uniqid();
-    DataLayer::createTemporaryTable($schema, $tableName, $this->config['audit_columns']);
-    $auditColumns = DataLayer::showColumns($schema, $tableName);
-    foreach ($auditColumns as $column)
+    if (!empty($this->config['audit_columns']))
     {
-      $key = StaticDataLayer::searchInRowSet('column_name', $column['Field'], $this->config['audit_columns']);
-      if (isset($key))
+      $schema    = $this->config['database']['audit_schema'];
+      $tableName = 'TMP_'.uniqid();
+      DataLayer::createTemporaryTable($schema, $tableName, $this->config['audit_columns']);
+      $auditColumns = DataLayer::showColumns($schema, $tableName);
+      foreach ($auditColumns as $column)
       {
-        $this->config['audit_columns'][$key]['column_type'] = $column['Type'];
-        if ($column['Null']==='NO')
+        $key = StaticDataLayer::searchInRowSet('column_name', $column['Field'], $this->config['audit_columns']);
+        if (isset($key))
         {
-          $this->config['audit_columns'][$key]['column_type'] = sprintf('%s not null', $this->config['audit_columns'][$key]['column_type']);
+          $this->config['audit_columns'][$key]['column_type'] = $column['Type'];
+          if ($column['Null']==='NO')
+          {
+            $this->config['audit_columns'][$key]['column_type'] = sprintf('%s not null', $this->config['audit_columns'][$key]['column_type']);
+          }
         }
       }
+      DataLayer::dropTemporaryTable($schema, $tableName);
     }
-    DataLayer::dropTemporaryTable($schema, $tableName);
   }
 
   //--------------------------------------------------------------------------------------------------------------------
