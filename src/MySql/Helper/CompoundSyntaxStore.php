@@ -86,7 +86,7 @@ class CompoundSyntaxStore
    */
   public function getCode()
   {
-    return implode(PHP_EOL, $this->lines);
+    return implode(PHP_EOL, $this->lines).PHP_EOL;
   }
 
   //--------------------------------------------------------------------------------------------------------------------
