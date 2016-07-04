@@ -41,6 +41,9 @@ class DataLayer
    */
   public static function addNewColumns($auditSchemaName, $tableName, $columns)
   {
+    // Return immediately if there are no columns to add. 
+    if ($columns->getNumberOfColumns()==0) return;
+
     $helper = new AlterAuditTableAddColumns($auditSchemaName, $tableName, $columns);
     $sql    = $helper->buildStatement();
 
