@@ -2,11 +2,11 @@
 //----------------------------------------------------------------------------------------------------------------------
 namespace SetBased\Audit\MySql;
 
-use SetBased\Audit\MySql\Helper\CompoundSyntaxStore;
 use SetBased\Audit\MySql\Sql\AlterAuditTableAddColumns;
 use SetBased\Audit\MySql\Sql\CreateAuditTable;
 use SetBased\Audit\MySql\Sql\CreateAuditTrigger;
 use SetBased\Audit\MySql\Table\Columns;
+use SetBased\Helper\CodeStore\MySqlCompoundSyntaxCodeStore;
 use SetBased\Stratum\MySql\StaticDataLayer;
 use SetBased\Stratum\Style\StratumStyle;
 
@@ -133,7 +133,7 @@ class DataLayer
    */
   public static function createTemporaryTable($schemaName, $tableName, $auditColumns)
   {
-    $sql = new CompoundSyntaxStore();
+    $sql = new MySqlCompoundSyntaxCodeStore();
     $sql->append(sprintf('create temporary table `%s`.`%s` (', $schemaName, $tableName));
     foreach ($auditColumns as $column)
     {

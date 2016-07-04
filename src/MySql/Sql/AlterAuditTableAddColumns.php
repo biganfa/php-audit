@@ -2,9 +2,9 @@
 //----------------------------------------------------------------------------------------------------------------------
 namespace SetBased\Audit\MySql\Sql;
 
-use SetBased\Audit\MySql\Helper\CompoundSyntaxStore;
 use SetBased\Audit\MySql\Table\Columns;
 use SetBased\Audit\MySql\Table\ColumnType;
+use SetBased\Helper\CodeStore\MySqlCompoundSyntaxCodeStore;
 
 //----------------------------------------------------------------------------------------------------------------------
 /**
@@ -58,7 +58,7 @@ class AlterAuditTableAddColumns
    */
   public function buildStatement()
   {
-    $code = new CompoundSyntaxStore();
+    $code = new MySqlCompoundSyntaxCodeStore();
 
     $code->append(sprintf('alter table `%s`.`%s`', $this->auditSchemaName, $this->tableName));
     /** @var ColumnType $column */

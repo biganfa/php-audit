@@ -2,11 +2,11 @@
 //----------------------------------------------------------------------------------------------------------------------
 namespace SetBased\Audit\MySql\Sql;
 
-use SetBased\Audit\MySql\Helper\CompoundSyntaxStore;
 use SetBased\Audit\MySql\Table\Columns;
 use SetBased\Audit\MySql\Table\ColumnType;
 use SetBased\Exception\FallenException;
 use SetBased\Exception\RuntimeException;
+use SetBased\Helper\CodeStore\MySqlCompoundSyntaxCodeStore;
 use SetBased\Stratum\MySql\StaticDataLayer;
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -40,7 +40,7 @@ class CreateAuditTrigger
   /**
    * The generated code.
    *
-   * @var CompoundSyntaxStore
+   * @var MySqlCompoundSyntaxCodeStore
    */
   private $code;
 
@@ -129,7 +129,7 @@ class CreateAuditTrigger
    */
   public function buildStatement()
   {
-    $this->code = new CompoundSyntaxStore();
+    $this->code = new MySqlCompoundSyntaxCodeStore();
 
     $rowState = [];
     switch ($this->triggerAction)

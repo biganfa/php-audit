@@ -3,9 +3,9 @@
 namespace SetBased\Audit\MySql\Sql;
 
 use SetBased\Audit\MySql\DataLayer;
-use SetBased\Audit\MySql\Helper\CompoundSyntaxStore;
 use SetBased\Audit\MySql\Table\Columns;
 use SetBased\Audit\MySql\Table\ColumnType;
+use SetBased\Helper\CodeStore\MySqlCompoundSyntaxCodeStore;
 
 //----------------------------------------------------------------------------------------------------------------------
 /**
@@ -71,7 +71,7 @@ class CreateAuditTable
    */
   public function buildStatement()
   {
-    $code = new CompoundSyntaxStore();
+    $code = new MySqlCompoundSyntaxCodeStore();
 
     $code->append(sprintf('create table `%s`.`%s`', $this->auditSchemaName, $this->tableName));
 
