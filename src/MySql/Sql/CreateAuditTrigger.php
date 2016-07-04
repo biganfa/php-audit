@@ -73,7 +73,7 @@ class CreateAuditTrigger
   private $tableName;
 
   /**
-   * The trigger action (.e. INSERT, UPDATE, or DELETE).
+   * The trigger action (i.e. INSERT, UPDATE, or DELETE).
    *
    * @var string
    */
