@@ -103,17 +103,17 @@ class BaseCommand extends Command
       throw new RuntimeException("Error decoding JSON: '%s'.", json_last_error_msg());
     }
 
-    if (!is_array($this->config['audit_columns']))
+    if (!isset($this->config['audit_columns']))
     {
       $this->config['audit_columns'] = [];
     }
 
-    if (!is_array($this->config['additional_sql']))
+    if (!isset($this->config['additional_sql']))
     {
       $this->config['additional_sql'] = [];
     }
 
-    if (!is_array($this->config['tables']))
+    if (!isset($this->config['tables']))
     {
       $this->config['tables'] = [];
     }
