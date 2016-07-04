@@ -113,30 +113,30 @@ class AuditCommand extends MySqlCommand
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
-   * Get canonical column types for audit columns.
+   * Resolves the canonical column types of the audit table columns.
    */
   protected function auditColumnTypes()
   {
-    if (!empty($this->config['audit_columns']))
+    // Return immediately of there are no audit columns.
+    if (empty($this->config['audit_columns'])) return;
+
+    $schema    = $this->config['database']['audit_schema'];
+    $tableName = 'TMP_'.uniqid();
+    DataLayer::createTemporaryTable($schema, $tableName, $this->config['audit_columns']);
+    $auditColumns = DataLayer::showColumns($schema, $tableName);
+    foreach ($auditColumns as $column)
     {
-      $schema    = $this->config['database']['audit_schema'];
-      $tableName = 'TMP_'.uniqid();
-      DataLayer::createTemporaryTable($schema, $tableName, $this->config['audit_columns']);
-      $auditColumns = DataLayer::showColumns($schema, $tableName);
-      foreach ($auditColumns as $column)
+      $key = StaticDataLayer::searchInRowSet('column_name', $column['Field'], $this->config['audit_columns']);
+      if (isset($key))
       {
-        $key = StaticDataLayer::searchInRowSet('column_name', $column['Field'], $this->config['audit_columns']);
-        if (isset($key))
+        $this->config['audit_columns'][$key]['column_type'] = $column['Type'];
+        if ($column['Null']==='NO')
         {
-          $this->config['audit_columns'][$key]['column_type'] = $column['Type'];
-          if ($column['Null']==='NO')
-          {
-            $this->config['audit_columns'][$key]['column_type'] = sprintf('%s not null', $this->config['audit_columns'][$key]['column_type']);
-          }
+          $this->config['audit_columns'][$key]['column_type'] = sprintf('%s not null', $this->config['audit_columns'][$key]['column_type']);
         }
       }
-      DataLayer::dropTemporaryTable($schema, $tableName);
     }
+    DataLayer::dropTemporaryTable($schema, $tableName);
   }
 
   //--------------------------------------------------------------------------------------------------------------------
