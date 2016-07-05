@@ -83,9 +83,7 @@ class LockTableCase extends AuditTestCase
     $status = $commandTester->getStatusCode();
     $this->assertSame(0, $status, 'status code');
 
-    $status = $generator->wait();
-    echo $generator->getOutput();
-    // $this->assertEquals(0, $status, 'status code generator');
+    $generator->wait();
 
     // Reconnect to DB.
     StaticDataLayer::connect('localhost', 'test', 'test', self::$dataSchema);
@@ -100,13 +98,10 @@ class LockTableCase extends AuditTestCase
                                                 from information_schema.TABLES
                                                 where TABLE_SCHEMA = 'test_data'
                                                 and   TABLE_NAME   = 'TABLE1'");
-      $n2 = StaticDataLayer::executeSingleton1('select sum(1) from test_audit.TABLE1');
+      $n2 = StaticDataLayer::executeSingleton1('select count(*) from test_audit.TABLE1');
 
       if (4 * $n1==$n2) break;
 
-      echo "$n1, ".(4 * $n1).", $n2\n";
-      StaticDataLayer::executeTable("select id from test_audit.TABLE1 group by id having count(*)<>4");
-      StaticDataLayer::executeTable("select * from test_audit.TABLE1 where id in (select id from test_audit.TABLE1 group by id having count(*)<>4)");
       sleep(3);
     }
 
