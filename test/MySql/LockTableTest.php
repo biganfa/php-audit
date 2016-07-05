@@ -83,6 +83,7 @@ class LockTableTest extends AuditTestCase
     $this->assertSame(0, $status, 'status code');
 
     $generator->wait();
+    sleep(2);
 
     // Reconnect to DB.
     StaticDataLayer::connect('localhost', 'test', 'test', self::$dataSchema);
