@@ -1,0 +1,43 @@
+{
+    "database": {
+        "host": "localhost",
+        "user": "test",
+        "password": "test",
+        "data_schema": "test_data",
+        "audit_schema": "test_audit"
+    },
+    "tables": {
+        "TABLE1": {
+            "audit": true,
+            "skip": null,
+            "alias": "577a9ae4d126a"
+        },
+        "TABLE2": {
+            "audit": false,
+            "alias": null,
+            "skip": null
+        },
+        "TABLE3": {
+            "audit": false,
+            "alias": null,
+            "skip": null
+        }
+    },
+    "audit_columns": [
+
+    ],
+    "additional_sql": [
+
+    ],
+    "table_columns": {
+        "TABLE1": [
+            {
+                "column_name": "c",
+                "column_type": "int(11)",
+                "is_nullable": "YES",
+                "character_set_name": null,
+                "collation_name": null
+            }
+        ]
+    }
+}
