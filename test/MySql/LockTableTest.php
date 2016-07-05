@@ -88,14 +88,13 @@ class LockTableTest extends AuditTestCase
     // Reconnect to DB.
     StaticDataLayer::connect('localhost', 'test', 'test', self::$dataSchema);
 
+    StaticDataLayer::executeTable("select id from test_audit.TABLE1 group by id having count(*)<>4");
     $n1 = StaticDataLayer::executeSingleton1("select AUTO_INCREMENT - 1 
                                               from information_schema.TABLES
                                               where TABLE_SCHEMA = 'test_data'
                                               and   TABLE_NAME   = 'TABLE1'");
-    $n2 = StaticDataLayer::executeSingleton1('select count(*) from test_audit.TABLE1');
+    $n2 = StaticDataLayer::executeSingleton1('select sum(1) from test_audit.TABLE1');
     echo (4*$n1).", $n2\n";
-
-    StaticDataLayer::executeTable("select id from test_audit.TABLE1 group by id having count(*)<>4");
 
     $this->assertEquals(4 * $n1, $n2, 'count');
   }
