@@ -61,7 +61,6 @@ $handler = new ErrorHandler();
 $handler->register();
 StaticDataLayer::connect('localhost', 'test', 'test', 'test_data');
 
-$i = 0;
 while (true)
 {
   if ($GLOBALS['exit']) break;
@@ -69,13 +68,7 @@ while (true)
   StaticDataLayer::executeNone('insert into TABLE1(c) values(1)');
   StaticDataLayer::executeNone('update TABLE1 set c = 2');
   StaticDataLayer::executeNone('delete from TABLE1 where c = 2');
-
-  $i++;
 }
 
 StaticDataLayer::commit();
 StaticDataLayer::disconnect();
-
-echo $i;
-
-sleep(3);

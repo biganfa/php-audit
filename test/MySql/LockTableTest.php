@@ -83,21 +83,18 @@ class LockTableTest extends AuditTestCase
     $status = $commandTester->getStatusCode();
     $this->assertSame(0, $status, 'status code');
 
-    $output = '';
-    $generator->wait(function ($type, $buffer) use (&$output){
-      $output .= $buffer;
-    });
-
-    $this->assertRegExp('/^\d+$/', $output);
-    var_dump($output);
+    $generator->wait();
 
     // Reconnect to DB.
     StaticDataLayer::connect('localhost', 'test', 'test', self::$dataSchema);
 
-    $n1 = $output;
+    $n1 = StaticDataLayer::executeSingleton1("select AUTO_INCREMENT - 1 
+                                              from information_schema.TABLES
+                                              where TABLE_SCHEMA = 'test_data'
+                                              and   TABLE_NAME   = 'TABLE1'");
     $n2 = StaticDataLayer::executeSingleton1('select count(*) from test_audit.TABLE1');
 
-    $this->assertEquals(4*$n1, $n2, 'count');
+    $this->assertEquals(4 * $n1, $n2, 'count');
   }
 
   //--------------------------------------------------------------------------------------------------------------------
