@@ -87,6 +87,7 @@ class LockTableTest extends AuditTestCase
 
     // Reconnect to DB.
     StaticDataLayer::connect('localhost', 'test', 'test', self::$dataSchema);
+    StaticDataLayer::executeNone('flush tables test_audit.TABLE1, test_data.TABLE1');
 
     StaticDataLayer::executeTable("select id from test_audit.TABLE1 group by id having count(*)<>4");
     StaticDataLayer::executeTable("select * from test_audit.TABLE1 where id in (select id from test_audit.TABLE1 group by id having count(*)<>4)");
@@ -95,7 +96,7 @@ class LockTableTest extends AuditTestCase
                                               where TABLE_SCHEMA = 'test_data'
                                               and   TABLE_NAME   = 'TABLE1'");
     $n2 = StaticDataLayer::executeSingleton1('select sum(1) from test_audit.TABLE1');
-    echo (4*$n1).", $n2\n";
+    echo "$n1, ".(4 * $n1).", $n2\n";
 
     $this->assertEquals(4 * $n1, $n2, 'count');
   }
