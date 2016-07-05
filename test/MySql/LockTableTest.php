@@ -83,11 +83,12 @@ class LockTableTest extends AuditTestCase
     $this->assertSame(0, $status, 'status code');
 
     $generator->wait();
-    sleep(2);
+    sleep(3);
 
     // Reconnect to DB.
     StaticDataLayer::connect('localhost', 'test', 'test', self::$dataSchema);
     StaticDataLayer::executeNone('flush tables test_audit.TABLE1, test_data.TABLE1');
+    sleep(3);
 
     StaticDataLayer::executeTable("select id from test_audit.TABLE1 group by id having count(*)<>4");
     StaticDataLayer::executeTable("select * from test_audit.TABLE1 where id in (select id from test_audit.TABLE1 group by id having count(*)<>4)");
