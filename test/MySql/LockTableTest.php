@@ -89,6 +89,7 @@ class LockTableTest extends AuditTestCase
     StaticDataLayer::connect('localhost', 'test', 'test', self::$dataSchema);
 
     StaticDataLayer::executeTable("select id from test_audit.TABLE1 group by id having count(*)<>4");
+    StaticDataLayer::executeTable("select * from test_audit.TABLE1 where id in (select id from test_audit.TABLE1 group by id having count(*)<>4)");
     $n1 = StaticDataLayer::executeSingleton1("select AUTO_INCREMENT - 1 
                                               from information_schema.TABLES
                                               where TABLE_SCHEMA = 'test_data'
