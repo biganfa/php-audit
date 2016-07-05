@@ -7,7 +7,6 @@ use SetBased\Stratum\MySql\StaticDataLayer;
 use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Tester\CommandTester;
-use Symfony\Component\Process\Process;
 
 //----------------------------------------------------------------------------------------------------------------------
 /**
@@ -64,10 +63,13 @@ class LockTableTestCase extends AuditTestCase
     $application->add(new AuditCommand());
 
     // Start process that inserts rows into TABLE1.
-    $generator = new Process(__DIR__.'/LockTableTestCase/generator.php');
-    $generator->start();
-
-    // Give generator some time to startup.
+    $pid = pcntl_fork();
+    if ($pid==0)
+    {
+      // Child process.
+      pcntl_exec(__DIR__.'/LockTableTestCase/generator.php');
+    }
+    // Parent process.
     sleep(2);
 
     /** @var AuditCommand $command */
@@ -78,12 +80,12 @@ class LockTableTestCase extends AuditTestCase
                              'config file' => __DIR__.'/LockTableTestCase/audit.json']);
 
     // Tell the generator it is time to stop.
-    $generator->signal(SIGUSR1);
+    posix_kill($pid, SIGUSR1);
 
     $status = $commandTester->getStatusCode();
     $this->assertSame(0, $status, 'status code');
 
-    $generator->wait();
+    pcntl_waitpid($pid, $status);
 
     // Reconnect to DB.
     StaticDataLayer::connect('localhost', 'test', 'test', self::$dataSchema);
