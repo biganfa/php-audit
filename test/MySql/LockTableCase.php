@@ -68,6 +68,7 @@ class LockTableCase extends AuditTestCase
     $generator->start();
 
     // Give generator some time to startup.
+    sleep(2);
 
     /** @var AuditCommand $command */
     $command = $application->find('audit');
