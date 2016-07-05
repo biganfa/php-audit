@@ -77,3 +77,5 @@ StaticDataLayer::commit();
 StaticDataLayer::disconnect();
 
 echo $i;
+
+sleep(3);

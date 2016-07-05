@@ -83,15 +83,18 @@ class LockTableTest extends AuditTestCase
     $status = $commandTester->getStatusCode();
     $this->assertSame(0, $status, 'status code');
 
+    $output = '';
+    $generator->wait(function ($type, $buffer) use (&$output){
+      $output .= $buffer;
+    });
+
+    $this->assertRegExp('/^\d+$/', $output);
+    var_dump($output);
+
     // Reconnect to DB.
     StaticDataLayer::connect('localhost', 'test', 'test', self::$dataSchema);
 
-    while ($generator->isRunning()) {
-      // waiting for process to finish
-    }
-
-    $n1 = $generator->getOutput();
-    echo $n1;
+    $n1 = $output;
     $n2 = StaticDataLayer::executeSingleton1('select count(*) from test_audit.TABLE1');
 
     $this->assertEquals(4*$n1, $n2, 'count');
