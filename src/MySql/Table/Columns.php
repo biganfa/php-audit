@@ -20,7 +20,7 @@ class Columns
   /**
    * Object constructor.
    *
-   * @param array[] $columns The metadata of the columns as returned by DataLayer::getTableColumns().
+   * @param array[][] | ColumnType[] $columns The metadata of the columns as returned by DataLayer::getTableColumns().
    */
   public function __construct($columns)
   {
