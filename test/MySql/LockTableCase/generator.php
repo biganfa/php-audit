@@ -73,3 +73,5 @@ while (true)
 }
 
 StaticDataLayer::disconnect();
+
+exit(0);
