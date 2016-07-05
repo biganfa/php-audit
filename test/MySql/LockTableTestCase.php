@@ -13,7 +13,7 @@ use Symfony\Component\Process\Process;
 /**
  * Tests for table locking.
  */
-class LockTableCase extends AuditTestCase
+class LockTableTestCase extends AuditTestCase
 {
   //--------------------------------------------------------------------------------------------------------------------
   /**
@@ -40,7 +40,7 @@ class LockTableCase extends AuditTestCase
     $command->setRewriteConfigFile(false);
     $commandTester = new CommandTester($command);
     $commandTester->execute(['command'     => $command->getName(),
-                             'config file' => 'test/MySql/LockTableCase/audit.json'],
+                             'config file' => 'test/MySql/LockTableTestCase/audit.json'],
                             ['verbosity' =>
                                OutputInterface::VERBOSITY_NORMAL |
                                OutputInterface::VERBOSITY_VERBOSE |
@@ -75,7 +75,7 @@ class LockTableCase extends AuditTestCase
     $command->setRewriteConfigFile(false);
     $commandTester = new CommandTester($command);
     $commandTester->execute(['command'     => $command->getName(),
-                             'config file' => 'test/MySql/LockTableCase/audit.json']);
+                             'config file' => 'test/MySql/LockTableTestCase/audit.json']);
 
     // Tell the generator it is time to stop.
     $generator->signal(SIGUSR1);

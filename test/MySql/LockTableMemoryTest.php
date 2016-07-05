@@ -8,7 +8,7 @@ use SetBased\Stratum\MySql\StaticDataLayer;
 /**
  * Tests for table locking.
  */
-class LockTableMemoryTest extends LockTableCase
+class LockTableMemoryTest extends LockTableTestCase
 {
   //--------------------------------------------------------------------------------------------------------------------
   /**
