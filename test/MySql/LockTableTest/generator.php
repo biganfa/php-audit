@@ -65,10 +65,11 @@ while (true)
 {
   if ($GLOBALS['exit']) break;
 
+  StaticDataLayer::begin();
   StaticDataLayer::executeNone('insert into TABLE1(c) values(1)');
   StaticDataLayer::executeNone('update TABLE1 set c = 2');
   StaticDataLayer::executeNone('delete from TABLE1 where c = 2');
+  StaticDataLayer::commit();
 }
 
-StaticDataLayer::commit();
 StaticDataLayer::disconnect();
