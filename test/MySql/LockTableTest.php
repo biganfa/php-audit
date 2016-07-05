@@ -91,6 +91,7 @@ class LockTableTest extends AuditTestCase
     }
 
     $n1 = $generator->getOutput();
+    echo $n1;
     $n2 = StaticDataLayer::executeSingleton1('select count(*) from test_audit.TABLE1');
 
     $this->assertEquals(4*$n1, $n2, 'count');
