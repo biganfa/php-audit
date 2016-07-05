@@ -86,6 +86,7 @@ class LockTableTestCase extends AuditTestCase
     $this->assertSame(0, $status, 'status code');
 
     pcntl_waitpid($pid, $status);
+    $this->assertEquals(0, $status);
 
     // Reconnect to DB.
     StaticDataLayer::connect('localhost', 'test', 'test', self::$dataSchema);
