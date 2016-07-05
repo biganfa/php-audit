@@ -95,7 +95,7 @@ class LockTableTest extends AuditTestCase
     $n2 = StaticDataLayer::executeSingleton1('select count(*) from test_audit.TABLE1');
     echo (4*$n1).", $n2\n";
 
-    StaticDataLayer::executeTable("select * from test_audit.TABLE1");
+    StaticDataLayer::executeTable("select id from test_audit.TABLE1 group by id having count(*)<>4");
 
     $this->assertEquals(4 * $n1, $n2, 'count');
   }
