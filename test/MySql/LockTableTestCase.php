@@ -23,7 +23,7 @@ class LockTableTestCase extends AuditTestCase
   {
     parent::setUpBeforeClass();
     
-    StaticDataLayer::multiQuery(file_get_contents(__DIR__.'/LockTableCase/setup.sql'));
+    StaticDataLayer::multiQuery(file_get_contents(__DIR__.'/LockTableTestCase/setup.sql'));
   }
 
   //--------------------------------------------------------------------------------------------------------------------
@@ -40,7 +40,7 @@ class LockTableTestCase extends AuditTestCase
     $command->setRewriteConfigFile(false);
     $commandTester = new CommandTester($command);
     $commandTester->execute(['command'     => $command->getName(),
-                             'config file' => 'test/MySql/LockTableTestCase/audit.json'],
+                             'config file' => __DIR__.'/LockTableTestCase/audit.json'],
                             ['verbosity' =>
                                OutputInterface::VERBOSITY_NORMAL |
                                OutputInterface::VERBOSITY_VERBOSE |
@@ -64,7 +64,7 @@ class LockTableTestCase extends AuditTestCase
     $application->add(new AuditCommand());
 
     // Start process that inserts rows into TABLE1.
-    $generator = new Process(__DIR__.'/LockTableCase/generator.php');
+    $generator = new Process(__DIR__.'/LockTableTestCase/generator.php');
     $generator->start();
 
     // Give generator some time to startup.
@@ -75,7 +75,7 @@ class LockTableTestCase extends AuditTestCase
     $command->setRewriteConfigFile(false);
     $commandTester = new CommandTester($command);
     $commandTester->execute(['command'     => $command->getName(),
-                             'config file' => 'test/MySql/LockTableTestCase/audit.json']);
+                             'config file' => __DIR__.'/LockTableTestCase/audit.json']);
 
     // Tell the generator it is time to stop.
     $generator->signal(SIGUSR1);
