@@ -51,7 +51,7 @@ class Columns
     /** @var ColumnType $column */
     foreach ($currentColumnsMetadata->columns as $column)
     {
-      $columns[] = $column->getType();;
+      $columns[] = $column->getType();
     }
 
     return new Columns($columns);
