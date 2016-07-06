@@ -72,19 +72,14 @@ class Columns
     $diff = [];
     foreach ($columns2->columns as $column2)
     {
-      if (!is_array($column2))
-      {
-        /** @var ColumnType $column2 */
-        $column2 = $column2->getType();
-      }
+      /** @var ColumnType $column2 */
+      $column2 = $column2->getType();
       if (isset($columns1->columns[$column2['column_name']]))
       {
         $column1 = $columns1->columns[$column2['column_name']];
-        if (!is_array($column1))
-        {
-          /** @var ColumnType $column1 */
-          $column1 = $column1->getType();
-        }
+
+        /** @var ColumnType $column1 */
+        $column1 = $column1->getType();
         if ($column2['column_type']!=$column1['column_type'])
         {
           $diff[] = $column1;
@@ -112,11 +107,8 @@ class Columns
     {
       foreach ($columns1->columns as $column1)
       {
-        if (!is_array($column1))
-        {
-          /** @var ColumnType $column1 */
-          $column1 = $column1->getType();
-        }
+        /** @var ColumnType $column1 */
+        $column1 = $column1->getType();
         if (!isset($columns2->columns[$column1['column_name']]))
         {
           $diff[] = $column1;
