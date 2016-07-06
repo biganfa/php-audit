@@ -20,18 +20,12 @@ class Columns
   /**
    * Object constructor.
    *
-   * @param array[][] | ColumnType[] $columns The metadata of the columns as returned by DataLayer::getTableColumns().
+   * @param array[] $columns The metadata of the columns as returned by DataLayer::getTableColumns().
    */
   public function __construct($columns)
   {
     foreach ($columns as $column)
     {
-      if (!is_array($column))
-      {
-        /** @var ColumnType $column */
-        $column = $column->getType();
-      }
-      /** @var array $column */
       $this->columns[$column['column_name']] = new ColumnType($column);
     }
   }
@@ -49,14 +43,15 @@ class Columns
   {
     $columns = [];
 
+    /** @var ColumnType $column */
     foreach ($auditColumnsMetadata->columns as $column)
     {
-      $columns[] = $column;
+      $columns[] = $column->getType();
     }
-
+    /** @var ColumnType $column */
     foreach ($currentColumnsMetadata->columns as $column)
     {
-      $columns[] = $column;
+      $columns[] = $column->getType();;
     }
 
     return new Columns($columns);
