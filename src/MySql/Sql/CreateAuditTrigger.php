@@ -95,8 +95,8 @@ class CreateAuditTrigger
    * @param string   $tableName       The name of the table.
    * @param string   $triggerAction   The trigger action (i.e. INSERT, UPDATE, or DELETE).
    * @param string   $triggerName     The name of the trigger.
-   * @param Columns  $tableColumns    The data table columns.
    * @param Columns  $auditColumns    The audit table columns.
+   * @param Columns  $tableColumns    The data table columns.
    * @param string   $skipVariable    The skip variable.
    * @param string[] $additionalSql   Additional SQL statements.
    */
@@ -116,8 +116,8 @@ class CreateAuditTrigger
     $this->triggerName     = $triggerName;
     $this->triggerAction   = $triggerAction;
     $this->skipVariable    = $skipVariable;
-    $this->tableColumns    = $tableColumns;
     $this->auditColumns    = $auditColumns;
+    $this->tableColumns    = $tableColumns;
     $this->additionalSql   = $additionalSql;
   }
 
