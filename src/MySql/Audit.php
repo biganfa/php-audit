@@ -1,112 +1,25 @@
 <?php
 //----------------------------------------------------------------------------------------------------------------------
-namespace SetBased\Audit\MySql\Table;
+namespace SetBased\Audit\MySql;
 
-use SetBased\Audit\MySql\DataLayer;
+use SetBased\Audit\MySql\Metadata\ColumnMetadata;
+use SetBased\Audit\MySql\Metadata\TableColumnsMetadata;
+use SetBased\Audit\MySql\Metadata\TableMetadata;
 use SetBased\Stratum\Style\StratumStyle;
 
 //--------------------------------------------------------------------------------------------------------------------
 /**
  * Class for metadata of tables.
  */
-class Table
+class Audit
 {
   //--------------------------------------------------------------------------------------------------------------------
-  /**
-   * The unique alias for this data table.
-   *
-   * @var string
-   */
-  private $alias;
-
-  /**
-   * The metadata (additional) audit columns (as stored in the config file).
-   *
-   * @var Columns
-   */
-  private $auditColumns;
-
-  /**
-   * The name of the schema with the audit tables.
-   *
-   * @var string
-   */
-  private $auditSchemaName;
-
-  /**
-   * The name of the schema with the data tables.
-   *
-   * @var string
-   */
-  private $dataSchemaName;
-
-  /**
-   * The metadata of the columns of the data table as stored in the config file.
-   *
-   * @var Columns
-   */
-  private $dataTableColumnsConfig;
-
-  /**
-   * The metadata of the columns of the data table retrieved from information_schema.
-   *
-   * @var Columns
-   */
-  private $dataTableColumnsDatabase;
-
   /**
    * The output decorator
    *
    * @var StratumStyle
    */
   private $io;
-
-  /**
-   * The skip variable for triggers.
-   *
-   * @var string
-   */
-  private $skipVariable;
-
-  /**
-   * The name of this data table.
-   *
-   * @var string
-   */
-  private $tableName;
-
-  //--------------------------------------------------------------------------------------------------------------------
-  /**
-   * Object constructor.
-   *
-   * @param StratumStyle $io                    The output for log messages.
-   * @param string       $tableName             The table name.
-   * @param string       $dataSchema            The name of the schema with data tables.
-   * @param string       $auditSchema           The name of the schema with audit tables.
-   * @param array[]      $configColumnsMetadata The columns of the data table as stored in the config file.
-   * @param array[]      $auditColumnsMetadata  The columns of the audit table as stored in the config file.
-   * @param string       $alias                 An unique alias for this table.
-   * @param string       $skipVariable          The skip variable
-   */
-  public function __construct($io,
-                              $tableName,
-                              $dataSchema,
-                              $auditSchema,
-                              $configColumnsMetadata,
-                              $auditColumnsMetadata,
-                              $alias,
-                              $skipVariable)
-  {
-    $this->io                       = $io;
-    $this->tableName                = $tableName;
-    $this->dataTableColumnsConfig   = new Columns($configColumnsMetadata);
-    $this->dataSchemaName           = $dataSchema;
-    $this->auditSchemaName          = $auditSchema;
-    $this->dataTableColumnsDatabase = new Columns($this->getColumnsFromInformationSchema());
-    $this->auditColumns             = new Columns($auditColumnsMetadata);
-    $this->alias                    = $alias;
-    $this->skipVariable             = $skipVariable;
-  }
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
@@ -127,7 +40,7 @@ class Table
   {
     $this->io->logInfo('Creating audit table <dbo>%s.%s<dbo>', $this->auditSchemaName, $this->tableName);
 
-    $columns = Columns::combine($this->auditColumns, $this->dataTableColumnsDatabase);
+    $columns = TableColumnsMetadata::combine($this->auditColumns, $this->dataTableColumnsDatabase);
     DataLayer::createAuditTable($this->dataSchemaName, $this->auditSchemaName, $this->tableName, $columns);
   }
 
@@ -156,13 +69,13 @@ class Table
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
-   * Returns the name of this table.
+   * Returns the table name.
    *
    * @return string
    */
   public function getTableName()
   {
-    return $this->tableName;
+    return $this->dataTable->getTableName();
   }
 
   //--------------------------------------------------------------------------------------------------------------------
@@ -171,7 +84,7 @@ class Table
    *
    * @param string[] $additionalSql Additional SQL statements to be include in triggers.
    *
-   * @return \array[] Columns for config file
+   * @return \array[] TableColumnsMetadata for config file
    */
   public function main($additionalSql)
   {
@@ -199,7 +112,7 @@ class Table
   /**
    * Adds new columns to audit table.
    *
-   * @param Columns $columns Columns array
+   * @param TableColumnsMetadata $columns TableColumnsMetadata array
    */
   private function addNewColumns($columns)
   {
@@ -257,12 +170,12 @@ class Table
   /**
    * Compares columns types from table in data_schema with columns in config file.
    *
-   * @return Columns
+   * @return TableColumnsMetadata
    */
   private function getAlteredColumns()
   {
-    $alteredColumnsTypes = Columns::differentColumnTypes($this->dataTableColumnsDatabase,
-                                                         $this->dataTableColumnsConfig);
+    $alteredColumnsTypes = TableColumnsMetadata::differentColumnTypes($this->dataTableColumnsDatabase,
+                                                                      $this->dataTableColumnsConfig);
 
     return $alteredColumnsTypes;
   }
@@ -288,12 +201,12 @@ class Table
    */
   private function getTableColumnInfo()
   {
-    $columnActual  = new Columns(DataLayer::getTableColumns($this->auditSchemaName, $this->tableName));
-    $columnsConfig = Columns::combine($this->auditColumns, $this->dataTableColumnsConfig);
-    $columnsTarget = Columns::combine($this->auditColumns, $this->dataTableColumnsDatabase);
+    $columnActual  = new TableColumnsMetadata(DataLayer::getTableColumns($this->auditSchemaName, $this->tableName));
+    $columnsConfig = TableColumnsMetadata::combine($this->auditColumns, $this->dataTableColumnsConfig);
+    $columnsTarget = TableColumnsMetadata::combine($this->auditColumns, $this->dataTableColumnsDatabase);
 
-    $newColumns      = Columns::notInOtherSet($columnsTarget, $columnActual);
-    $obsoleteColumns = Columns::notInOtherSet($columnsConfig, $columnsTarget);
+    $newColumns      = TableColumnsMetadata::notInOtherSet($columnsTarget, $columnActual);
+    $obsoleteColumns = TableColumnsMetadata::notInOtherSet($columnsConfig, $columnsTarget);
     $alteredColumns  = $this->getAlteredColumns();
 
     $this->loggingColumnInfo($newColumns, $obsoleteColumns, $alteredColumns);
@@ -309,10 +222,10 @@ class Table
   /**
    * Check for know what columns array returns.
    *
-   * @param Columns $newColumns
-   * @param Columns $obsoleteColumns
+   * @param TableColumnsMetadata $newColumns
+   * @param TableColumnsMetadata $obsoleteColumns
    *
-   * @return Columns
+   * @return TableColumnsMetadata
    */
   private function getTableColumnsFromConfig($newColumns, $obsoleteColumns)
   {
@@ -354,9 +267,9 @@ class Table
   /**
    * Logging new and obsolete columns.
    *
-   * @param Columns $newColumns
-   * @param Columns $obsoleteColumns
-   * @param Columns $alteredColumns
+   * @param TableColumnsMetadata $newColumns
+   * @param TableColumnsMetadata $obsoleteColumns
+   * @param TableColumnsMetadata $alteredColumns
    */
   private function loggingColumnInfo($newColumns, $obsoleteColumns, $alteredColumns)
   {
@@ -367,7 +280,7 @@ class Table
       $this->io->logInfo('Found both new and obsolete columns for table %s', $this->tableName);
       $this->io->logInfo('No action taken');
 
-      /** @var ColumnType $column */
+      /** @var ColumnMetadata $column */
       foreach ($newColumns->getColumns() as $column)
       {
         $this->io->logInfo('New column %s', $column->getProperty('column_name'));
@@ -378,13 +291,13 @@ class Table
       }
     }
 
-    /** @var ColumnType $column */
+    /** @var ColumnMetadata $column */
     foreach ($obsoleteColumns->getColumns() as $column)
     {
       $this->io->logInfo('Obsolete column %s.%s', $this->tableName, $column->getProperty('column_name'));
     }
 
-    /** @var ColumnType $column */
+    /** @var ColumnMetadata $column */
     foreach ($newColumns->getColumns() as $column)
     {
       $this->io->logInfo('New column %s.%s', $this->tableName, $column->getProperty('column_name'));
