@@ -97,8 +97,8 @@ class DataLayer
    * @param string   $tableName       The name of the table.
    * @param string   $triggerAction   The trigger action (i.e. INSERT, UPDATE, or DELETE).
    * @param string   $triggerName     The name of the trigger.
-   * @param Columns  $tableColumns    The data table columns.
    * @param Columns  $auditColumns    The audit table columns.
+   * @param Columns  $tableColumns    The data table columns.
    * @param string   $skipVariable    The skip variable.
    * @param string[] $additionSql     Additional SQL statements.
    */
@@ -107,8 +107,8 @@ class DataLayer
                                             $tableName,
                                             $triggerAction,
                                             $triggerName,
-                                            $tableColumns,
                                             $auditColumns,
+                                            $tableColumns,
                                             $skipVariable,
                                             $additionSql)
   {
@@ -117,8 +117,8 @@ class DataLayer
                                      $tableName,
                                      $triggerAction,
                                      $triggerName,
-                                     $tableColumns,
                                      $auditColumns,
+                                     $tableColumns,
                                      $skipVariable,
                                      $additionSql);
     $sql    = $helper->buildStatement();
