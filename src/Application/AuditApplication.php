@@ -3,6 +3,7 @@
 namespace SetBased\Audit\Application;
 
 use SetBased\Audit\Command\AboutCommand;
+use SetBased\Audit\Command\ConfigCommand;
 use SetBased\Audit\Command\DiffCommand;
 use SetBased\Audit\MySql\Command\AuditCommand;
 use Symfony\Component\Console\Application;
@@ -36,6 +37,7 @@ class AuditApplication extends Application
     $commands[] = new AboutCommand();
     $commands[] = new AuditCommand();
     $commands[] = new DiffCommand();
+    $commands[] = new ConfigCommand();
 
     return $commands;
   }
