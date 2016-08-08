@@ -5,7 +5,7 @@ namespace SetBased\Audit\MySql\Command;
 use SetBased\Audit\MySql\DataLayer;
 use SetBased\Audit\MySql\Table\Columns;
 use SetBased\Audit\MySql\Table\ColumnType;
-use SetBased\Audit\MySql\Table\Table;
+use SetBased\Audit\MySql\Audit;
 use SetBased\Stratum\MySql\StaticDataLayer;
 use SetBased\Stratum\Style\StratumStyle;
 use Symfony\Component\Console\Input\InputArgument;
@@ -16,7 +16,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 /**
  * Command for creating audit tables and audit triggers.
  */
-class AuditCommand extends MySqlCommand
+class AuditCommand extends MySqlBaseCommand
 {
   //--------------------------------------------------------------------------------------------------------------------
   /**
@@ -46,6 +46,8 @@ class AuditCommand extends MySqlCommand
    *
    * @param string  $tableName Name of table
    * @param Columns $columns   The table columns.
+   *
+   * XXX put logic in \SetBased\Audit\MySql\Audit
    */
   public function getColumns($tableName, $columns)
   {
@@ -66,6 +68,8 @@ class AuditCommand extends MySqlCommand
   //--------------------------------------------------------------------------------------------------------------------
   /**
    * Getting list of all tables from information_schema of database from config file.
+   *
+   * XXX put logic in \SetBased\Audit\MySql\Audit
    */
   public function listOfTables()
   {
@@ -79,6 +83,8 @@ class AuditCommand extends MySqlCommand
    * Found tables in config file
    *
    * Compares the tables listed in the config file and the tables found in the data schema
+   *
+   * XXX put logic in \SetBased\Audit\MySql\Audit
    */
   public function unknownTables()
   {
@@ -96,7 +102,7 @@ class AuditCommand extends MySqlCommand
           {
             if (!isset($this->config['tables'][$table['table_name']]['alias']))
             {
-              $this->config['tables'][$table['table_name']]['alias'] = Table::getRandomAlias();
+              $this->config['tables'][$table['table_name']]['alias'] = Audit::getRandomAlias();
             }
           }
         }
@@ -114,6 +120,8 @@ class AuditCommand extends MySqlCommand
   //--------------------------------------------------------------------------------------------------------------------
   /**
    * Resolves the canonical column types of the audit table columns.
+   *
+   * XXX put logic in \SetBased\Audit\MySql\Audit
    */
   protected function auditColumnTypes()
   {
@@ -153,6 +161,8 @@ class AuditCommand extends MySqlCommand
   //--------------------------------------------------------------------------------------------------------------------
   /**
    * {@inheritdoc}
+   *
+   * XXX put logic in \SetBased\Audit\MySql\Audit
    */
   protected function execute(InputInterface $input, OutputInterface $output)
   {
@@ -179,7 +189,7 @@ class AuditCommand extends MySqlCommand
         {
           $tableColumns = $this->config['table_columns'][$table['table_name']];
         }
-        $currentTable = new Table($this->io,
+        $currentTable = new Audit($this->io,
                                   $table['table_name'],
                                   $this->config['database']['data_schema'],
                                   $this->config['database']['audit_schema'],

@@ -21,14 +21,14 @@ class TableHelper
   private $auditColumns;
 
   /**
-   * Table options from audit schema.
+   * Audit options from audit schema.
    *
    * @var array
    */
   private $auditTableOptions;
 
   /**
-   * Table options from data schema.
+   * Audit options from data schema.
    *
    * @var array
    */

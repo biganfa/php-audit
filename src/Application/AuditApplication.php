@@ -3,8 +3,7 @@
 namespace SetBased\Audit\Application;
 
 use SetBased\Audit\Command\AboutCommand;
-use SetBased\Audit\Command\ConfigCommand;
-use SetBased\Audit\Command\DiffCommand;
+use SetBased\Audit\MySql\Command\DiffCommand;
 use SetBased\Audit\MySql\Command\AuditCommand;
 use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Command\Command;

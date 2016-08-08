@@ -1,8 +1,9 @@
 <?php
 //----------------------------------------------------------------------------------------------------------------------
-namespace SetBased\Audit\Test\MySql;
+namespace SetBased\Audit\Test\MySql\LockTable;
 
 use SetBased\Audit\MySql\Command\AuditCommand;
+use SetBased\Audit\Test\MySql\AuditTestCase;
 use SetBased\Stratum\MySql\StaticDataLayer;
 use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -22,7 +23,7 @@ class LockTableTestCase extends AuditTestCase
   {
     parent::setUpBeforeClass();
     
-    StaticDataLayer::multiQuery(file_get_contents(__DIR__.'/LockTableTestCase/setup.sql'));
+    StaticDataLayer::multiQuery(file_get_contents(__DIR__.'/config/setup.sql'));
   }
 
   //--------------------------------------------------------------------------------------------------------------------
@@ -39,7 +40,7 @@ class LockTableTestCase extends AuditTestCase
     $command->setRewriteConfigFile(false);
     $commandTester = new CommandTester($command);
     $commandTester->execute(['command'     => $command->getName(),
-                             'config file' => __DIR__.'/LockTableTestCase/audit.json'],
+                             'config file' => __DIR__.'/config/audit.json'],
                             ['verbosity' =>
                                OutputInterface::VERBOSITY_NORMAL |
                                OutputInterface::VERBOSITY_VERBOSE |
@@ -67,7 +68,7 @@ class LockTableTestCase extends AuditTestCase
     if ($pid==0)
     {
       // Child process.
-      pcntl_exec(__DIR__.'/LockTableTestCase/generator.php');
+      pcntl_exec(__DIR__.'/config/generator.php');
     }
     // Parent process.
     sleep(2);
@@ -77,7 +78,7 @@ class LockTableTestCase extends AuditTestCase
     $command->setRewriteConfigFile(false);
     $commandTester = new CommandTester($command);
     $commandTester->execute(['command'     => $command->getName(),
-                             'config file' => __DIR__.'/LockTableTestCase/audit.json']);
+                             'config file' => __DIR__.'/config/audit.json']);
 
     // Tell the generator it is time to stop.
     posix_kill($pid, SIGUSR1);
@@ -103,7 +104,7 @@ class LockTableTestCase extends AuditTestCase
                                                 and   TABLE_NAME   = 'TABLE1'");
       $n2 = StaticDataLayer::executeSingleton1('select count(*) from test_audit.TABLE1');
 
-      if (4 * $n1==$n2) break;
+      if ((4 * $n1)==$n2) break;
 
       sleep(3);
     }

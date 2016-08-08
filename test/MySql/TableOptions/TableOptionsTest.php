@@ -1,9 +1,10 @@
 <?php
 //----------------------------------------------------------------------------------------------------------------------
-namespace SetBased\Audit\Test\MySql;
+namespace SetBased\Audit\Test\MySql\TableOptions;
 
 use SetBased\Audit\MySql\Command\AuditCommand;
 use SetBased\Audit\MySql\DataLayer;
+use SetBased\Audit\Test\MySql\AuditTestCase;
 use SetBased\Stratum\MySql\StaticDataLayer;
 use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Tester\CommandTester;
@@ -22,7 +23,7 @@ class TableOptionsTest extends AuditTestCase
   {
     parent::setUpBeforeClass();
 
-    StaticDataLayer::multiQuery(file_get_contents(__DIR__.'/TableOptionsTest/setup.sql'));
+    StaticDataLayer::multiQuery(file_get_contents(__DIR__.'/config/setup.sql'));
   }
 
   //--------------------------------------------------------------------------------------------------------------------
@@ -39,7 +40,7 @@ class TableOptionsTest extends AuditTestCase
     $command->setRewriteConfigFile(false);
     $commandTester = new CommandTester($command);
     $commandTester->execute(['command'     => $command->getName(),
-                             'config file' => 'test/MySql/TableOptionsTest/audit.json']);
+                             'config file' => __DIR__.'/config/audit.json']);
 
     $this->assertSame(0, $commandTester->getStatusCode());
 

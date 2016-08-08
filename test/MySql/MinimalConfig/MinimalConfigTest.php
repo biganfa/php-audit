@@ -1,8 +1,9 @@
 <?php
 //----------------------------------------------------------------------------------------------------------------------
-namespace SetBased\Audit\Test\MySql;
+namespace SetBased\Audit\Test\MySql\MinimalConfig;
 
 use SetBased\Audit\MySql\Command\AuditCommand;
+use SetBased\Audit\Test\MySql\AuditTestCase;
 use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Tester\CommandTester;
 
@@ -23,7 +24,7 @@ class MinimalConfigTest extends AuditTestCase
     $command->setRewriteConfigFile(false);
     $commandTester = new CommandTester($command);
     $commandTester->execute(['command'     => $command->getName(),
-                             'config file' => 'test/MySql/MinimalConfigTest/audit.json']);
+                             'config file' => __DIR__.'/config/audit.json']);
 
     $this->assertSame(0, $commandTester->getStatusCode());
   }

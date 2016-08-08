@@ -1,6 +1,6 @@
 <?php
 //----------------------------------------------------------------------------------------------------------------------
-namespace SetBased\Audit\Test\MySql;
+namespace SetBased\Audit\Test\MySql\TriggerCode;
 
 use PHPUnit_Framework_TestCase;
 use SetBased\Audit\MySql\Sql\CreateAuditTrigger;

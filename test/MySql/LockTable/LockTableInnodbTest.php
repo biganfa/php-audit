@@ -1,6 +1,6 @@
 <?php
 //----------------------------------------------------------------------------------------------------------------------
-namespace SetBased\Audit\Test\MySql;
+namespace SetBased\Audit\Test\MySql\LockTable;
 
 use SetBased\Stratum\MySql\StaticDataLayer;
 
@@ -8,7 +8,7 @@ use SetBased\Stratum\MySql\StaticDataLayer;
 /**
  * Tests for table locking.
  */
-class LockTableMemoryTest extends LockTableTestCase
+class LockTableInnodbTest extends LockTableTestCase
 {
   //--------------------------------------------------------------------------------------------------------------------
   /**
@@ -22,7 +22,7 @@ class LockTableMemoryTest extends LockTableTestCase
     StaticDataLayer::disconnect();
     StaticDataLayer::connect('localhost', 'test', 'test', self::$dataSchema);
 
-    StaticDataLayer::executeNone('alter table `test_data`.`TABLE1` engine=memory');
+    StaticDataLayer::executeNone('alter table `test_data`.`TABLE1` engine=innodb');
   }
 
   //--------------------------------------------------------------------------------------------------------------------

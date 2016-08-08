@@ -9,7 +9,7 @@ use SetBased\Audit\MySql\DataLayer;
 /**
  * Base class for commands which needs to connect to a MySQL instance.
  */
-class MySqlCommand extends BaseCommand
+class MySqlBaseCommand extends BaseCommand
 {
   //--------------------------------------------------------------------------------------------------------------------
   /**

@@ -1,8 +1,7 @@
 <?php
 //----------------------------------------------------------------------------------------------------------------------
-namespace SetBased\Audit\Command;
+namespace SetBased\Audit\MySql\Command;
 
-use SetBased\Audit\MySql\Command\AuditCommand;
 use SetBased\Audit\MySql\DataLayer;
 use SetBased\Audit\MySql\Helper\ColumnTypesExtended;
 use SetBased\Audit\MySql\Helper\ColumnTypesHelper;

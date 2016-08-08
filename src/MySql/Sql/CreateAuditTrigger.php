@@ -59,7 +59,7 @@ class CreateAuditTrigger
   private $skipVariable;
 
   /**
-   * Table columns from metadata.
+   * Audit columns from metadata.
    *
    * @var Columns
    */
