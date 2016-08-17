@@ -48,7 +48,7 @@ class ColumnMetadata
     }
 
     // XXX Must be in some other place, i guess.
-    // Maybe create class for one property. ???
+    // See to move in logic for create table.
     if ($this->properties['column_type']==='timestamp')
     {
       $this->properties['column_type'] = $this->properties['column_type'].' NULL';
