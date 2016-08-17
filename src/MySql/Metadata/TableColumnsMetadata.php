@@ -177,7 +177,7 @@ class TableColumnsMetadata
    *
    * @param string $columnName The column name.
    *
-   * @return null|string
+   * @return int|null
    */
   public function getPreviousColumn($columnName)
   {

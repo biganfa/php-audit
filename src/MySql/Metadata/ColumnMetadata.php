@@ -76,7 +76,7 @@ class ColumnMetadata
   /**
    * Returns the properties of this table column as an array.
    *
-   * @return array[]
+   * @return array<string,string>
    */
   public function getProperties()
   {

@@ -34,9 +34,9 @@ class TableMetadata
   /**
    * Object constructor.
    *
-   * @param string  $tableName  The table name.
-   * @param string  $schemaName The name of the schema were the table is located.
-   * @param array[] $columns    The metadata of the columns of this table.
+   * @param string   $tableName  The table name.
+   * @param string   $schemaName The name of the schema were the table is located.
+   * @param \array[] $columns    The metadata of the columns of this table.
    */
   public function __construct($tableName, $schemaName, $columns)
   {

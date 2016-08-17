@@ -296,7 +296,7 @@ class AuditTable
   /**
    * Selects and returns the metadata of the columns of this table from information_schema.
    *
-   * @return array[]
+   * @return \array[]
    */
   private function getColumnsFromInformationSchema()
   {
@@ -309,7 +309,7 @@ class AuditTable
   /**
    * Compare columns from table in data_schema with columns in config file.
    *
-   * @return TableColumnsMetadata[]
+   * @return array<string,TableColumnsMetadata>
    */
   private function getTableColumnInfo()
   {
