@@ -10,7 +10,7 @@
         "TABLE1": {
             "audit": true,
             "skip": null,
-            "alias": "577a9ae4d126a"
+            "alias": "t1"
         },
         "TABLE2": {
             "audit": false,
@@ -25,25 +25,17 @@
     },
     "audit_columns": [
         {
-        "column_name": "audit_statement",
-        "column_type": "enum('INSERT','DELETE','UPDATE') not null",
-        "value_type": "ACTION"
+            "column_name": "audit_statement",
+            "column_type": "enum('INSERT','DELETE','UPDATE') not null",
+            "value_type": "ACTION"
         },
         {
-        "column_name": "audit_type",
-        "column_type": "enum('OLD','NEW') not null",
-        "value_type": "STATE"
+            "column_name": "audit_type",
+            "column_type": "enum('OLD','NEW') not null",
+            "value_type": "STATE"
         }
     ],
-    "table_columns": {
-        "TABLE1": [
-            {
-                "column_name": "c",
-                "column_type": "int(11)",
-                "is_nullable": "YES",
-                "character_set_name": null,
-                "collation_name": null
-            }
-        ]
-    }
+    "additional_sql": [
+
+    ]
 }

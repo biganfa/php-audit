@@ -1,0 +1,1 @@
+alter table `TABLE1` drop column `c3`;

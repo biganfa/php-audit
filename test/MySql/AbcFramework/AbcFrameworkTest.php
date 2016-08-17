@@ -26,6 +26,18 @@ class AbcFrameworkTest extends AuditTestCase
   }
 
   //--------------------------------------------------------------------------------------------------------------------
+  protected function setUp()
+  {
+    // Don't disconnect and connect to the database.
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  protected function tearDown()
+  {
+    // Don't disconnect and connect to the database.
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
   /**
    * Test audit table is created correctly.
    */
@@ -189,7 +201,7 @@ where  `audit_statement` = 'UPDATE'");
     $rows = StaticDataLayer::executeRows($sql);
 
     // We expect 2 rows.
-    $this->assertEquals(2, count($rows));
+    $this->assertEquals(2, count($rows), 'row count');
 
     // Tests on 'OLD' fields.
     $row  = $rows[StaticDataLayer::searchInRowSet('audit_type', 'OLD', $rows)];

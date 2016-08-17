@@ -53,46 +53,17 @@
         "TABLE1": {
             "audit": true,
             "skip": null,
-            "alias": "577a88d63cbc2"
+            "alias": "t1"
         },
         "TABLE2": {
             "audit": true,
             "skip": null,
-            "alias": "577a88d63cc05"
+            "alias": "t2"
         },
         "TABLE3": {
             "audit": true,
             "skip": null,
-            "alias": "577a88d63cc42"
+            "alias": "t3"
         }
-    },
-    "table_columns": {
-        "TABLE1": [
-            {
-                "column_name": "c",
-                "column_type": "int(11)",
-                "is_nullable": "YES",
-                "character_set_name": null,
-                "collation_name": null
-            }
-        ],
-        "TABLE2": [
-            {
-                "column_name": "c",
-                "column_type": "int(11)",
-                "is_nullable": "YES",
-                "character_set_name": null,
-                "collation_name": null
-            }
-        ],
-        "TABLE3": [
-            {
-                "column_name": "c",
-                "column_type": "int(11)",
-                "is_nullable": "YES",
-                "character_set_name": null,
-                "collation_name": null
-            }
-        ]
     }
 }
