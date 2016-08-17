@@ -77,7 +77,7 @@ class TableColumnsMetadata
     {
       if (isset($columns2->columns[$column_name]))
       {
-        if (ColumnMetadata::compare($column1, $columns2->columns[$column_name], $ignore))
+        if (!ColumnMetadata::compare($column1, $columns2->columns[$column_name], $ignore))
         {
           $diff->appendTableColumn($column1);
         }
