@@ -41,9 +41,6 @@ class AuditDataLayer
    */
   public static function addNewColumns($auditSchemaName, $tableName, $columns)
   {
-    // Return immediately if there are no columns to add. 
-    if ($columns->getNumberOfColumns()==0) return;
-
     $helper = new AlterAuditTableAddColumns($auditSchemaName, $tableName, $columns);
     $sql    = $helper->buildStatement();
 
@@ -361,6 +358,26 @@ order by Trigger_Name',
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
+   * Selects all table names in a schema.
+   *
+   * @param string $schemaName The name of the schema.
+   *
+   * @return \array[]
+   */
+  public static function getTablesNames($schemaName)
+  {
+    $sql = sprintf("
+select TABLE_NAME as table_name
+from   information_schema.TABLES
+where  TABLE_SCHEMA = %s
+and    TABLE_TYPE   = 'BASE TABLE'
+order by TABLE_NAME", self::$dl->quoteString($schemaName));
+
+    return self::executeRows($sql);
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
    * Selects all triggers in a schema
    *
    * @param string $schemaName The name of the table schema.
@@ -377,26 +394,6 @@ where  TRIGGER_SCHEMA     = %s
 order by EVENT_OBJECT_TABLE
 ,        TRIGGER_NAME',
                    self::$dl->quoteString($schemaName));
-
-    return self::executeRows($sql);
-  }
-
-  //--------------------------------------------------------------------------------------------------------------------
-  /**
-   * Selects all table names in a schema.
-   *
-   * @param string $schemaName The name of the schema.
-   *
-   * @return \array[]
-   */
-  public static function getTablesNames($schemaName)
-  {
-    $sql = sprintf("
-select TABLE_NAME as table_name
-from   information_schema.TABLES
-where  TABLE_SCHEMA = %s
-and    TABLE_TYPE   = 'BASE TABLE'
-order by TABLE_NAME", self::$dl->quoteString($schemaName));
 
     return self::executeRows($sql);
   }

@@ -40,13 +40,15 @@ class AuditCommand extends MySqlBaseCommand
     // Create database connection with params from config file
     $this->connect($this->config);
 
-    $audit = new Audit($this->config, $this->io);
-    $audit->main();
+    $audit  = new Audit($this->config, $this->io);
+    $status = $audit->main();
 
     // Drop database connection
     AuditDataLayer::disconnect();
 
     $this->rewriteConfig();
+
+    return $status;
   }
 
   //--------------------------------------------------------------------------------------------------------------------

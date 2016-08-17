@@ -54,7 +54,7 @@ class DropTriggersCommand extends MySqlBaseCommand
   private function dropTriggers()
   {
     $data_schema = $this->config['database']['data_schema'];
-    $triggers = AuditDataLayer::getTriggers($data_schema);
+    $triggers    = AuditDataLayer::getTriggers($data_schema);
     foreach ($triggers as $trigger)
     {
       $this->io->logInfo('Dropping trigger <dbo>%s</dbo> from table <dbo>%s</dbo>',

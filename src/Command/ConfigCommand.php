@@ -80,24 +80,6 @@ class ConfigCommand extends BaseCommand
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
-   * Configure each table for audit or not.
-   *
-   * @param InputInterface  $input
-   * @param OutputInterface $output
-   * @param string          $configPart Part of config file.
-   * @param string          $tableName  The table name.
-   */
-  protected function setTableParams(InputInterface $input, OutputInterface $output, $configPart, $tableName)
-  {
-    $this->io->logInfo('Please input data for table <dbo>\'%s\'</dbo>.', $tableName);
-    $question = sprintf('Audit table \'%s\' or not (y|(n)): ', $tableName);
-    $question = new ConfirmationQuestion($question, false);
-
-    $this->config[$configPart][$tableName]['audit'] = $this->helper->ask($input, $output, $question);
-  }
-
-  //--------------------------------------------------------------------------------------------------------------------
-  /**
    * Configure database part.
    *
    * @param InputInterface  $input
@@ -113,6 +95,24 @@ class ConfigCommand extends BaseCommand
       $question                              = new Question($question, $value);
       $this->config[$configPart][$parameter] = $this->helper->ask($input, $output, $question);
     }
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
+   * Configure each table for audit or not.
+   *
+   * @param InputInterface  $input
+   * @param OutputInterface $output
+   * @param string          $configPart Part of config file.
+   * @param string          $tableName  The table name.
+   */
+  protected function setTableParams(InputInterface $input, OutputInterface $output, $configPart, $tableName)
+  {
+    $this->io->logInfo('Please input data for table <dbo>\'%s\'</dbo>.', $tableName);
+    $question = sprintf('Audit table \'%s\' or not (y|(n)): ', $tableName);
+    $question = new ConfirmationQuestion($question, false);
+
+    $this->config[$configPart][$tableName]['audit'] = $this->helper->ask($input, $output, $question);
   }
 
   //--------------------------------------------------------------------------------------------------------------------

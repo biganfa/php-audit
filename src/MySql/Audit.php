@@ -65,7 +65,7 @@ class Audit
    */
   public function __construct(&$config, $io)
   {
-    $this->config = $config;
+    $this->config = &$config;
     $this->io     = $io;
   }
 
@@ -83,6 +83,8 @@ class Audit
   //--------------------------------------------------------------------------------------------------------------------
   /**
    * The main method: executes the auditing actions for tables.
+   *
+   * @return int The exit status.
    */
   public function main()
   {
@@ -97,7 +99,9 @@ class Audit
 
     $this->unknownTables();
 
-    $this->knownTables();
+    $status = $this->knownTables();
+
+    return $status;
   }
 
   //--------------------------------------------------------------------------------------------------------------------
@@ -158,45 +162,56 @@ class Audit
    */
   protected function resolveCanonicalAuditColumns()
   {
-    // Return immediately of there are no audit columns.
-    if (empty($this->config['audit_columns'])) return;
-
-    $schema    = $this->config['database']['audit_schema'];
-    $tableName = '_TMP_'.uniqid();
-    AuditDataLayer::createTemporaryTable($schema, $tableName, $this->config['audit_columns']);
-    $columns = AuditDataLayer::getTableColumns($schema, $tableName);
-    AuditDataLayer::dropTemporaryTable($schema, $tableName);
-
-    foreach ($this->config['audit_columns'] as $audit_column)
+    if (empty($this->config['audit_columns']))
     {
-      $key = StaticDataLayer::searchInRowSet('column_name', $audit_column['column_name'], $columns);
-      if (isset($audit_column['value_type']))
-      {
-        $columns[$key]['value_type'] = $audit_column['value_type'];
-      }
-      if (isset($audit_column['expression']))
-      {
-        $columns[$key]['expression'] = $audit_column['expression'];
-      }
+      $this->auditColumnsMetadata = new TableColumnsMetadata();
     }
+    else
+    {
+      $schema    = $this->config['database']['audit_schema'];
+      $tableName = '_TMP_'.uniqid();
+      AuditDataLayer::createTemporaryTable($schema, $tableName, $this->config['audit_columns']);
+      $columns = AuditDataLayer::getTableColumns($schema, $tableName);
+      AuditDataLayer::dropTemporaryTable($schema, $tableName);
 
-    $this->auditColumnsMetadata = new TableColumnsMetadata($columns, 'AuditColumnMetadata');
+      foreach ($this->config['audit_columns'] as $audit_column)
+      {
+        $key = StaticDataLayer::searchInRowSet('column_name', $audit_column['column_name'], $columns);
+        if (isset($audit_column['value_type']))
+        {
+          $columns[$key]['value_type'] = $audit_column['value_type'];
+        }
+        if (isset($audit_column['expression']))
+        {
+          $columns[$key]['expression'] = $audit_column['expression'];
+        }
+      }
+
+      $this->auditColumnsMetadata = new TableColumnsMetadata($columns, 'AuditColumnMetadata');
+    }
   }
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
    * Processed known tables.
+   *
+   * @return int The exit status.
    */
   private function knownTables()
   {
+    $status = 0;
+
     foreach ($this->dataSchemaTables as $table)
     {
       if ($this->config['tables'][$table['table_name']]['audit'])
       {
-        $tableColumns = [];
         if (isset($this->config['table_columns'][$table['table_name']]))
         {
           $tableColumns = $this->config['table_columns'][$table['table_name']];
+        }
+        else
+        {
+          $tableColumns = [];
         }
         $configTable = new TableMetadata($table['table_name'],
                                          $this->config['database']['data_schema'],
@@ -208,22 +223,29 @@ class Audit
                                        $this->auditColumnsMetadata,
                                        $this->config['tables'][$table['table_name']]['alias'],
                                        $this->config['tables'][$table['table_name']]['skip']);
-        $res          = StaticDataLayer::searchInRowSet('table_name',
-                                                        $currentTable->getTableName(),
-                                                        $this->auditSchemaTables);
-        if (!isset($res))
+
+        // Ensure an audit table exists.
+        if (StaticDataLayer::searchInRowSet('table_name', $table['table_name'], $this->auditSchemaTables)===null)
         {
-          $currentTable->createMissingAuditTable();
+          $currentTable->createAuditTable();
         }
 
-        $columns        = $currentTable->main($this->config['additional_sql']);
-        $alteredColumns = $columns['altered_columns']->getColumns();
-        if (empty($alteredColumns))
+        // Drop and create audit triggers and add new columns to the audit table.
+        $ok = $currentTable->main($this->config['additional_sql']);
+        if ($ok)
         {
-          $this->setConfigTableColumns($currentTable->getTableName(), $columns['full_columns']);
+          $columns = new TableColumnsMetadata(AuditDataLayer::getTableColumns($this->config['database']['data_schema'],
+                                                                              $table['table_name']));
+          $this->setConfigTableColumns($table['table_name'], $columns);
+        }
+        else
+        {
+          $status += 1;
         }
       }
     }
+
+    return $status;
   }
 
   //--------------------------------------------------------------------------------------------------------------------

@@ -46,6 +46,34 @@ class ColumnMetadata
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
+   * Compares two the metadata of the columns.
+   *
+   * @param ColumnMetadata $column1 The metadata of the first column.
+   * @param ColumnMetadata $column2 The metadata of the second column.
+   * @param string[]       $ignore  The properties to be ignored.
+   *
+   * @return bool True if the columns are equal, false otherwise.
+   */
+  public static function compare($column1, $column2, $ignore = [])
+  {
+    $equal = true;
+
+    foreach (self::$fields as $field)
+    {
+      if (!in_array($field, $ignore))
+      {
+        if ($column1->getProperty($field)!=$column2->getProperty($field))
+        {
+          $equal = false;
+        }
+      }
+    }
+
+    return $equal;
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
    * Returns the properties of this table column as an array.
    *
    * @return array[]
@@ -72,7 +100,6 @@ class ColumnMetadata
 
     return null;
   }
-
   //--------------------------------------------------------------------------------------------------------------------
   /**
    * Make this column nullable.

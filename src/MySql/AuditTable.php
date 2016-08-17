@@ -3,7 +3,6 @@
 namespace SetBased\Audit\MySql;
 
 use SetBased\Audit\MySql\Metadata\AlterColumnMetadata;
-use SetBased\Audit\MySql\Metadata\ColumnMetadata;
 use SetBased\Audit\MySql\Metadata\TableColumnsMetadata;
 use SetBased\Audit\MySql\Metadata\TableMetadata;
 use SetBased\Stratum\Style\StratumStyle;
@@ -104,9 +103,9 @@ class AuditTable
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
-   * Creates missing audit table for this table.
+   * Creates an audit table for this table.
    */
-  public function createMissingAuditTable()
+  public function createAuditTable()
   {
     $this->io->logInfo('Creating audit table <dbo>%s.%s<dbo>',
                        $this->auditSchemaName,
@@ -163,29 +162,27 @@ class AuditTable
    *
    * @param string[] $additionalSql Additional SQL statements to be include in triggers.
    *
-   * @return TableColumnsMetadata[]
+   * @return bool
    */
   public function main($additionalSql)
   {
-    $comparedColumns = [];
-    $columns         = $this->configTable->getColumns();
-    if (isset($columns))
+    $comparedColumns = $this->getTableColumnInfo();
+    $newColumns      = $comparedColumns['new_columns'];
+    $obsoleteColumns = $comparedColumns['obsolete_columns'];
+    $alteredColumns  = $comparedColumns['altered_columns'];
+
+    if ($newColumns->getNumberOfColumns()==0 || $obsoleteColumns->getNumberOfColumns()==0)
     {
-      $comparedColumns = $this->getTableColumnInfo();
+      $this->addNewColumns($newColumns);
+
+      $this->createTriggers($additionalSql);
+
+      return ($alteredColumns->getNumberOfColumns()==0);
     }
 
-    $newColumns      = $comparedColumns['new_columns']->getColumns();
-    $obsoleteColumns = $comparedColumns['obsolete_columns']->getColumns();
-    if (empty($newColumns) && empty($obsoleteColumns))
-    {
-      $alteredColumns = $comparedColumns['altered_columns']->getColumns();
-      if (empty($alteredColumns))
-      {
-        $this->createTriggers($additionalSql);
-      }
-    }
+    $this->io->warning(sprintf('Skipping table %s', $this->getTableName()));
 
-    return $comparedColumns;
+    return false;
   }
 
   //--------------------------------------------------------------------------------------------------------------------
@@ -196,7 +193,12 @@ class AuditTable
    */
   private function addNewColumns($columns)
   {
-    AuditDataLayer::addNewColumns($this->auditSchemaName, $this->configTable->getTableName(), $columns);
+    // Return immediately if there are no columns to add.
+    if ($columns->getNumberOfColumns()==0) return;
+
+    $alterColumns = $this->alterNewColumns($columns);
+
+    AuditDataLayer::addNewColumns($this->auditSchemaName, $this->configTable->getTableName(), $alterColumns);
   }
 
   //--------------------------------------------------------------------------------------------------------------------
@@ -276,8 +278,16 @@ class AuditTable
    */
   private function getAlteredColumns()
   {
-    $alteredColumnsTypes = TableColumnsMetadata::differentColumnTypes($this->dataTableColumnsDatabase,
-                                                                      $this->configTable->getColumns());
+    if ($this->configTable->getColumns()->getNumberOfColumns())
+    {
+      $alteredColumnsTypes = TableColumnsMetadata::differentColumnTypes($this->dataTableColumnsDatabase,
+                                                                        $this->configTable->getColumns(),
+                                                                        ['is_nullable']);
+    }
+    else
+    {
+      $alteredColumnsTypes = new TableColumnsMetadata();
+    }
 
     return $alteredColumnsTypes;
   }
@@ -299,7 +309,7 @@ class AuditTable
   /**
    * Compare columns from table in data_schema with columns in config file.
    *
-   * @return \array[]
+   * @return TableColumnsMetadata[]
    */
   private function getTableColumnInfo()
   {
@@ -312,41 +322,16 @@ class AuditTable
     $obsoleteColumns = TableColumnsMetadata::notInOtherSet($columnsConfig, $columnsTarget);
     $alteredColumns  = $this->getAlteredColumns();
 
-    $this->loggingColumnInfo($newColumns, $obsoleteColumns, $alteredColumns);
+    $this->logColumnInfo($newColumns, $obsoleteColumns, $alteredColumns);
 
-    $alterNewColumns = $this->alterNewColumns($newColumns);
-    $this->addNewColumns($alterNewColumns);
-
-    return ['full_columns'     => $this->getTableColumnsFromConfig($newColumns, $obsoleteColumns),
-            'new_columns'      => $newColumns,
+    return ['new_columns'      => $newColumns,
             'obsolete_columns' => $obsoleteColumns,
             'altered_columns'  => $alteredColumns];
   }
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
-   * Check for know what columns array returns.
-   *
-   * @param TableColumnsMetadata $newColumns
-   * @param TableColumnsMetadata $obsoleteColumns
-   *
-   * @return TableColumnsMetadata
-   */
-  private function getTableColumnsFromConfig($newColumns, $obsoleteColumns)
-  {
-    $new      = $newColumns->getColumns();
-    $obsolete = $obsoleteColumns->getColumns();
-    if (!empty($new) && !empty($obsolete))
-    {
-      return $this->configTable->getColumns();
-    }
-
-    return $this->dataTableColumnsDatabase;
-  }
-
-  //--------------------------------------------------------------------------------------------------------------------
-  /**
-   * Create and return trigger name.
+   * Returns the trigger name for a trigger action.
    *
    * @param string $action Trigger on action (Insert, Update, Delete)
    *
@@ -370,50 +355,34 @@ class AuditTable
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
-   * Logging new and obsolete columns.
+   * Logs info about new, obsolete, and altered columns.
    *
-   * @param TableColumnsMetadata $newColumns
-   * @param TableColumnsMetadata $obsoleteColumns
-   * @param TableColumnsMetadata $alteredColumns
+   * @param TableColumnsMetadata $newColumns      The metadata of the new columns.
+   * @param TableColumnsMetadata $obsoleteColumns The metadata of the obsolete columns.
+   * @param TableColumnsMetadata $alteredColumns  The metadata of the altered columns.
    */
-  private function loggingColumnInfo($newColumns, $obsoleteColumns, $alteredColumns)
+  private function logColumnInfo($newColumns, $obsoleteColumns, $alteredColumns)
   {
-    $new      = $newColumns->getColumns();
-    $obsolete = $obsoleteColumns->getColumns();
-    if (!empty($new) && !empty($obsolete))
-    {
-      $this->io->logInfo('Found both new and obsolete columns for table %s', $this->configTable->getTableName());
-      $this->io->logInfo('No action taken');
-
-      /** @var ColumnMetadata $column */
-      foreach ($newColumns->getColumns() as $column)
-      {
-        $this->io->logInfo('New column %s', $column->getProperty('column_name'));
-      }
-      foreach ($obsoleteColumns->getColumns() as $column)
-      {
-        $this->io->logInfo('Obsolete column %s', $column->getProperty('column_name'));
-      }
-    }
-
-    /** @var ColumnMetadata $column */
-    foreach ($obsoleteColumns->getColumns() as $column)
-    {
-      $this->io->logInfo('Obsolete column %s.%s', $this->configTable->getTableName(), $column->getProperty('column_name'));
-    }
-
-    /** @var ColumnMetadata $column */
     foreach ($newColumns->getColumns() as $column)
     {
-      $this->io->logInfo('New column %s.%s', $this->configTable->getTableName(), $column->getProperty('column_name'));
+      $this->io->logInfo('New column <dbo>%s.%s</dbo>',
+                         $this->configTable->getTableName(),
+                         $column->getProperty('column_name'));
+    }
+
+    foreach ($obsoleteColumns->getColumns() as $column)
+    {
+      $this->io->logInfo('Obsolete column <dbo>%s.%s</dbo>',
+                         $this->configTable->getTableName(),
+                         $column->getProperty('column_name'));
     }
 
     foreach ($alteredColumns->getColumns() as $column)
     {
       $this->io->logInfo('Type of <dbo>%s.%s</dbo> has been altered to <dbo>%s</dbo>',
                          $this->configTable->getTableName(),
-                         $column['column_name'],
-                         $column['column_type']);
+                         $column->getProperty('column_name'),
+                         $column->getProperty('column_type'));
     }
   }
 

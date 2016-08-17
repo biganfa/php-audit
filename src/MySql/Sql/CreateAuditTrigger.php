@@ -2,7 +2,6 @@
 //----------------------------------------------------------------------------------------------------------------------
 namespace SetBased\Audit\MySql\Sql;
 
-use SetBased\Audit\MySql\Metadata\ColumnMetadata;
 use SetBased\Audit\MySql\Metadata\TableColumnsMetadata;
 use SetBased\Exception\FallenException;
 use SetBased\Exception\RuntimeException;
@@ -196,7 +195,7 @@ class CreateAuditTrigger
     $columnNames = '';
 
     // First the audit columns.
-     foreach ($this->auditColumns->getColumns() as $column)
+    foreach ($this->auditColumns->getColumns() as $column)
     {
       if ($columnNames) $columnNames .= ',';
       $columnNames .= sprintf('`%s`', $column->getProperty('column_name'));

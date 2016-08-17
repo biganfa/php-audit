@@ -66,17 +66,18 @@ class TableColumnsMetadata
    *
    * @param TableColumnsMetadata $columns1 The first sets of metadata of table columns.
    * @param TableColumnsMetadata $columns2 The second sets of metadata of table columns.
+   * @param string[]             $ignore   The properties to be ignored.
    *
    * @return TableColumnsMetadata
    */
-  public static function differentColumnTypes($columns1, $columns2)
+  public static function differentColumnTypes($columns1, $columns2, $ignore = [])
   {
     $diff = new TableColumnsMetadata();
     foreach ($columns1->columns as $column_name => $column1)
     {
       if (isset($columns2->columns[$column_name]))
       {
-        if ($columns2->columns[$column_name]->getProperty('column_type')!=$column1->getProperty('column_type'))
+        if (ColumnMetadata::compare($column1, $columns2->columns[$column_name], $ignore))
         {
           $diff->appendTableColumn($column1);
         }
