@@ -348,13 +348,35 @@ AND   t1.TABLE_NAME   = %s',
   public static function getTableTriggers($schemaName, $tableName)
   {
     $sql = sprintf('
-select Trigger_Name as trigger_name
+select TRIGGER_NAME as trigger_name
 from   information_schema.TRIGGERS
 where  TRIGGER_SCHEMA     = %s
 and    EVENT_OBJECT_TABLE = %s
 order by Trigger_Name',
                    self::$dl->quoteString($schemaName),
                    self::$dl->quoteString($tableName));
+
+    return self::executeRows($sql);
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
+   * Selects all triggers in a schema
+   *
+   * @param string $schemaName The name of the table schema.
+   *
+   * @return \array[]
+   */
+  public static function getTriggers($schemaName)
+  {
+    $sql = sprintf('
+select EVENT_OBJECT_TABLE as table_name
+,      TRIGGER_NAME       as trigger_name
+from   information_schema.TRIGGERS
+where  TRIGGER_SCHEMA     = %s
+order by EVENT_OBJECT_TABLE
+,        TRIGGER_NAME',
+                   self::$dl->quoteString($schemaName));
 
     return self::executeRows($sql);
   }
