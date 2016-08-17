@@ -3,7 +3,7 @@
 namespace SetBased\Audit\MySql\Command;
 
 use SetBased\Audit\MySql\Audit;
-use SetBased\Audit\MySql\DataLayer;
+use SetBased\Audit\MySql\AuditDataLayer;
 use SetBased\Stratum\Style\StratumStyle;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -44,7 +44,7 @@ class AuditCommand extends MySqlBaseCommand
     $audit->main();
 
     // Drop database connection
-    DataLayer::disconnect();
+    AuditDataLayer::disconnect();
 
     $this->rewriteConfig();
   }

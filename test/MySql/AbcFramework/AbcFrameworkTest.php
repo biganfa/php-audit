@@ -69,13 +69,13 @@ order by ORDINAL_POSITION',
                  ['column_name'        => 'audit_statement',
                   'column_type'        => "enum('INSERT','DELETE','UPDATE')",
                   'is_nullable'        => 'NO',
-                  'character_set_name' => 'utf8',
-                  'collation_name'     => 'utf8_general_ci'],
+                  'character_set_name' => 'ascii',
+                  'collation_name'     => 'ascii_general_ci'],
                  ['column_name'        => 'audit_type',
                   'column_type'        => "enum('OLD','NEW')",
                   'is_nullable'        => 'NO',
-                  'character_set_name' => 'utf8',
-                  'collation_name'     => 'utf8_general_ci'],
+                  'character_set_name' => 'ascii',
+                  'collation_name'     => 'ascii_general_ci'],
                  ['column_name'        => 'audit_uuid',
                   'column_type'        => 'bigint(20) unsigned',
                   'is_nullable'        => 'NO',
@@ -109,8 +109,8 @@ order by ORDINAL_POSITION',
                  ['column_name'        => 'cmp_label',
                   'column_type'        => 'varchar(20)',
                   'is_nullable'        => 'YES',
-                  'character_set_name' => 'utf8',
-                  'collation_name'     => 'utf8_general_ci']];
+                  'character_set_name' => 'ascii',
+                  'collation_name'     => 'ascii_general_ci']];
 
     $this->assertEquals($expected, $rows);
   }
@@ -226,6 +226,8 @@ where  `audit_statement` = 'UPDATE'");
    */
   public function test02c()
   {
+    StaticDataLayer::query("SET time_zone = 'Europe/Amsterdam'");
+
     // Delete a row from AUT_COMPANY.
     $sql = sprintf('
 delete from `AUT_COMPANY`
@@ -240,7 +242,6 @@ select *
 from   `test_audit`.`AUT_COMPANY`
 where  audit_statement = 'DELETE'");
 
-    StaticDataLayer::query("SET time_zone = 'Europe/Amsterdam'");
     $rows = StaticDataLayer::executeRows($sql);
 
     // We expect 1 row.

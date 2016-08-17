@@ -2,7 +2,7 @@
 //----------------------------------------------------------------------------------------------------------------------
 namespace SetBased\Audit\MySql\Helper;
 
-use SetBased\Audit\MySql\DataLayer;
+use SetBased\Audit\MySql\AuditDataLayer;
 use SetBased\Stratum\MySql\StaticDataLayer;
 use Symfony\Component\Console\Helper\TableSeparator;
 
@@ -69,8 +69,8 @@ class TableHelper
   {
     $this->auditColumns      = $theAuditColumns;
     $this->fullOption        = $fullOption;
-    $this->auditTableOptions = DataLayer::getTableOptions($auditSchema, $tableName);
-    $this->dataTableOptions  = DataLayer::getTableOptions($dataSchema, $tableName);
+    $this->auditTableOptions = AuditDataLayer::getTableOptions($auditSchema, $tableName);
+    $this->dataTableOptions  = AuditDataLayer::getTableOptions($dataSchema, $tableName);
   }
 
   //--------------------------------------------------------------------------------------------------------------------

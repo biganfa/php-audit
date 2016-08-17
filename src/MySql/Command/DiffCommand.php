@@ -2,7 +2,7 @@
 //----------------------------------------------------------------------------------------------------------------------
 namespace SetBased\Audit\MySql\Command;
 
-use SetBased\Audit\MySql\DataLayer;
+use SetBased\Audit\MySql\AuditDataLayer;
 use SetBased\Audit\MySql\Helper\ColumnTypesExtended;
 use SetBased\Audit\MySql\Helper\ColumnTypesHelper;
 use SetBased\Audit\MySql\Helper\TableHelper;
@@ -216,8 +216,8 @@ class DiffCommand extends AuditCommand
         $res = StaticDataLayer::searchInRowSet('table_name', $table['table_name'], $this->auditSchemaTables);
         if (isset($res))
         {
-          $dataColumns  = new Columns(DataLayer::getTableColumns($this->config['database']['data_schema'], $table['table_name']));
-          $auditColumns = DataLayer::getTableColumns($this->config['database']['audit_schema'], $table['table_name']);
+          $dataColumns  = new Columns(AuditDataLayer::getTableColumns($this->config['database']['data_schema'], $table['table_name']));
+          $auditColumns = AuditDataLayer::getTableColumns($this->config['database']['audit_schema'], $table['table_name']);
           $auditColumns = $this->addNotNull($auditColumns);
           $auditColumns = new Columns($auditColumns);
 

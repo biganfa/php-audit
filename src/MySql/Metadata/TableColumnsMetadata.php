@@ -3,8 +3,10 @@
 namespace SetBased\Audit\MySql\Metadata;
 
 //----------------------------------------------------------------------------------------------------------------------
+use SetBased\Exception\FallenException;
+
 /**
- * Class for metadata of a set of table columns.
+ * Metadata of a set of table columns.
  */
 class TableColumnsMetadata
 {
@@ -12,7 +14,7 @@ class TableColumnsMetadata
   /**
    * The metadata of the columns.
    *
-   * @var array<string,ColumnMetadata>
+   * @var ColumnMetadata[]
    */
   private $columns = [];
 
@@ -20,32 +22,14 @@ class TableColumnsMetadata
   /**
    * Object constructor.
    *
-   * @param array[] $columns The metadata of the columns as returned by DataLayer::getTableColumns().
-   * @param string  $type    The class for columns metadata.
+   * @param \array[] $columns The metadata of the columns as returned by AuditDataLayer::getTableColumns().
+   * @param string   $type    The class for columns metadata.
    */
-  public function __construct($columns, $type = '\SetBased\Audit\MySql\Metadata\ColumnMetadata')
+  public function __construct($columns = [], $type = 'ColumnMetadata')
   {
-    $previousColumns = null;
     foreach ($columns as $columnName => $column)
     {
-      if (is_int($columnName))
-      {
-        if (!is_array($column))
-        {
-          /** @var ColumnMetadata $column */
-          $this->columns[$column->getProperty('column_name')] = new $type($column, $previousColumns);
-        }
-        else
-        {
-          $this->columns[$column['column_name']] = new $type($column, $previousColumns);
-        }
-      }
-      else
-      {
-        $this->columns[$columnName] = new $type($column, $previousColumns);
-      }
-
-      $previousColumns = $column;
+      $this->columns[$column['column_name']] = self::columnFactory($type, $column);
     }
   }
 
@@ -60,20 +44,19 @@ class TableColumnsMetadata
    */
   public static function combine($columns1, $columns2)
   {
-    $columns = [];
+    $columns = new TableColumnsMetadata();
 
-    /** @var ColumnMetadata $column */
     foreach ($columns1->columns as $column)
     {
-      $columns[$column->getProperty('column_name')] = $column;
-    }
-    /** @var ColumnMetadata $column */
-    foreach ($columns2->columns as $column)
-    {
-      $columns[$column->getProperty('column_name')] = $column;
+      $columns->appendTableColumn($column);
     }
 
-    return new TableColumnsMetadata($columns, '\SetBased\Audit\MySql\Metadata\AuditColumnMetadata');
+    foreach ($columns2->columns as $column)
+    {
+      $columns->appendTableColumn($column);
+    }
+
+    return $columns;
   }
 
   //--------------------------------------------------------------------------------------------------------------------
@@ -88,19 +71,19 @@ class TableColumnsMetadata
    */
   public static function differentColumnTypes($columns1, $columns2)
   {
-    $diff = [];
+    $diff = new TableColumnsMetadata();
     foreach ($columns1->columns as $column_name => $column1)
     {
       if (isset($columns2->columns[$column_name]))
       {
         if ($columns2->columns[$column_name]->getProperty('column_type')!=$column1->getProperty('column_type'))
         {
-          $diff[] = $column1;
+          $diff->appendTableColumn($column1);
         }
       }
     }
 
-    return new TableColumnsMetadata($diff);
+    return $diff;
   }
 
   //--------------------------------------------------------------------------------------------------------------------
@@ -115,23 +98,61 @@ class TableColumnsMetadata
    */
   public static function notInOtherSet($columns1, $columns2)
   {
-    $diff = [];
+    $diff = new TableColumnsMetadata();
     foreach ($columns1->columns as $column_name => $column1)
     {
       if (!isset($columns2->columns[$column_name]))
       {
-        $diff[] = $column1;
+        $diff->appendTableColumn($column1);
       }
     }
 
-    return new TableColumnsMetadata($diff);
+    return $diff;
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
+   * A factory for table column metadata.
+   *
+   * @param string $type   The type of the metadata.
+   * @param array  $column The metadata of the column
+   *
+   * @return AlterColumnMetadata|AuditColumnMetadata|ColumnMetadata
+   */
+  private static function columnFactory($type, $column)
+  {
+    switch ($type)
+    {
+      case 'ColumnMetadata':
+        return new ColumnMetadata($column);
+
+      case 'AlterColumnMetadata':
+        return new AlterColumnMetadata($column);
+
+      case 'AuditColumnMetadata':
+        return new AuditColumnMetadata($column);
+
+      default:
+        throw new FallenException('type', $type);
+    }
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
+   * Appends a table column to the table columns.
+   *
+   * @param ColumnMetadata $column The metadata of the table columns.
+   */
+  public function appendTableColumn($column)
+  {
+    $this->columns[$column->getProperty('column_name')] = $column;
   }
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
    * Returns the underlying array with metadata of the columns.
    *
-   * @return array<string,ColumnMetadata>
+   * @return ColumnMetadata[]
    */
   public function getColumns()
   {
@@ -168,6 +189,18 @@ class TableColumnsMetadata
     }
 
     return null;
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
+   * Makes all columns nullable.
+   */
+  public function makeNullable()
+  {
+    foreach ($this->columns as $column)
+    {
+      $column->makeNullable();
+    }
   }
 
   //--------------------------------------------------------------------------------------------------------------------

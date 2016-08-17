@@ -2,6 +2,7 @@
 //----------------------------------------------------------------------------------------------------------------------
 namespace SetBased\Audit\MySql;
 
+use SetBased\Audit\MySql\Metadata\AlterColumnMetadata;
 use SetBased\Audit\MySql\Metadata\ColumnMetadata;
 use SetBased\Audit\MySql\Metadata\TableColumnsMetadata;
 use SetBased\Audit\MySql\Metadata\TableMetadata;
@@ -107,10 +108,19 @@ class AuditTable
    */
   public function createMissingAuditTable()
   {
-    $this->io->logInfo('Creating audit table <dbo>%s.%s<dbo>', $this->auditSchemaName, $this->configTable->getTableName());
+    $this->io->logInfo('Creating audit table <dbo>%s.%s<dbo>',
+                       $this->auditSchemaName,
+                       $this->configTable->getTableName());
 
-    $columns = TableColumnsMetadata::combine($this->auditColumns, $this->dataTableColumnsDatabase);
-    DataLayer::createAuditTable($this->configTable->getSchemaName(), $this->auditSchemaName, $this->configTable->getTableName(), $columns);
+    // In the audit table all columns from the data table must be nullable.
+    $dataTableColumnsDatabase = clone($this->dataTableColumnsDatabase);
+    $dataTableColumnsDatabase->makeNullable();
+
+    $columns = TableColumnsMetadata::combine($this->auditColumns, $dataTableColumnsDatabase);
+    AuditDataLayer::createAuditTable($this->configTable->getSchemaName(),
+                                     $this->auditSchemaName,
+                                     $this->configTable->getTableName(),
+                                     $columns);
   }
 
   //--------------------------------------------------------------------------------------------------------------------
@@ -153,11 +163,11 @@ class AuditTable
    *
    * @param string[] $additionalSql Additional SQL statements to be include in triggers.
    *
-   * @return \array[] TableColumnsMetadata for config file
+   * @return TableColumnsMetadata[]
    */
   public function main($additionalSql)
   {
-    $comparedColumns = null;
+    $comparedColumns = [];
     $columns         = $this->configTable->getColumns();
     if (isset($columns))
     {
@@ -186,38 +196,29 @@ class AuditTable
    */
   private function addNewColumns($columns)
   {
-    DataLayer::addNewColumns($this->auditSchemaName, $this->configTable->getTableName(), $columns);
+    AuditDataLayer::addNewColumns($this->auditSchemaName, $this->configTable->getTableName(), $columns);
   }
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
-   * Add alter property to each new columns for alter table statement.
+   * Returns metadata of new table columns that can be used in a 'alter table .. add column' statement.
    *
-   * @param TableColumnsMetadata $newColumns
+   * @param TableColumnsMetadata $newColumns The metadata new table columns.
    *
    * @return TableColumnsMetadata
    */
   private function alterNewColumns($newColumns)
   {
-    $alterNewColumns = [];
-    /** @var ColumnMetadata $column */
-    foreach ($newColumns->getColumns() as $key => $column)
+    $alterNewColumns = new TableColumnsMetadata();
+    foreach ($newColumns->getColumns() as $newColumn)
     {
-      $dataTableColumns = $this->dataTableColumnsDatabase->getColumns();
-      $prev             = null;
-      /** @var ColumnMetadata $dataColumn */
-      foreach ($dataTableColumns as $columnName => $dataColumn)
-      {
-        if ($columnName===$key)
-        {
-          $alterNewColumns[$key]          = $column->getProperties();
-          $alterNewColumns[$key]['after'] = $prev;
-        }
-        $prev = $columnName;
-      }
+      $properties          = $newColumn->getProperties();
+      $properties['after'] = $this->dataTableColumnsDatabase->getPreviousColumn($properties['column_name']);
+
+      $alterNewColumns->appendTableColumn(new AlterColumnMetadata($properties));
     }
 
-    return new TableColumnsMetadata($alterNewColumns, '\SetBased\Audit\MySql\Metadata\AlterColumnMetadata');
+    return $alterNewColumns;
   }
 
   //--------------------------------------------------------------------------------------------------------------------
@@ -238,15 +239,15 @@ class AuditTable
                           $this->configTable->getSchemaName(),
                           $this->configTable->getTableName());
 
-    DataLayer::createAuditTrigger($this->configTable->getSchemaName(),
-                                  $this->auditSchemaName,
-                                  $this->configTable->getTableName(),
-                                  $triggerName,
-                                  $action,
-                                  $this->auditColumns,
-                                  $this->dataTableColumnsDatabase,
-                                  $skipVariable,
-                                  $additionSql);
+    AuditDataLayer::createAuditTrigger($this->configTable->getSchemaName(),
+                                       $this->auditSchemaName,
+                                       $this->configTable->getTableName(),
+                                       $triggerName,
+                                       $action,
+                                       $this->auditColumns,
+                                       $this->dataTableColumnsDatabase,
+                                       $skipVariable,
+                                       $additionSql);
   }
 
   //--------------------------------------------------------------------------------------------------------------------
@@ -255,7 +256,7 @@ class AuditTable
    */
   private function dropTriggers()
   {
-    $triggers = DataLayer::getTableTriggers($this->configTable->getSchemaName(), $this->configTable->getTableName());
+    $triggers = AuditDataLayer::getTableTriggers($this->configTable->getSchemaName(), $this->configTable->getTableName());
     foreach ($triggers as $trigger)
     {
       $this->io->logVerbose('Dropping trigger <dbo>%s</dbo> on <dbo>%s.%s</dbo>',
@@ -263,7 +264,7 @@ class AuditTable
                             $this->configTable->getSchemaName(),
                             $this->configTable->getTableName());
 
-      DataLayer::dropTrigger($this->configTable->getSchemaName(), $trigger['trigger_name']);
+      AuditDataLayer::dropTrigger($this->configTable->getSchemaName(), $trigger['trigger_name']);
     }
   }
 
@@ -289,7 +290,7 @@ class AuditTable
    */
   private function getColumnsFromInformationSchema()
   {
-    $result = DataLayer::getTableColumns($this->configTable->getSchemaName(), $this->configTable->getTableName());
+    $result = AuditDataLayer::getTableColumns($this->configTable->getSchemaName(), $this->configTable->getTableName());
 
     return $result;
   }
@@ -302,7 +303,8 @@ class AuditTable
    */
   private function getTableColumnInfo()
   {
-    $columnActual  = new TableColumnsMetadata(DataLayer::getTableColumns($this->auditSchemaName, $this->configTable->getTableName()));
+    $columnActual  = new TableColumnsMetadata(AuditDataLayer::getTableColumns($this->auditSchemaName,
+                                                                              $this->configTable->getTableName()));
     $columnsConfig = TableColumnsMetadata::combine($this->auditColumns, $this->configTable->getColumns());
     $columnsTarget = TableColumnsMetadata::combine($this->auditColumns, $this->dataTableColumnsDatabase);
 
@@ -363,7 +365,7 @@ class AuditTable
    */
   private function lockTable($tableName)
   {
-    DataLayer::lockTable($tableName);
+    AuditDataLayer::lockTable($tableName);
   }
 
   //--------------------------------------------------------------------------------------------------------------------
@@ -421,7 +423,7 @@ class AuditTable
    */
   private function unlockTables()
   {
-    DataLayer::unlockTables();
+    AuditDataLayer::unlockTables();
   }
 
   //--------------------------------------------------------------------------------------------------------------------

@@ -152,7 +152,10 @@ class CreateAuditTrigger
     }
 
     $this->code->append(sprintf('create trigger `%s`.`%s`', $this->dataSchemaName, $this->triggerName));
-    $this->code->append(sprintf('after %s on `%s`.`%s`', strtolower($this->triggerAction), $this->dataSchemaName, $this->tableName));
+    $this->code->append(sprintf('after %s on `%s`.`%s`',
+                                strtolower($this->triggerAction),
+                                $this->dataSchemaName,
+                                $this->tableName));
     $this->code->append('for each row');
     $this->code->append('begin');
 
@@ -193,15 +196,13 @@ class CreateAuditTrigger
     $columnNames = '';
 
     // First the audit columns.
-    /** @var ColumnMetadata $column */
-    foreach ($this->auditColumns->getColumns() as $column)
+     foreach ($this->auditColumns->getColumns() as $column)
     {
       if ($columnNames) $columnNames .= ',';
       $columnNames .= sprintf('`%s`', $column->getProperty('column_name'));
     }
 
     // Second the audit columns.
-    /** @var ColumnMetadata $column */
     foreach ($this->tableColumns->getColumns() as $column)
     {
       if ($columnNames) $columnNames .= ',';
@@ -222,11 +223,11 @@ class CreateAuditTrigger
     $values = '';
 
     // First the values for the audit columns.
-    /** @var ColumnMetadata $column */
     foreach ($this->auditColumns->getColumns() as $column)
     {
       $column = $column->getProperties();
       if ($values) $values .= ',';
+
       switch (true)
       {
         case (isset($column['value_type'])):
@@ -241,7 +242,7 @@ class CreateAuditTrigger
               break;
 
             default:
-              throw new FallenException('audit_value_type', ($column['value_type']));
+              throw new FallenException('value_type', ($column['value_type']));
           }
           break;
 
@@ -250,12 +251,11 @@ class CreateAuditTrigger
           break;
 
         default:
-          throw new RuntimeException('None of audit_value_type and audit_expression are set.');
+          throw new RuntimeException('None of value_type and expression are set.');
       }
     }
 
     // Second the values for the audit columns.
-    /** @var ColumnMetadata $column */
     foreach ($this->tableColumns->getColumns() as $column)
     {
       if ($values) $values .= ',';

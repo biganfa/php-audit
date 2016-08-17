@@ -14,7 +14,7 @@ use SetBased\Stratum\Style\StratumStyle;
 /**
  * Class for executing SQL statements and retrieving metadata from MySQL.
  */
-class DataLayer
+class AuditDataLayer
 {
   //--------------------------------------------------------------------------------------------------------------------
   /**
@@ -137,7 +137,7 @@ class DataLayer
   public static function createTemporaryTable($schemaName, $tableName, $auditColumns)
   {
     $sql = new MySqlCompoundSyntaxCodeStore();
-    $sql->append(sprintf('create temporary table `%s`.`%s` (', $schemaName, $tableName));
+    $sql->append(sprintf('create table `%s`.`%s` (', $schemaName, $tableName));
     foreach ($auditColumns as $column)
     {
       $sql->append(sprintf('%s %s', $column['column_name'], $column['column_type']));
@@ -173,7 +173,7 @@ class DataLayer
    */
   public static function dropTemporaryTable($schemaName, $tableName)
   {
-    $sql = sprintf('drop temporary table `%s`.`%s`', $schemaName, $tableName);
+    $sql = sprintf('drop table `%s`.`%s`', $schemaName, $tableName);
 
     self::executeNone($sql);
   }

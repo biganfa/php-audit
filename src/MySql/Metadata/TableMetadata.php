@@ -38,9 +38,7 @@ class TableMetadata
    * @param string  $schemaName The name of the schema were the table is located.
    * @param array[] $columns    The metadata of the columns of this table.
    */
-  public function __construct($tableName,
-                              $schemaName,
-                              $columns)
+  public function __construct($tableName, $schemaName, $columns)
   {
     $this->tableName  = $tableName;
     $this->columns    = new TableColumnsMetadata($columns);

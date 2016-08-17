@@ -3,7 +3,7 @@
 namespace SetBased\Audit\MySql\Command;
 
 use SetBased\Audit\Command\BaseCommand;
-use SetBased\Audit\MySql\DataLayer;
+use SetBased\Audit\MySql\AuditDataLayer;
 
 //----------------------------------------------------------------------------------------------------------------------
 /**
@@ -17,7 +17,7 @@ class MySqlBaseCommand extends BaseCommand
    */
   public function disconnect()
   {
-    DataLayer::disconnect();
+    AuditDataLayer::disconnect();
   }
 
   //--------------------------------------------------------------------------------------------------------------------
@@ -33,8 +33,8 @@ class MySqlBaseCommand extends BaseCommand
     $password = $this->getSetting($settings, true, 'database', 'password');
     $database = $this->getSetting($settings, true, 'database', 'data_schema');
 
-    DataLayer::setIo($this->io);
-    DataLayer::connect($host, $user, $password, $database);
+    AuditDataLayer::setIo($this->io);
+    AuditDataLayer::connect($host, $user, $password, $database);
   }
 
   //--------------------------------------------------------------------------------------------------------------------

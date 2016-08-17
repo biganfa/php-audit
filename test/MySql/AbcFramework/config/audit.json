@@ -14,12 +14,12 @@
     },
     {
       "column_name": "audit_statement",
-      "column_type": "enum('INSERT','DELETE','UPDATE') not null",
+      "column_type": "enum('INSERT','DELETE','UPDATE') character set ascii collate ascii_general_ci not null",
       "value_type": "ACTION"
     },
     {
       "column_name": "audit_type",
-      "column_type": "enum('OLD','NEW') not null",
+      "column_type": "enum('OLD','NEW') character set ascii collate ascii_general_ci not null",
       "value_type": "STATE"
     },
     {

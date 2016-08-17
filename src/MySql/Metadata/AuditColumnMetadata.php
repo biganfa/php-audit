@@ -4,23 +4,25 @@ namespace SetBased\Audit\MySql\Metadata;
 
 //----------------------------------------------------------------------------------------------------------------------
 /**
- * Class for the metadata of a audit column or TableColumnsMetadata with audit and data columns.
+ * Metadata of an audit table column in an audit table.
  */
 class AuditColumnMetadata extends ColumnMetadata
 {
   //--------------------------------------------------------------------------------------------------------------------
   /**
-   * Object constructor.
+   * The properties of table columns that are stored by this class.
    *
-   * @param array[]|ColumnMetadata $properties The metadata of the column.
+   * var string[]
    */
-  public function __construct($properties)
-  {
-    self::$fields[] = 'expression';
-    self::$fields[] = 'value_type';
+  protected static $fields = ['column_name',
+                              'column_type',
+                              'is_nullable',
+                              'character_set_name',
+                              'collation_name',
+                              'expression',
+                              'value_type'];
 
-    parent::__construct($properties);
-  }
+  //--------------------------------------------------------------------------------------------------------------------
 }
 
 //----------------------------------------------------------------------------------------------------------------------

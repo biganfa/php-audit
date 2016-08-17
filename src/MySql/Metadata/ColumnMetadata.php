@@ -4,13 +4,13 @@ namespace SetBased\Audit\MySql\Metadata;
 
 //----------------------------------------------------------------------------------------------------------------------
 /**
- * Class for the metadata of a column.
+ * Metadata of table columns.
  */
 class ColumnMetadata
 {
   //--------------------------------------------------------------------------------------------------------------------
   /**
-   * The properties of table columns that are stored by this class.
+   * The properties of the column that are stored by this class.
    *
    * var string[]
    */
@@ -31,27 +31,16 @@ class ColumnMetadata
   /**
    * Object constructor.
    *
-   * @param array[]|ColumnMetadata $properties The metadata of the column.
+   * @param array[] $properties The metadata of the column.
    */
   public function __construct($properties)
   {
-    if (!is_array($properties))
-    {
-      $properties = $properties->getProperties();
-    }
-    foreach (self::$fields as $field)
+    foreach (static::$fields as $field)
     {
       if (isset($properties[$field]))
       {
         $this->properties[$field] = $properties[$field];
       }
-    }
-
-    // XXX Must be in some other place, i guess.
-    // See to move in logic for create table.
-    if ($this->properties['column_type']==='timestamp')
-    {
-      $this->properties['column_type'] = $this->properties['column_type'].' NULL';
     }
   }
 
@@ -82,6 +71,15 @@ class ColumnMetadata
     }
 
     return null;
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
+   * Make this column nullable.
+   */
+  public function makeNullable()
+  {
+    $this->properties['is_nullable'] = 'YES';
   }
 
   //--------------------------------------------------------------------------------------------------------------------

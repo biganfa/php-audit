@@ -4,23 +4,24 @@ namespace SetBased\Audit\MySql\Metadata;
 
 //----------------------------------------------------------------------------------------------------------------------
 /**
- * Class for the metadata of a audit column or TableColumnsMetadata with audit and data columns.
+ * Metadata of a table column for altering a column in an audit table.
  */
 class AlterColumnMetadata extends ColumnMetadata
 {
   //--------------------------------------------------------------------------------------------------------------------
   /**
-   * Object constructor.
+   * The properties of table columns that are stored by this class.
    *
-   * @param array[]|ColumnMetadata $properties  The metadata of the column.
-   * @param array[]|ColumnMetadata $afterColumn After column name.
+   * var string[]
    */
-  public function __construct($properties, $afterColumn)
-  {
-    self::$fields[] = 'after';
+  protected static $fields = ['column_name',
+                              'column_type',
+                              'is_nullable',
+                              'character_set_name',
+                              'collation_name',
+                              'after'];
 
-    parent::__construct($properties);
-  }
+  //--------------------------------------------------------------------------------------------------------------------
 }
 
 //----------------------------------------------------------------------------------------------------------------------

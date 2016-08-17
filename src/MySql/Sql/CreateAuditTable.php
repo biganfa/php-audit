@@ -2,8 +2,7 @@
 //----------------------------------------------------------------------------------------------------------------------
 namespace SetBased\Audit\MySql\Sql;
 
-use SetBased\Audit\MySql\DataLayer;
-use SetBased\Audit\MySql\Metadata\ColumnMetadata;
+use SetBased\Audit\MySql\AuditDataLayer;
 use SetBased\Audit\MySql\Metadata\TableColumnsMetadata;
 use SetBased\Helper\CodeStore\MySqlCompoundSyntaxCodeStore;
 
@@ -75,35 +74,93 @@ class CreateAuditTable
 
     $code->append(sprintf('create table `%s`.`%s`', $this->auditSchemaName, $this->tableName));
 
-    // Base format on column with longest name.
-    $columns = $this->columns->getColumns();
-    $width   = 0;
-    /** @var ColumnMetadata $column */
-    foreach ($columns as $column)
-    {
-      $width = max($width, mb_strlen($column->getProperty('column_name')));
-    }
-    $format = sprintf('  %%-%ds %%s', $width + 2);
-
     // Create SQL for columns.
     $code->append('(');
-    foreach ($columns as $column)
-    {
-      $code->append(sprintf($format, '`'.$column->getProperty('column_name').'`', $column->getProperty('column_type')), false);
-      if (end($columns)!==$column)
-      {
-        $code->appendToLastLine(',');
-      }
-    }
+    $code->append($this->getColumnDefinitions());
 
     // Create SQL for table options.
-    $tableOptions = DataLayer::getTableOptions($this->dataSchemaName, $this->tableName);
+    $tableOptions = AuditDataLayer::getTableOptions($this->dataSchemaName, $this->tableName);
     $code->append(sprintf(') engine=%s character set=%s collate=%s',
                           $tableOptions['engine'],
                           $tableOptions['character_set_name'],
                           $tableOptions['table_collation']));
 
     return $code->getCode();
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
+   * Retuns an array with SQL code for column definitions.
+   *
+   * @return string[]
+   */
+  private function getColumnDefinitions()
+  {
+    $lines = [];
+
+    // Base format on column with longest name.
+    $format = $this->getFormat();
+
+    $columns = $this->columns->getColumns();
+    foreach ($columns as $column)
+    {
+      $line = sprintf($format, '`'.$column->getProperty('column_name').'`', $column->getProperty('column_type'));
+
+      // Timestamps require special settings for null values.
+      if ($column->getProperty('column_type')=='timestamp')
+      {
+        $line .= ' null';
+
+        if ($column->getProperty('is_nullable')=='YES')
+        {
+          $line .= ' default null';
+        }
+      }
+
+      // Set character set and collation.
+      if ($column->getProperty('character_set_name'))
+      {
+        $line .= ' character set ';
+        $line .= $column->getProperty('character_set_name');
+      }
+      if ($column->getProperty('collation_name'))
+      {
+        $line .= ' collate ';
+        $line .= $column->getProperty('collation_name');
+      }
+
+      // Set nullable.
+      if ($column->getProperty('is_nullable')=='NO')
+      {
+        $line .= ' not null';
+      }
+
+      if (end($columns)!==$column)
+      {
+        $line .= ',';
+      }
+
+      $lines[] = $line;
+    }
+
+    return $lines;
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
+   * Returns the format specifier for printing column names and column types
+   *
+   * @return string
+   */
+  private function getFormat()
+  {
+    $width = 0;
+    foreach ($this->columns->getColumns() as $column)
+    {
+      $width = max($width, mb_strlen($column->getProperty('column_name')));
+    }
+
+    return sprintf('  %%-%ds %%s', $width + 2);
   }
 
   //--------------------------------------------------------------------------------------------------------------------

@@ -2,7 +2,6 @@
 //----------------------------------------------------------------------------------------------------------------------
 namespace SetBased\Audit\MySql;
 
-use SetBased\Audit\MySql\Metadata\ColumnMetadata;
 use SetBased\Audit\MySql\Metadata\TableColumnsMetadata;
 use SetBased\Audit\MySql\Metadata\TableMetadata;
 use SetBased\Stratum\MySql\StaticDataLayer;
@@ -10,38 +9,45 @@ use SetBased\Stratum\Style\StratumStyle;
 
 //----------------------------------------------------------------------------------------------------------------------
 /**
- * Class for audit actions.
+ * Class for executing auditing actions for tables.
  */
 class Audit
 {
   //--------------------------------------------------------------------------------------------------------------------
   /**
-   * All tables in the in the audit schema.
+   * The metadata (additional) audit columns (as stored in the config file).
    *
-   * @var array
+   * @var TableColumnsMetadata
    */
-  protected $auditSchemaTables;
+  private $auditColumnsMetadata;
 
   /**
-   * All config file as array.
+   * The names of all tables in audit schema.
    *
    * @var array
    */
-  protected $config;
+  private $auditSchemaTables;
 
   /**
-   * Array of tables from data schema.
+   * The content of the configuration file.
    *
    * @var array
    */
-  protected $dataSchemaTables;
+  private $config;
+
+  /**
+   * The names of all tables in data schema.
+   *
+   * @var array
+   */
+  private $dataSchemaTables;
 
   /**
    * The Output decorator.
    *
    * @var StratumStyle
    */
-  protected $io;
+  private $io;
 
   /**
    * If true remove all column information from config file.
@@ -54,36 +60,13 @@ class Audit
   /**
    * Object constructor.
    *
-   * @param array[]      $config All config file as array
-   * @param StratumStyle $io     The Output decorator
+   * @param array[]      $config The content of the configuration file.
+   * @param StratumStyle $io     The Output decorator.
    */
   public function __construct(&$config, $io)
   {
-    $this->config = &$config;
+    $this->config = $config;
     $this->io     = $io;
-  }
-
-  //--------------------------------------------------------------------------------------------------------------------
-  /**
-   * Compares the tables listed in the config file and the tables found in the audit schema
-   *
-   * @param string               $tableName Name of table
-   * @param TableColumnsMetadata $columns   The table columns.
-   */
-  public function getColumns($tableName, $columns)
-  {
-    $newColumns = [];
-    /** @var ColumnMetadata $column */
-    foreach ($columns->getColumns() as $column)
-    {
-      $newColumns[] = $column->getProperties();
-    }
-    $this->config['table_columns'][$tableName] = $newColumns;
-
-    if ($this->pruneOption)
-    {
-      $this->config['table_columns'] = [];
-    }
   }
 
   //--------------------------------------------------------------------------------------------------------------------
@@ -92,57 +75,50 @@ class Audit
    */
   public function listOfTables()
   {
-    $this->dataSchemaTables = DataLayer::getTablesNames($this->config['database']['data_schema']);
+    $this->dataSchemaTables = AuditDataLayer::getTablesNames($this->config['database']['data_schema']);
 
-    $this->auditSchemaTables = DataLayer::getTablesNames($this->config['database']['audit_schema']);
+    $this->auditSchemaTables = AuditDataLayer::getTablesNames($this->config['database']['audit_schema']);
   }
 
   //--------------------------------------------------------------------------------------------------------------------
+  /**
+   * The main method: executes the auditing actions for tables.
+   */
   public function main()
   {
-    $this->auditColumnTypes();
+    if ($this->pruneOption)
+    {
+      $this->config['table_columns'] = [];
+    }
+
+    $this->resolveCanonicalAuditColumns();
 
     $this->listOfTables();
 
     $this->unknownTables();
 
-    foreach ($this->dataSchemaTables as $table)
-    {
-      if ($this->config['tables'][$table['table_name']]['audit'])
-      {
-        $tableColumns = [];
-        if (isset($this->config['table_columns'][$table['table_name']]))
-        {
-          $tableColumns = $this->config['table_columns'][$table['table_name']];
-        }
-        $configTable          = new TableMetadata($table['table_name'], $this->config['database']['data_schema'], $tableColumns);
-        $auditColumnsMetadata = new TableColumnsMetadata($this->config['audit_columns'], '\SetBased\Audit\MySql\Metadata\AuditColumnMetadata');
-        $currentTable         = new AuditTable($this->io,
-                                               $configTable,
-                                               $this->config['database']['audit_schema'],
-                                               $auditColumnsMetadata,
-                                               $this->config['tables'][$table['table_name']]['alias'],
-                                               $this->config['tables'][$table['table_name']]['skip']);
-        $res                  = StaticDataLayer::searchInRowSet('table_name', $currentTable->getTableName(), $this->auditSchemaTables);
-        if (!isset($res))
-        {
-          $currentTable->createMissingAuditTable();
-        }
-
-        $columns        = $currentTable->main($this->config['additional_sql']);
-        $alteredColumns = $columns['altered_columns']->getColumns();
-        if (empty($alteredColumns))
-        {
-          $this->getColumns($currentTable->getTableName(), $columns['full_columns']);
-        }
-      }
-    }
+    $this->knownTables();
   }
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
-   * Found tables in config file
+   * Sets the columns metadata of a table in the configuration file.
    *
+   * @param string               $tableName The name of table.
+   * @param TableColumnsMetadata $columns   The metadata of the table columns.
+   */
+  public function setConfigTableColumns($tableName, $columns)
+  {
+    $newColumns = [];
+    foreach ($columns->getColumns() as $column)
+    {
+      $newColumns[] = $column->getProperties();
+    }
+    $this->config['table_columns'][$tableName] = $newColumns;
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
    * Compares the tables listed in the config file and the tables found in the data schema.
    */
   public function unknownTables()
@@ -153,7 +129,7 @@ class Audit
       {
         if (!isset($this->config['tables'][$table['table_name']]['audit']))
         {
-          $this->io->writeln(sprintf('<info>AuditApplication flag is not set in table %s</info>', $table['table_name']));
+          $this->io->writeln(sprintf('<info>audit is not set for table %s</info>', $table['table_name']));
         }
         else
         {
@@ -180,28 +156,74 @@ class Audit
   /**
    * Resolves the canonical column types of the audit table columns.
    */
-  protected function auditColumnTypes()
+  protected function resolveCanonicalAuditColumns()
   {
     // Return immediately of there are no audit columns.
     if (empty($this->config['audit_columns'])) return;
 
     $schema    = $this->config['database']['audit_schema'];
-    $tableName = 'TMP_'.uniqid();
-    DataLayer::createTemporaryTable($schema, $tableName, $this->config['audit_columns']);
-    $auditColumns = DataLayer::showColumns($schema, $tableName);
-    foreach ($auditColumns as $column)
+    $tableName = '_TMP_'.uniqid();
+    AuditDataLayer::createTemporaryTable($schema, $tableName, $this->config['audit_columns']);
+    $columns = AuditDataLayer::getTableColumns($schema, $tableName);
+    AuditDataLayer::dropTemporaryTable($schema, $tableName);
+
+    foreach ($this->config['audit_columns'] as $audit_column)
     {
-      $key = StaticDataLayer::searchInRowSet('column_name', $column['Field'], $this->config['audit_columns']);
-      if (isset($key))
+      $key = StaticDataLayer::searchInRowSet('column_name', $audit_column['column_name'], $columns);
+      if (isset($audit_column['value_type']))
       {
-        $this->config['audit_columns'][$key]['column_type'] = $column['Type'];
-        if ($column['Null']==='NO')
+        $columns[$key]['value_type'] = $audit_column['value_type'];
+      }
+      if (isset($audit_column['expression']))
+      {
+        $columns[$key]['expression'] = $audit_column['expression'];
+      }
+    }
+
+    $this->auditColumnsMetadata = new TableColumnsMetadata($columns, 'AuditColumnMetadata');
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
+   * Processed known tables.
+   */
+  private function knownTables()
+  {
+    foreach ($this->dataSchemaTables as $table)
+    {
+      if ($this->config['tables'][$table['table_name']]['audit'])
+      {
+        $tableColumns = [];
+        if (isset($this->config['table_columns'][$table['table_name']]))
         {
-          $this->config['audit_columns'][$key]['column_type'] = sprintf('%s not null', $this->config['audit_columns'][$key]['column_type']);
+          $tableColumns = $this->config['table_columns'][$table['table_name']];
+        }
+        $configTable = new TableMetadata($table['table_name'],
+                                         $this->config['database']['data_schema'],
+                                         $tableColumns);
+
+        $currentTable = new AuditTable($this->io,
+                                       $configTable,
+                                       $this->config['database']['audit_schema'],
+                                       $this->auditColumnsMetadata,
+                                       $this->config['tables'][$table['table_name']]['alias'],
+                                       $this->config['tables'][$table['table_name']]['skip']);
+        $res          = StaticDataLayer::searchInRowSet('table_name',
+                                                        $currentTable->getTableName(),
+                                                        $this->auditSchemaTables);
+        if (!isset($res))
+        {
+          $currentTable->createMissingAuditTable();
+        }
+
+        $columns        = $currentTable->main($this->config['additional_sql']);
+        $alteredColumns = $columns['altered_columns']->getColumns();
+        if (empty($alteredColumns))
+        {
+          $this->setConfigTableColumns($currentTable->getTableName(), $columns['full_columns']);
         }
       }
     }
-    DataLayer::dropTemporaryTable($schema, $tableName);
   }
 
   //--------------------------------------------------------------------------------------------------------------------

@@ -16,7 +16,7 @@ class TriggerCodeTest extends PHPUnit_Framework_TestCase
   public function test01()
   {
     $actions = ['INSERT', 'UPDATE', 'DELETE'];
-    
+
     foreach ($actions as $action)
     {
       $this->triggerEndingTest($action);
@@ -45,13 +45,13 @@ class TriggerCodeTest extends PHPUnit_Framework_TestCase
   //--------------------------------------------------------------------------------------------------------------------
   private function additionalSqlTest($triggerAction, $additionalSql)
   {
-    $audit_columns = new TableColumnsMetadata([]);
+    $audit_columns = new TableColumnsMetadata();
 
     $table_columns = new TableColumnsMetadata([['column_name'        => 'x',
-                                   'column_type'        => 'int(11)',
-                                   'is_nullable'        => 'YES',
-                                   'character_set_name' => null,
-                                   'collation_name'     => null]]);
+                                                'column_type'        => 'int(11)',
+                                                'is_nullable'        => 'YES',
+                                                'character_set_name' => null,
+                                                'collation_name'     => null]]);
 
     $helper = new CreateAuditTrigger('test_data',
                                      'test_audit',
@@ -77,13 +77,13 @@ class TriggerCodeTest extends PHPUnit_Framework_TestCase
   //--------------------------------------------------------------------------------------------------------------------
   private function triggerEndingTest($triggerAction)
   {
-    $audit_columns = new TableColumnsMetadata([]);
+    $audit_columns = new TableColumnsMetadata();
 
     $table_columns = new TableColumnsMetadata([['column_name'        => 'x',
-                                   'column_type'        => 'int(11)',
-                                   'is_nullable'        => 'YES',
-                                   'character_set_name' => null,
-                                   'collation_name'     => null]]);
+                                                'column_type'        => 'int(11)',
+                                                'is_nullable'        => 'YES',
+                                                'character_set_name' => null,
+                                                'collation_name'     => null]]);
 
     $helper = new CreateAuditTrigger('test_data',
                                      'test_audit',
