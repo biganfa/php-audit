@@ -12,8 +12,8 @@ class RowHelper
   /**
    * Append a row.
    *
-   * @param \array[]          $theExistRows Exist rows array for appending.
-   * @param ColumnTypesHelper $theRow       Row for append.
+   * @param \array[]           $theExistRows Exist rows array for appending.
+   * @param ColumnTypeExtended $theRow       Row for append.
    */
   public static function appendRow(&$theExistRows, $theRow)
   {
