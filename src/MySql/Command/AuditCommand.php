@@ -27,7 +27,7 @@ class AuditCommand extends MySqlBaseCommand
   /**
    * File name for config metadata.
    *
-   * @var array
+   * @var string
    */
   protected $configMetadataFile;
 
