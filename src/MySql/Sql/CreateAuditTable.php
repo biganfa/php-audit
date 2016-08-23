@@ -90,7 +90,7 @@ class CreateAuditTable
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
-   * Retuns an array with SQL code for column definitions.
+   * Returns an array with SQL code for column definitions.
    *
    * @return string[]
    */

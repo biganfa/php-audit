@@ -8,7 +8,7 @@ use SetBased\Audit\MySql\Metadata\ColumnMetadata;
 /**
  * Class for extended column type.
  */
-class ColumnTypeExtended
+class ColumnMetadataExtended
 {
   //--------------------------------------------------------------------------------------------------------------------
   /**
@@ -16,7 +16,7 @@ class ColumnTypeExtended
    *
    * @var array[]
    */
-  protected $columnTypes = [];
+  private $columnTypes = [];
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
@@ -34,12 +34,12 @@ class ColumnTypeExtended
   /**
    * Create array with all columns types.
    *
-   * @param array[]|ColumnMetadata $columnTypes The metadata of the column.
-   * @param null|string        $typePrefix  Prefix for column type name.
+   * @param array[]|ColumnMetadata $properties The metadata of the column.
+   * @param null|string            $typePrefix Prefix for column type name.
    */
-  public function extendColumnTypes($columnTypes, $typePrefix)
+  public function extendColumnTypes($properties, $typePrefix)
   {
-    $columnTypes = $columnTypes->getProperties();
+    $columnTypes = $properties->getProperties();
     foreach ($columnTypes as $typeName => $typeValue)
     {
       if ($typeName=='column_name')
@@ -70,7 +70,7 @@ class ColumnTypeExtended
    *
    * @return \array[]
    */
-  public function getTypes()
+  public function getExtendMetadata()
   {
     return $this->columnTypes;
   }

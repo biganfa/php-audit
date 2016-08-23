@@ -9,7 +9,7 @@ use SetBased\Audit\MySql\Metadata\TableColumnsMetadata;
 /**
  * Class container for all column types like audit,data and config.
  */
-class ColumnsExtendedContainer
+class DiffTableColumns
 {
   //--------------------------------------------------------------------------------------------------------------------
   /**
@@ -23,13 +23,13 @@ class ColumnsExtendedContainer
   /**
    * Object constructor
    *
-   * @param array[]              $configColumns The table columns from config file.
+   * @param TableColumnsMetadata $configColumns The table columns from config file.
    * @param TableColumnsMetadata $auditColumns  The table columns from audit schema.
    * @param TableColumnsMetadata $dataColumns   The table columns from data schema.
    */
   public function __construct($configColumns, $auditColumns, $dataColumns)
   {
-    $auditConfigTypes = new TableColumnsMetadata($configColumns);
+    $auditConfigTypes = $configColumns;
     $auditTypes       = $auditColumns;
     $dataTypes        = $dataColumns;
     $allTypes         = ['config' => $auditConfigTypes, 'audit' => $auditTypes, 'data' => $dataTypes];
@@ -65,11 +65,12 @@ class ColumnsExtendedContainer
       {
         if (isset($this->columnTypes[$type->getProperty('column_name')]))
         {
+          /** @var ColumnMetadataExtended */
           $this->columnTypes[$type->getProperty('column_name')]->extendColumnTypes($type, $typePrefix);
         }
         else
         {
-          $this->columnTypes[$type->getProperty('column_name')] = new ColumnTypeExtended($type, $typePrefix);
+          $this->columnTypes[$type->getProperty('column_name')] = new ColumnMetadataExtended($type, $typePrefix);
         }
       }
     }

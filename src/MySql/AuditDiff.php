@@ -2,9 +2,7 @@
 //----------------------------------------------------------------------------------------------------------------------
 namespace SetBased\Audit\MySql;
 
-use SetBased\Audit\MySql\Helper\ColumnsExtendedContainer;
-use SetBased\Audit\MySql\Helper\ColumnTypeExtended;
-use SetBased\Audit\MySql\Helper\TableHelper;
+use SetBased\Audit\MySql\Helper\DiffTableHelper;
 use SetBased\Audit\MySql\Metadata\TableColumnsMetadata;
 use SetBased\Stratum\MySql\StaticDataLayer;
 use SetBased\Stratum\Style\StratumStyle;
@@ -111,47 +109,6 @@ class AuditDiff
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
-   * Check full full and return array without new or obsolete columns if full not set.
-   *
-   * @param array[] $columns The metadata of the columns of a table.
-   *
-   * @return array[]
-   */
-  private static function removeMatchingColumns($columns)
-  {
-    $cleaned = [];
-    /** @var ColumnTypeExtended $column */
-    foreach ($columns as $column)
-    {
-      $columnsArray = $column->getTypes();
-      if (!isset($columnsArray['data_column_type']))
-      {
-        if ($columnsArray['audit_column_type']!=$columnsArray['config_column_type'])
-        {
-          $cleaned[] = $column;
-        }
-      }
-      elseif (!isset($columnsArray['config_column_type']))
-      {
-        if (($columnsArray['audit_column_type']!=$columnsArray['data_column_type']) || ($columnsArray['audit_character_set_name']!=$columnsArray['data_character_set_name'] || $columnsArray['audit_collation_name']!=$columnsArray['data_collation_name']))
-        {
-          $cleaned[] = $column;
-        }
-      }
-      else
-      {
-        if (($columnsArray['data_column_type']!=$columnsArray['audit_column_type'] && $columnsArray['audit_column_type']!=$columnsArray['config_column_type']) || ($columnsArray['audit_column_type']!=$columnsArray['config_column_type'] && !empty($columnsArray['config_column_type'])))
-        {
-          $cleaned[] = $column;
-        }
-      }
-    }
-
-    return $cleaned;
-  }
-
-  //--------------------------------------------------------------------------------------------------------------------
-  /**
    * The main method: executes the auditing actions for tables.
    *
    * @return int The exit status.
@@ -176,57 +133,13 @@ class AuditDiff
 
     $this->full = $this->input->getOption('full');
 
-
     $this->resolveCanonicalAuditColumns();
 
     $this->listOfTables();
 
     $this->getDiff();
+
     $this->printDiff();
-  }
-
-  //--------------------------------------------------------------------------------------------------------------------
-  /**
-   * Add not null to audit columns if it not nullable.
-   *
-   * @param array $theColumns Audit columns.
-   *
-   * @return array
-   */
-  private function addNotNull($theColumns)
-  {
-    $modifiedColumns = [];
-    foreach ($theColumns as $column)
-    {
-      $modifiedColumn = $column;
-      $auditColumn    = StaticDataLayer::searchInRowSet('column_name', $modifiedColumn['column_name'], $this->config['audit_columns']);
-      if (isset($auditColumn))
-      {
-        if ($modifiedColumn['is_nullable']==='NO')
-        {
-          $modifiedColumn['column_type'] = sprintf('%s not null', $modifiedColumn['column_type']);
-        }
-      }
-      $modifiedColumns[] = $modifiedColumn;
-    }
-
-    return $modifiedColumns;
-  }
-
-  //--------------------------------------------------------------------------------------------------------------------
-  /**
-   * Get the difference between data and audit tables.
-   *
-   * @param TableColumnsMetadata $dataColumns  The table columns from data schema.
-   * @param TableColumnsMetadata $auditColumns The table columns from audit schema.
-   *
-   * @return \array[]
-   */
-  private function createDiffArray($dataColumns, $auditColumns)
-  {
-    $diff = new ColumnsExtendedContainer($this->config['audit_columns'], $auditColumns, $dataColumns);
-
-    return $diff;
   }
 
   //--------------------------------------------------------------------------------------------------------------------
@@ -259,15 +172,14 @@ class AuditDiff
     {
       if ($this->config['tables'][$table['table_name']]['audit'])
       {
+
         $res = StaticDataLayer::searchInRowSet('table_name', $table['table_name'], $this->auditSchemaTables);
         if (isset($res))
         {
-          $dataColumns  = new TableColumnsMetadata(AuditDataLayer::getTableColumns($this->config['database']['data_schema'], $table['table_name']));
-          $auditColumns = AuditDataLayer::getTableColumns($this->config['database']['audit_schema'], $table['table_name']);
-          $auditColumns = $this->addNotNull($auditColumns);
-          $auditColumns = new TableColumnsMetadata($auditColumns);
-
-          $this->diffColumns[$table['table_name']] = $this->createDiffArray($dataColumns, $auditColumns);
+          $this->diffColumns[$table['table_name']] = new AuditDiffTable($this->config['database']['data_schema'],
+                                                                        $this->config['database']['audit_schema'],
+                                                                        $table['table_name'],
+                                                                        $this->config['audit_columns']);
         }
       }
     }
@@ -293,17 +205,14 @@ class AuditDiff
     $first = true;
     if (isset($this->diffColumns))
     {
-      /**
-       * @var ColumnsExtendedContainer $columns
-       */
-      foreach ($this->diffColumns as $tableName => $columns)
+      /** @var AuditDiffTable $diffTable */
+      foreach ($this->diffColumns as $tableName => $diffTable)
       {
-        $columns = $columns->getTypes();
+        $columns = $diffTable->getDiffColumns();
         // Remove matching columns unless the full option is used.
         if (!$this->full)
         {
-          /** @var array[] $columns */
-          $columns = self::removeMatchingColumns($columns);
+          $columns = $diffTable->removeMatchingColumns();
         }
 
         if (!empty($columns))
@@ -322,7 +231,11 @@ class AuditDiff
           $this->output->writeln($tableName);
 
           // Write table with columns.
-          $rows = new TableHelper($this->config['database']['data_schema'], $this->config['database']['audit_schema'], $tableName, $this->config['audit_columns'], $this->full);
+          $rows = new DiffTableHelper($this->config['database']['data_schema'],
+                                      $this->config['database']['audit_schema'],
+                                      $tableName,
+                                      $this->config['audit_columns'],
+                                      $this->full);
           $rows->appendRows($columns);
           $rows->addHighlighting();
           $table = new Table($this->output);
@@ -331,8 +244,8 @@ class AuditDiff
           $table->render();
         }
       }
+      $this->diffTables();
     }
-    $this->diffTables();
   }
 
   //--------------------------------------------------------------------------------------------------------------------

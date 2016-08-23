@@ -4,20 +4,20 @@ namespace SetBased\Audit\MySql\Helper;
 
 //----------------------------------------------------------------------------------------------------------------------
 /**
- * A helper class for column types.
+ * A helper class for DiffTable.
  */
-class RowHelper
+class DiffTableRowHelper
 {
   //--------------------------------------------------------------------------------------------------------------------
   /**
    * Append a row.
    *
-   * @param \array[]           $theExistRows Exist rows array for appending.
-   * @param ColumnTypeExtended $theRow       Row for append.
+   * @param \array[]               $theExistRows Exist rows array for appending.
+   * @param ColumnMetadataExtended $theRow       Row for append.
    */
   public static function appendRow(&$theExistRows, $theRow)
   {
-    $theRow         = $theRow->getTypes();
+    $theRow         = $theRow->getExtendMetadata();
     $theExistRows[] = self::createTableRow($theRow);
     if (self::checkOptions($theRow))
     {
