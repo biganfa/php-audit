@@ -50,5 +50,371 @@
             "expression": "@abc_g_usr_id"
         }
     ],
-    "tables": []
+    "tables": {
+        "ABC_BLOB": {
+            "audit": false,
+            "alias": null,
+            "skip": null
+        },
+        "ABC_BLOB_DATA": {
+            "audit": false,
+            "alias": "57b16edf3cd07",
+            "skip": null
+        },
+        "AUT_COMPANY": {
+            "audit": true,
+            "alias": "57b16fe129e35",
+            "skip": null
+        },
+        "AUT_CONFIG": {
+            "audit": false,
+            "alias": null,
+            "skip": null
+        },
+        "AUT_CONFIG_CLASS": {
+            "audit": false,
+            "alias": null,
+            "skip": null
+        },
+        "AUT_CONFIG_VALUE": {
+            "audit": false,
+            "alias": null,
+            "skip": null
+        },
+        "AUT_CROSS_DOMAIN_REDIRECT": {
+            "audit": false,
+            "alias": null,
+            "skip": null
+        },
+        "AUT_FUNCTIONALITY": {
+            "audit": false,
+            "alias": null,
+            "skip": null
+        },
+        "AUT_LOGIN_RESPONSE": {
+            "audit": false,
+            "alias": null,
+            "skip": null
+        },
+        "AUT_MENU": {
+            "audit": false,
+            "alias": null,
+            "skip": null
+        },
+        "AUT_MODULE": {
+            "audit": false,
+            "alias": null,
+            "skip": null
+        },
+        "AUT_MODULE_COMPANY": {
+            "audit": false,
+            "alias": null,
+            "skip": null
+        },
+        "AUT_PAGE": {
+            "audit": false,
+            "alias": null,
+            "skip": null
+        },
+        "AUT_PAGE_COMPANY": {
+            "audit": false,
+            "alias": null,
+            "skip": null
+        },
+        "AUT_PAGE_TAB": {
+            "audit": false,
+            "alias": null,
+            "skip": null
+        },
+        "AUT_PAG_FUN": {
+            "audit": false,
+            "alias": null,
+            "skip": null
+        },
+        "AUT_ROLE": {
+            "audit": false,
+            "alias": null,
+            "skip": null
+        },
+        "AUT_ROL_FUN": {
+            "audit": false,
+            "alias": null,
+            "skip": null
+        },
+        "AUT_SESSION": {
+            "audit": false,
+            "alias": null,
+            "skip": null
+        },
+        "AUT_USER": {
+            "audit": false,
+            "alias": null,
+            "skip": null
+        },
+        "AUT_USR_ROL": {
+            "audit": false,
+            "alias": null,
+            "skip": null
+        },
+        "BBL_LANGUAGE": {
+            "audit": false,
+            "alias": null,
+            "skip": null
+        },
+        "BBL_WORD": {
+            "audit": false,
+            "alias": null,
+            "skip": null
+        },
+        "BBL_WORD_GROUP": {
+            "audit": false,
+            "alias": null,
+            "skip": null
+        },
+        "BBL_WORD_TEXT": {
+            "audit": false,
+            "alias": null,
+            "skip": null
+        },
+        "BBL_WORD_TRANSLATE_HISTORY": {
+            "audit": false,
+            "alias": null,
+            "skip": null
+        },
+        "DEV_UUID_KEY": {
+            "audit": false,
+            "alias": null,
+            "skip": null
+        },
+        "ELM_ATTRIBUTE": {
+            "audit": false,
+            "alias": null,
+            "skip": null
+        },
+        "ELM_AUTHORIZED_DOMAIN": {
+            "audit": false,
+            "alias": null,
+            "skip": null
+        },
+        "KNAS_PARTICIPANT_CONSTANT": {
+            "audit": false,
+            "alias": null,
+            "skip": null
+        },
+        "KNAS_POINTS": {
+            "audit": false,
+            "alias": null,
+            "skip": null
+        },
+        "KNAS_POINTS_SCHEME": {
+            "audit": false,
+            "alias": null,
+            "skip": null
+        },
+        "KNAS_POINTS_SCHEME_POOL": {
+            "audit": false,
+            "alias": null,
+            "skip": null
+        },
+        "KNAS_RANK_LIST_ENTRY": {
+            "audit": false,
+            "alias": null,
+            "skip": null
+        },
+        "KNAS_RANK_LIST_NODE": {
+            "audit": false,
+            "alias": null,
+            "skip": null
+        },
+        "KNAS_RANK_LIST_RELEASE": {
+            "audit": false,
+            "alias": null,
+            "skip": null
+        },
+        "KNAS_RANK_LIST_RELEASE_REVISION": {
+            "audit": false,
+            "alias": null,
+            "skip": null
+        },
+        "KNAS_RANK_LIST_WORLD_TOP": {
+            "audit": false,
+            "alias": null,
+            "skip": null
+        },
+        "KNAS_RRL_TRN": {
+            "audit": false,
+            "alias": null,
+            "skip": null
+        },
+        "KNAS_TOURNAMENT": {
+            "audit": false,
+            "alias": null,
+            "skip": null
+        },
+        "KNAS_TOURNAMENT_ATTACHMENT": {
+            "audit": false,
+            "alias": null,
+            "skip": null
+        },
+        "KNAS_TOURNAMENT_LINK": {
+            "audit": false,
+            "alias": null,
+            "skip": null
+        },
+        "KNAS_TOURNAMENT_RESULT": {
+            "audit": false,
+            "alias": null,
+            "skip": null
+        },
+        "KNAS_TOURNAMENT_SUPP": {
+            "audit": false,
+            "alias": null,
+            "skip": null
+        },
+        "KNAS_TOURNAMENT_TYPE1": {
+            "audit": false,
+            "alias": null,
+            "skip": null
+        },
+        "KNAS_TOURNAMENT_TYPE2": {
+            "audit": false,
+            "alias": null,
+            "skip": null
+        },
+        "LOG_EVENT": {
+            "audit": false,
+            "alias": null,
+            "skip": null
+        },
+        "LOG_EVENT_TYPE": {
+            "audit": false,
+            "alias": null,
+            "skip": null
+        },
+        "LOG_LOGIN": {
+            "audit": false,
+            "alias": null,
+            "skip": null
+        },
+        "LOG_REQUEST": {
+            "audit": false,
+            "alias": null,
+            "skip": null
+        },
+        "LOG_REQUEST_COOKIE": {
+            "audit": false,
+            "alias": null,
+            "skip": null
+        },
+        "LOG_REQUEST_POST": {
+            "audit": false,
+            "alias": null,
+            "skip": null
+        },
+        "LOG_REQUEST_QUERY": {
+            "audit": false,
+            "alias": null,
+            "skip": null
+        },
+        "LOG_SESSION": {
+            "audit": false,
+            "alias": null,
+            "skip": null
+        },
+        "RNK_AGE_GROUP_CROSSING": {
+            "audit": false,
+            "alias": null,
+            "skip": null
+        },
+        "RNK_COUNTRY": {
+            "audit": false,
+            "alias": null,
+            "skip": null
+        },
+        "RNK_DOCUMENT": {
+            "audit": false,
+            "alias": null,
+            "skip": null
+        },
+        "RNK_MEMBERSHIP1": {
+            "audit": false,
+            "alias": null,
+            "skip": null
+        },
+        "RNK_MEMBERSHIP3": {
+            "audit": false,
+            "alias": null,
+            "skip": null
+        },
+        "RNK_RANK_LIST": {
+            "audit": false,
+            "alias": null,
+            "skip": null
+        },
+        "RNK_RANK_LIST_GROUP": {
+            "audit": false,
+            "alias": null,
+            "skip": null
+        },
+        "RNK_RANK_LIST_PERIOD": {
+            "audit": false,
+            "alias": null,
+            "skip": null
+        },
+        "RNK_RANK_LIST_SUB_GROUP1": {
+            "audit": false,
+            "alias": null,
+            "skip": null
+        },
+        "RNK_RANK_LIST_SUB_GROUP2": {
+            "audit": false,
+            "alias": null,
+            "skip": null
+        },
+        "RNK_RANK_LIST_SUB_GROUP3": {
+            "audit": false,
+            "alias": null,
+            "skip": null
+        },
+        "RNK_RANK_LIST_SUB_GROUP4": {
+            "audit": false,
+            "alias": null,
+            "skip": null
+        },
+        "RNK_RELATION1": {
+            "audit": false,
+            "alias": null,
+            "skip": null
+        },
+        "RNK_RELATION2": {
+            "audit": false,
+            "alias": null,
+            "skip": null
+        },
+        "RNK_RELATION3": {
+            "audit": false,
+            "alias": null,
+            "skip": null
+        },
+        "RNK_SUBSYSTEM": {
+            "audit": false,
+            "alias": null,
+            "skip": null
+        },
+        "RNK_SUBSYSTEM_COMPATIBILITY": {
+            "audit": false,
+            "alias": null,
+            "skip": null
+        },
+        "RNK_SYSTEM": {
+            "audit": false,
+            "alias": null,
+            "skip": null
+        },
+        "Test_table": {
+            "audit": false,
+            "alias": null,
+            "skip": null
+        }
+    }
 }

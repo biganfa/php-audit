@@ -1,14 +1,3 @@
 {
-    "tables": {
-        "TABLE1": {
-            "audit": true,
-            "skip": null,
-            "alias": "t1"
-        },
-        "TABLE2": {
-            "audit": true,
-            "skip": null,
-            "alias": "t2"
-        }
-    }
+
 }

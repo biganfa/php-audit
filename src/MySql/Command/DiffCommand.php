@@ -281,7 +281,7 @@ class DiffCommand extends AuditCommand
   {
     foreach ($this->dataSchemaTables as $table)
     {
-      if ($this->configMetadata['tables'][$table['table_name']]['audit'])
+      if ($this->config['tables'][$table['table_name']]['audit'])
       {
         $res = StaticDataLayer::searchInRowSet('table_name', $table['table_name'], $this->auditSchemaTables);
         if (isset($res))

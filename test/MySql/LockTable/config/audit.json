@@ -7,6 +7,23 @@
         "audit_schema": "test_audit"
     },
     "metadata": "audit_metadata.json",
+    "tables": {
+        "TABLE1": {
+            "audit": true,
+            "skip": null,
+            "alias": "t1"
+        },
+        "TABLE2": {
+            "audit": false,
+            "alias": null,
+            "skip": null
+        },
+        "TABLE3": {
+            "audit": false,
+            "alias": null,
+            "skip": null
+        }
+    },
     "audit_columns": [
         {
             "column_name": "audit_statement",

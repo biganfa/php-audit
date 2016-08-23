@@ -1,11 +1,4 @@
 {
-  "tables": {
-    "TABLE1": {
-      "audit": true,
-      "skip": null,
-      "alias": "t1"
-    }
-  },
   "table_columns": {
     "TABLE1": [
       {

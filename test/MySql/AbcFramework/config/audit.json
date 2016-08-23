@@ -7,6 +7,13 @@
         "audit_schema": "test_audit"
     },
     "metadata": "audit_metadata.json",
+    "tables": {
+        "AUT_COMPANY": {
+            "audit": true,
+            "alias": "cmp",
+            "skip": null
+        }
+    },
     "audit_columns": [
         {
             "column_name": "audit_timestamp",

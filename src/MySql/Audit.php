@@ -138,19 +138,19 @@ class Audit
   {
     foreach ($this->dataSchemaTables as $table)
     {
-      if (isset($this->configMetadata['tables'][$table['table_name']]))
+      if (isset($this->config['tables'][$table['table_name']]))
       {
-        if (!isset($this->configMetadata['tables'][$table['table_name']]['audit']))
+        if (!isset($this->config['tables'][$table['table_name']]['audit']))
         {
           $this->io->writeln(sprintf('<info>audit is not set for table %s</info>', $table['table_name']));
         }
         else
         {
-          if ($this->configMetadata['tables'][$table['table_name']]['audit'])
+          if ($this->config['tables'][$table['table_name']]['audit'])
           {
-            if (!isset($this->configMetadata['tables'][$table['table_name']]['alias']))
+            if (!isset($this->config['tables'][$table['table_name']]['alias']))
             {
-              $this->configMetadata['tables'][$table['table_name']]['alias'] = AuditTable::getRandomAlias();
+              $this->config['tables'][$table['table_name']]['alias'] = AuditTable::getRandomAlias();
             }
           }
         }
@@ -158,7 +158,7 @@ class Audit
       else
       {
         $this->io->writeln(sprintf('<info>Found new table %s</info>', $table['table_name']));
-        $this->configMetadata['tables'][$table['table_name']] = ['audit' => false,
+        $this->config['tables'][$table['table_name']] = ['audit' => false,
                                                                  'alias' => null,
                                                                  'skip'  => null];
       }
@@ -212,7 +212,7 @@ class Audit
 
     foreach ($this->dataSchemaTables as $table)
     {
-      if ($this->configMetadata['tables'][$table['table_name']]['audit'])
+      if ($this->config['tables'][$table['table_name']]['audit'])
       {
         if (isset($this->configMetadata['table_columns'][$table['table_name']]))
         {
@@ -230,8 +230,8 @@ class Audit
                                        $configTable,
                                        $this->config['database']['audit_schema'],
                                        $this->auditColumnsMetadata,
-                                       $this->configMetadata['tables'][$table['table_name']]['alias'],
-                                       $this->configMetadata['tables'][$table['table_name']]['skip']);
+                                       $this->config['tables'][$table['table_name']]['alias'],
+                                       $this->config['tables'][$table['table_name']]['skip']);
 
         // Ensure an audit table exists.
         if (StaticDataLayer::searchInRowSet('table_name', $table['table_name'], $this->auditSchemaTables)===null)
