@@ -71,6 +71,25 @@ class AuditCommand extends MySqlBaseCommand
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
+   * Read tables metadata from config file.
+   */
+  protected function readMetadata()
+  {
+    if (isset($this->config['metadata']))
+    {
+      $this->configMetadataFile = dirname($this->configFileName).'/'.$this->config['metadata'];
+      $content                  = file_get_contents($this->configMetadataFile);
+
+      $this->configMetadata = (array)json_decode($content, true);
+      if (json_last_error()!=JSON_ERROR_NONE)
+      {
+        throw new RuntimeException("Error decoding JSON: '%s'.", json_last_error_msg());
+      }
+    }
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
    * Rewrites the config file with updated data.
    */
   protected function rewriteConfig()
@@ -80,25 +99,6 @@ class AuditCommand extends MySqlBaseCommand
 
     $this->writeTwoPhases($this->configFileName, json_encode($this->config, JSON_PRETTY_PRINT));
     $this->writeTwoPhases($this->configMetadataFile, json_encode($this->configMetadata, JSON_PRETTY_PRINT));
-  }
-
-  //--------------------------------------------------------------------------------------------------------------------
-  /**
-   * Read tables metadata from config file.
-   */
-  protected function readMetadata()
-  {
-    if (isset($this->config['metadata']))
-    {
-      $this->configMetadataFile = $this->config['metadata'];
-      $content                  = file_get_contents($this->configMetadataFile);
-
-      $this->configMetadata = (array)json_decode($content, true);
-      if (json_last_error()!=JSON_ERROR_NONE)
-      {
-        throw new RuntimeException("Error decoding JSON: '%s'.", json_last_error_msg());
-      }
-    }
   }
 
   //--------------------------------------------------------------------------------------------------------------------

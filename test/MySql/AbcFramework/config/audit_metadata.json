@@ -1,0 +1,9 @@
+{
+    "tables": {
+        "AUT_COMPANY": {
+            "audit": true,
+            "alias": "cmp",
+            "skip": null
+        }
+    }
+}
