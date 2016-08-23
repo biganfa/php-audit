@@ -110,8 +110,6 @@ class AuditDiff
   //--------------------------------------------------------------------------------------------------------------------
   /**
    * The main method: executes the auditing actions for tables.
-   *
-   * @return int The exit status.
    */
   public function main()
   {

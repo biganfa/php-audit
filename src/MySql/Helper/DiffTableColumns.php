@@ -52,7 +52,7 @@ class DiffTableColumns
   /**
    * Add to array all columns types.
    *
-   * @param array[] $allTypes The metadata of the column.
+   * @param array<string,object> $allTypes The metadata of the column.
    */
   private function appendColumnTypes($allTypes)
   {
