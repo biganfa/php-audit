@@ -40,7 +40,7 @@ class BaseCommand extends Command
    *
    * @var bool
    */
-  private $rewriteConfigFile = true;
+  protected $rewriteConfigFile = true;
 
   //--------------------------------------------------------------------------------------------------------------------
   /**

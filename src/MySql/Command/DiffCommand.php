@@ -6,6 +6,7 @@ use SetBased\Audit\MySql\AuditDataLayer;
 use SetBased\Audit\MySql\Helper\ColumnTypesExtended;
 use SetBased\Audit\MySql\Helper\ColumnTypesHelper;
 use SetBased\Audit\MySql\Helper\TableHelper;
+use SetBased\Audit\MySql\Metadata\TableColumnsMetadata;
 use SetBased\Audit\MySql\Table\Columns;
 use SetBased\Stratum\MySql\StaticDataLayer;
 use SetBased\Stratum\Style\StratumStyle;
@@ -23,6 +24,27 @@ use Symfony\Component\Console\Output\OutputInterface;
 class DiffCommand extends AuditCommand
 {
   //--------------------------------------------------------------------------------------------------------------------
+  /**
+   * The metadata (additional) audit columns (as stored in the config file).
+   *
+   * @var TableColumnsMetadata
+   */
+  private $auditColumnsMetadata;
+
+  /**
+   * The names of all tables in audit schema.
+   *
+   * @var array
+   */
+  private $auditSchemaTables;
+
+  /**
+   * The names of all tables in data schema.
+   *
+   * @var array
+   */
+  private $dataSchemaTables;
+
   /**
    * Array with columns for each table.
    * array [
@@ -89,6 +111,17 @@ class DiffCommand extends AuditCommand
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
+   * Getting list of all tables from information_schema of database from config file.
+   */
+  public function listOfTables()
+  {
+    $this->dataSchemaTables = AuditDataLayer::getTablesNames($this->config['database']['data_schema']);
+
+    $this->auditSchemaTables = AuditDataLayer::getTablesNames($this->config['database']['audit_schema']);
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
    * {@inheritdoc}
    */
   protected function configure()
@@ -125,16 +158,53 @@ class DiffCommand extends AuditCommand
     $this->configFileName = $input->getArgument('config file');
     $this->readConfigFile();
 
+    $this->readMetadata();
+
     $this->full = $input->getOption('full');
 
     $this->connect($this->config);
 
-    $this->auditColumnTypes();
+    $this->resolveCanonicalAuditColumns();
 
     $this->listOfTables();
 
     $this->getDiff();
     $this->printDiff($output);
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
+   * Resolves the canonical column types of the audit table columns.
+   */
+  protected function resolveCanonicalAuditColumns()
+  {
+    if (empty($this->config['audit_columns']))
+    {
+      $this->auditColumnsMetadata = new TableColumnsMetadata();
+    }
+    else
+    {
+      $schema    = $this->config['database']['audit_schema'];
+      $tableName = '_TMP_'.uniqid();
+      AuditDataLayer::createTemporaryTable($schema, $tableName, $this->config['audit_columns']);
+      $columns = AuditDataLayer::getTableColumns($schema, $tableName);
+      AuditDataLayer::dropTemporaryTable($schema, $tableName);
+
+      foreach ($this->config['audit_columns'] as $audit_column)
+      {
+        $key = StaticDataLayer::searchInRowSet('column_name', $audit_column['column_name'], $columns);
+        if (isset($audit_column['value_type']))
+        {
+          $columns[$key]['value_type'] = $audit_column['value_type'];
+        }
+        if (isset($audit_column['expression']))
+        {
+          $columns[$key]['expression'] = $audit_column['expression'];
+        }
+      }
+
+      $this->auditColumnsMetadata = new TableColumnsMetadata($columns, 'AuditColumnMetadata');
+    }
   }
 
   //--------------------------------------------------------------------------------------------------------------------
@@ -169,8 +239,8 @@ class DiffCommand extends AuditCommand
   /**
    * Get the difference between data and audit tables.
    *
-   * @param Columns $dataColumns  The table columns from data schema.
-   * @param Columns $auditColumns The table columns from audit schema.
+   * @param TableColumnsMetadata $dataColumns  The table columns from data schema.
+   * @param TableColumnsMetadata $auditColumns The table columns from audit schema.
    *
    * @return \array[]
    */
@@ -211,15 +281,15 @@ class DiffCommand extends AuditCommand
   {
     foreach ($this->dataSchemaTables as $table)
     {
-      if ($this->config['tables'][$table['table_name']]['audit'])
+      if ($this->configMetadata['tables'][$table['table_name']]['audit'])
       {
         $res = StaticDataLayer::searchInRowSet('table_name', $table['table_name'], $this->auditSchemaTables);
         if (isset($res))
         {
-          $dataColumns  = new Columns(AuditDataLayer::getTableColumns($this->config['database']['data_schema'], $table['table_name']));
+          $dataColumns  = new TableColumnsMetadata(AuditDataLayer::getTableColumns($this->config['database']['data_schema'], $table['table_name']));
           $auditColumns = AuditDataLayer::getTableColumns($this->config['database']['audit_schema'], $table['table_name']);
           $auditColumns = $this->addNotNull($auditColumns);
-          $auditColumns = new Columns($auditColumns);
+          $auditColumns = new TableColumnsMetadata($auditColumns);
 
           $this->diffColumns[$table['table_name']] = $this->createDiffArray($dataColumns, $auditColumns);
         }

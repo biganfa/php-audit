@@ -36,6 +36,13 @@ class Audit
   private $config;
 
   /**
+   * Tables metadata from config file.
+   *
+   * @var array
+   */
+  private $configMetadata;
+
+  /**
    * The names of all tables in data schema.
    *
    * @var array
@@ -60,13 +67,15 @@ class Audit
   /**
    * Object constructor.
    *
-   * @param array[]      $config The content of the configuration file.
-   * @param StratumStyle $io     The Output decorator.
+   * @param array[]      $config         The content of the configuration file.
+   * @param array[]      $configMetadata The content of the metadata file.
+   * @param StratumStyle $io             The Output decorator.
    */
-  public function __construct(&$config, $io)
+  public function __construct(&$config, &$configMetadata, $io)
   {
-    $this->config = &$config;
-    $this->io     = $io;
+    $this->config         = &$config;
+    $this->configMetadata = &$configMetadata;
+    $this->io             = $io;
   }
 
   //--------------------------------------------------------------------------------------------------------------------
@@ -90,7 +99,7 @@ class Audit
   {
     if ($this->pruneOption)
     {
-      $this->config['table_columns'] = [];
+      $this->configMetadata['table_columns'] = [];
     }
 
     $this->resolveCanonicalAuditColumns();
@@ -118,7 +127,7 @@ class Audit
     {
       $newColumns[] = $column->getProperties();
     }
-    $this->config['table_columns'][$tableName] = $newColumns;
+    $this->configMetadata['table_columns'][$tableName] = $newColumns;
   }
 
   //--------------------------------------------------------------------------------------------------------------------
@@ -129,19 +138,19 @@ class Audit
   {
     foreach ($this->dataSchemaTables as $table)
     {
-      if (isset($this->config['tables'][$table['table_name']]))
+      if (isset($this->configMetadata['tables'][$table['table_name']]))
       {
-        if (!isset($this->config['tables'][$table['table_name']]['audit']))
+        if (!isset($this->configMetadata['tables'][$table['table_name']]['audit']))
         {
           $this->io->writeln(sprintf('<info>audit is not set for table %s</info>', $table['table_name']));
         }
         else
         {
-          if ($this->config['tables'][$table['table_name']]['audit'])
+          if ($this->configMetadata['tables'][$table['table_name']]['audit'])
           {
-            if (!isset($this->config['tables'][$table['table_name']]['alias']))
+            if (!isset($this->configMetadata['tables'][$table['table_name']]['alias']))
             {
-              $this->config['tables'][$table['table_name']]['alias'] = AuditTable::getRandomAlias();
+              $this->configMetadata['tables'][$table['table_name']]['alias'] = AuditTable::getRandomAlias();
             }
           }
         }
@@ -149,9 +158,9 @@ class Audit
       else
       {
         $this->io->writeln(sprintf('<info>Found new table %s</info>', $table['table_name']));
-        $this->config['tables'][$table['table_name']] = ['audit' => false,
-                                                         'alias' => null,
-                                                         'skip'  => null];
+        $this->configMetadata['tables'][$table['table_name']] = ['audit' => false,
+                                                                 'alias' => null,
+                                                                 'skip'  => null];
       }
     }
   }
@@ -203,11 +212,11 @@ class Audit
 
     foreach ($this->dataSchemaTables as $table)
     {
-      if ($this->config['tables'][$table['table_name']]['audit'])
+      if ($this->configMetadata['tables'][$table['table_name']]['audit'])
       {
-        if (isset($this->config['table_columns'][$table['table_name']]))
+        if (isset($this->configMetadata['table_columns'][$table['table_name']]))
         {
-          $tableColumns = $this->config['table_columns'][$table['table_name']];
+          $tableColumns = $this->configMetadata['table_columns'][$table['table_name']];
         }
         else
         {
@@ -221,8 +230,8 @@ class Audit
                                        $configTable,
                                        $this->config['database']['audit_schema'],
                                        $this->auditColumnsMetadata,
-                                       $this->config['tables'][$table['table_name']]['alias'],
-                                       $this->config['tables'][$table['table_name']]['skip']);
+                                       $this->configMetadata['tables'][$table['table_name']]['alias'],
+                                       $this->configMetadata['tables'][$table['table_name']]['skip']);
 
         // Ensure an audit table exists.
         if (StaticDataLayer::searchInRowSet('table_name', $table['table_name'], $this->auditSchemaTables)===null)

@@ -4,6 +4,7 @@ namespace SetBased\Audit\MySql\Command;
 
 use SetBased\Audit\MySql\Audit;
 use SetBased\Audit\MySql\AuditDataLayer;
+use SetBased\Exception\RuntimeException;
 use SetBased\Stratum\Style\StratumStyle;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -15,6 +16,21 @@ use Symfony\Component\Console\Output\OutputInterface;
  */
 class AuditCommand extends MySqlBaseCommand
 {
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
+   * Tables metadata from config file.
+   *
+   * @var array
+   */
+  protected $configMetadata;
+
+  /**
+   * File name for config metadata.
+   *
+   * @var array
+   */
+  protected $configMetadataFile;
+
   //--------------------------------------------------------------------------------------------------------------------
   /**
    * {@inheritdoc}
@@ -37,10 +53,12 @@ class AuditCommand extends MySqlBaseCommand
     $this->configFileName = $input->getArgument('config file');
     $this->readConfigFile();
 
+    $this->readMetadata();
+
     // Create database connection with params from config file
     $this->connect($this->config);
 
-    $audit  = new Audit($this->config, $this->io);
+    $audit  = new Audit($this->config, $this->configMetadata, $this->io);
     $status = $audit->main();
 
     // Drop database connection
@@ -49,6 +67,38 @@ class AuditCommand extends MySqlBaseCommand
     $this->rewriteConfig();
 
     return $status;
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
+   * Rewrites the config file with updated data.
+   */
+  protected function rewriteConfig()
+  {
+    // Return immediately when the config file must not be rewritten.
+    if (!$this->rewriteConfigFile) return;
+
+    $this->writeTwoPhases($this->configFileName, json_encode($this->config, JSON_PRETTY_PRINT));
+    $this->writeTwoPhases($this->configMetadataFile, json_encode($this->configMetadata, JSON_PRETTY_PRINT));
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
+   * Read tables metadata from config file.
+   */
+  protected function readMetadata()
+  {
+    if (isset($this->config['metadata']))
+    {
+      $this->configMetadataFile = $this->config['metadata'];
+      $content                  = file_get_contents($this->configMetadataFile);
+
+      $this->configMetadata = (array)json_decode($content, true);
+      if (json_last_error()!=JSON_ERROR_NONE)
+      {
+        throw new RuntimeException("Error decoding JSON: '%s'.", json_last_error_msg());
+      }
+    }
   }
 
   //--------------------------------------------------------------------------------------------------------------------
