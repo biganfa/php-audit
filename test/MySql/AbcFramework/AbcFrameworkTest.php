@@ -159,9 +159,9 @@ where  `audit_statement` = 'INSERT'");
 
     // Tests on fields.
     $time = new \DateTime();
-    $this->assertLessThanOrEqual(date_format($time->add(new \DateInterval('P1M')), 'Y-m-d H:i:s'), $row['audit_timestamp']);
+    $this->assertLessThanOrEqual(date_format($time->add(new \DateInterval('PT1M')), 'Y-m-d H:i:s'), $row['audit_timestamp']);
     $time = new \DateTime();
-    $this->assertGreaterThanOrEqual(date_format($time->sub(new \DateInterval('P1M')), 'Y-m-d H:i:s'), $row['audit_timestamp']);
+    $this->assertGreaterThanOrEqual(date_format($time->sub(new \DateInterval('PT1M')), 'Y-m-d H:i:s'), $row['audit_timestamp']);
     $this->assertEquals('NEW', $row['audit_type']);
     $this->assertNotEmpty($row['audit_uuid']);
     $this->assertEquals(1, $row['audit_rownum']);
@@ -207,9 +207,9 @@ where  `audit_statement` = 'UPDATE'");
     // Tests on 'OLD' fields.
     $row  = $rows[StaticDataLayer::searchInRowSet('audit_type', 'OLD', $rows)];
     $time = new \DateTime();
-    $this->assertLessThanOrEqual(date_format($time->add(new \DateInterval('P1M')), 'Y-m-d H:i:s'), $row['audit_timestamp']);
+    $this->assertLessThanOrEqual(date_format($time->add(new \DateInterval('PT1M')), 'Y-m-d H:i:s'), $row['audit_timestamp']);
     $time = new \DateTime();
-    $this->assertGreaterThanOrEqual(date_format($time->sub(new \DateInterval('P1M')), 'Y-m-d H:i:s'), $row['audit_timestamp']);
+    $this->assertGreaterThanOrEqual(date_format($time->sub(new \DateInterval('PT1M')), 'Y-m-d H:i:s'), $row['audit_timestamp']);
     $this->assertEquals('OLD', $row['audit_type']);
     $this->assertNotEmpty($row['audit_uuid']);
     $this->assertSame('2', $row['audit_rownum']);
@@ -222,9 +222,9 @@ where  `audit_statement` = 'UPDATE'");
     // Tests on 'NEW' fields.
     $row  = $rows[StaticDataLayer::searchInRowSet('audit_type', 'NEW', $rows)];
     $time = new \DateTime();
-    $this->assertLessThanOrEqual(date_format($time->add(new \DateInterval('P1M')), 'Y-m-d H:i:s'), $row['audit_timestamp']);
+    $this->assertLessThanOrEqual(date_format($time->add(new \DateInterval('PT1M')), 'Y-m-d H:i:s'), $row['audit_timestamp']);
     $time = new \DateTime();
-    $this->assertGreaterThanOrEqual(date_format($time->sub(new \DateInterval('P1M')), 'Y-m-d H:i:s'), $row['audit_timestamp']);
+    $this->assertGreaterThanOrEqual(date_format($time->sub(new \DateInterval('PT1M')), 'Y-m-d H:i:s'), $row['audit_timestamp']);
     $this->assertEquals('NEW', $row['audit_type']);
     $this->assertNotEmpty($row['audit_uuid']);
     $this->assertSame('2', $row['audit_rownum']);
