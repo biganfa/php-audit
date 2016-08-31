@@ -2,13 +2,13 @@
 //----------------------------------------------------------------------------------------------------------------------
 namespace SetBased\Audit\MySql\Helper;
 
-use SetBased\Audit\MySQl\Table\ColumnType;
-
 //----------------------------------------------------------------------------------------------------------------------
+use SetBased\Audit\MySql\Metadata\ColumnMetadata;
+
 /**
- * Class for metadata of (table) column types.
+ * Class for extended column type.
  */
-class ColumnTypesHelper
+class ColumnMetadataExtended
 {
   //--------------------------------------------------------------------------------------------------------------------
   /**
@@ -16,14 +16,14 @@ class ColumnTypesHelper
    *
    * @var array[]
    */
-  protected $columnTypes = [];
+  private $columnTypes = [];
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
    * Object constructor.
    *
-   * @param array[]|ColumnType $columnTypes The metadata of the column.
-   * @param null|string        $typePrefix  Prefix for column type name.
+   * @param array[]|ColumnMetadata $columnTypes The metadata of the column.
+   * @param null|string            $typePrefix  Prefix for column type name.
    */
   public function __construct($columnTypes, $typePrefix)
   {
@@ -34,12 +34,12 @@ class ColumnTypesHelper
   /**
    * Create array with all columns types.
    *
-   * @param array[]|ColumnType $columnTypes The metadata of the column.
-   * @param null|string        $typePrefix  Prefix for column type name.
+   * @param array[]|ColumnMetadata $properties The metadata of the column.
+   * @param null|string            $typePrefix Prefix for column type name.
    */
-  public function extendColumnTypes($columnTypes, $typePrefix)
+  public function extendColumnTypes($properties, $typePrefix)
   {
-    $columnTypes = $columnTypes->getType();
+    $columnTypes = $properties->getProperties();
     foreach ($columnTypes as $typeName => $typeValue)
     {
       if ($typeName=='column_name')
@@ -70,7 +70,7 @@ class ColumnTypesHelper
    *
    * @return \array[]
    */
-  public function getTypes()
+  public function getExtendMetadata()
   {
     return $this->columnTypes;
   }

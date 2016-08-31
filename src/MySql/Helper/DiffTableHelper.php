@@ -10,7 +10,7 @@ use Symfony\Component\Console\Helper\TableSeparator;
 /**
  * A helper class for creating printing Tables.
  */
-class TableHelper
+class DiffTableHelper
 {
   //--------------------------------------------------------------------------------------------------------------------
   /**
@@ -147,13 +147,14 @@ class TableHelper
   /**
    * Appends rows.
    *
-   * @param \array[] $theRows Rows array.
+   * @param array[] $theRows Rows array.
    */
   public function appendRows($theRows)
   {
+    /** @var ColumnMetadataExtended $row */
     foreach ($theRows as $row)
     {
-      RowHelper::appendRow($this->rows, $row);
+      DiffTableRowHelper::appendRow($this->rows, $row);
     }
     $this->appendTableOption('engine');
     $this->appendTableOption('character_set_name', 'character set');
@@ -184,7 +185,7 @@ class TableHelper
                                  'data_column_type'   => $this->dataTableOptions[$theOption],
                                  'audit_column_type'  => $this->auditTableOptions[$theOption],
                                  'config_column_type' => null];
-      $this->rows[$theOption] = RowHelper::createTableRow($tableRow);
+      $this->rows[$theOption] = DiffTableRowHelper::createTableRow($tableRow);
     }
   }
 
