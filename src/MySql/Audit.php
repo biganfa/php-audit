@@ -243,6 +243,10 @@ class Audit
           $status += 1;
         }
       }
+      else
+      {
+
+      }
     }
 
     return $status;
