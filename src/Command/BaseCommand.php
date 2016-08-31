@@ -19,14 +19,21 @@ class BaseCommand extends Command
    *
    * @var array
    */
-  protected $config;
+  protected $config = [];
 
   /**
    * The name of the configuration file.
    *
    * @var string
    */
-  protected $configFileName;
+  protected $configFileName = '';
+
+  /**
+   * Table metadata from config file.
+   *
+   * @var array
+   */
+  protected $configMetadata = [];
 
   /**
    * The Output decorator.
@@ -40,7 +47,7 @@ class BaseCommand extends Command
    *
    * @var bool
    */
-  private $rewriteConfigFile = true;
+  protected $rewriteConfigFile = true;
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
@@ -122,6 +129,8 @@ class BaseCommand extends Command
     {
       $this->config['tables'][$table_name]['audit'] = filter_var($params['audit'], FILTER_VALIDATE_BOOLEAN);
     }
+
+    $this->readMetadata();
   }
 
   //--------------------------------------------------------------------------------------------------------------------
@@ -142,10 +151,16 @@ class BaseCommand extends Command
    */
   protected function rewriteConfig()
   {
-    // Return immediately when the config file must not be rewritten. 
+    // Return immediately when the config file must not be rewritten.
     if (!$this->rewriteConfigFile) return;
 
     $this->writeTwoPhases($this->configFileName, json_encode($this->config, JSON_PRETTY_PRINT));
+
+    $filename = $this->getTableMetadataPath();
+    if ($filename!==null)
+    {
+      $this->writeTwoPhases($filename, json_encode($this->configMetadata, JSON_PRETTY_PRINT));
+    }
   }
 
   //--------------------------------------------------------------------------------------------------------------------
@@ -182,6 +197,44 @@ class BaseCommand extends Command
     else
     {
       $this->io->text(sprintf('File <fso>%s</fso> is up to date', OutputFormatter::escape($filename)));
+    }
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
+   * Returns the path of the table metadata file.
+   *
+   * @return string|null
+   */
+  private function getTableMetadataPath()
+  {
+    if (isset($this->config['metadata']))
+    {
+      return dirname($this->configFileName).'/'.$this->config['metadata'];
+    }
+
+    return null;
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
+   * Reads table metadata from the table metadata config file (if any).
+   */
+  private function readMetadata()
+  {
+    $filename = $this->getTableMetadataPath();
+    if ($filename!==null)
+    {
+      if (file_exists($filename))
+      {
+        $content = file_get_contents($filename);
+
+        $this->configMetadata = (array)json_decode($content, true);
+        if (json_last_error()!=JSON_ERROR_NONE)
+        {
+          throw new RuntimeException("Error decoding JSON: '%s'.", json_last_error_msg());
+        }
+      }
     }
   }
 

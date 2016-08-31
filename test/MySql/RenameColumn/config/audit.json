@@ -6,6 +6,7 @@
         "data_schema": "test_data",
         "audit_schema": "test_audit"
     },
+    "metadata": "audit_metadata.json",
     "tables": {
         "TABLE1": {
             "audit": true,
@@ -18,29 +19,5 @@
     ],
     "additional_sql": [
 
-    ],
-    "table_columns": {
-        "TABLE1": [
-            {
-                "column_name": "c1",
-                "column_type": "tinyint(4)",
-                "is_nullable": "YES"
-            },
-            {
-                "column_name": "c2",
-                "column_type": "smallint(6)",
-                "is_nullable": "YES"
-            },
-            {
-                "column_name": "c3",
-                "column_type": "mediumint(9)",
-                "is_nullable": "YES"
-            },
-            {
-                "column_name": "c4",
-                "column_type": "int(11)",
-                "is_nullable": "YES"
-            }
-        ]
-    }
+    ]
 }

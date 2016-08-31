@@ -151,10 +151,12 @@ class AuditDiff
       $res = StaticDataLayer::searchInRowSet('table_name', $tableName, $this->auditSchemaTables);
       if ($table['audit'] && !isset($res))
       {
+        $this->output->writeln('<miss_table>Missing Tables:</>');
         $this->output->writeln(sprintf('<miss_table>%s</>', $tableName));
       }
       else if (!$table['audit'] && isset($res))
       {
+        $this->output->writeln('<obsolete_table>Obsolete Tables:</>');
         $this->output->writeln(sprintf('<obsolete_table>%s</>', $tableName));
       }
     }
@@ -170,7 +172,6 @@ class AuditDiff
     {
       if ($this->config['tables'][$table['table_name']]['audit'])
       {
-
         $res = StaticDataLayer::searchInRowSet('table_name', $table['table_name'], $this->auditSchemaTables);
         if (isset($res))
         {
