@@ -2,14 +2,14 @@
 //----------------------------------------------------------------------------------------------------------------------
 namespace SetBased\Audit\MySql\Helper;
 
-use SetBased\Audit\MySql\Table\Columns;
-use SetBased\Audit\MySQl\Table\ColumnType;
+use SetBased\Audit\MySql\Metadata\ColumnMetadata;
+use SetBased\Audit\MySql\Metadata\TableColumnsMetadata;
 
 //----------------------------------------------------------------------------------------------------------------------
 /**
- * A helper class for column types.
+ * Class container for all column types like audit,data and config.
  */
-class ColumnTypesExtended
+class DiffTableColumns
 {
   //--------------------------------------------------------------------------------------------------------------------
   /**
@@ -23,13 +23,13 @@ class ColumnTypesExtended
   /**
    * Object constructor
    *
-   * @param array[] $configColumns The table columns from config file.
-   * @param Columns $auditColumns  The table columns from audit schema.
-   * @param Columns $dataColumns   The table columns from data schema.
+   * @param TableColumnsMetadata $configColumns The table columns from config file.
+   * @param TableColumnsMetadata $auditColumns  The table columns from audit schema.
+   * @param TableColumnsMetadata $dataColumns   The table columns from data schema.
    */
   public function __construct($configColumns, $auditColumns, $dataColumns)
   {
-    $auditConfigTypes = new Columns($configColumns);
+    $auditConfigTypes = $configColumns;
     $auditTypes       = $auditColumns;
     $dataTypes        = $dataColumns;
     $allTypes         = ['config' => $auditConfigTypes, 'audit' => $auditTypes, 'data' => $dataTypes];
@@ -52,24 +52,25 @@ class ColumnTypesExtended
   /**
    * Add to array all columns types.
    *
-   * @param array[] $columnTypes The metadata of the column.
+   * @param array<string,object> $allTypes The metadata of the column.
    */
-  private function appendColumnTypes($columnTypes)
+  private function appendColumnTypes($allTypes)
   {
-    /** @var Columns $typesArray */
-    foreach ($columnTypes as $typePrefix => $typesArray)
+    /** @var TableColumnsMetadata $typesArray */
+    foreach ($allTypes as $typePrefix => $typesArray)
     {
       $typesArray = $typesArray->getColumns();
-      /** @var ColumnType $type */
+      /** @var ColumnMetadata $type */
       foreach ($typesArray as $type)
       {
         if (isset($this->columnTypes[$type->getProperty('column_name')]))
         {
+          /** @var ColumnMetadataExtended */
           $this->columnTypes[$type->getProperty('column_name')]->extendColumnTypes($type, $typePrefix);
         }
         else
         {
-          $this->columnTypes[$type->getProperty('column_name')] = new ColumnTypesHelper($type, $typePrefix);
+          $this->columnTypes[$type->getProperty('column_name')] = new ColumnMetadataExtended($type, $typePrefix);
         }
       }
     }
