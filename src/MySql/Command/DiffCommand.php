@@ -75,8 +75,6 @@ class DiffCommand extends AuditCommand
     $this->configFileName = $input->getArgument('config file');
     $this->readConfigFile();
 
-    $this->readMetadata();
-
     $this->connect($this->config);
 
     $diff = new AuditDiff($this->config, $this->io, $input, $output);
