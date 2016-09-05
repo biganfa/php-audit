@@ -3,6 +3,8 @@
 namespace SetBased\Audit\MySql\Helper;
 
 use SetBased\Audit\MySql\AuditDataLayer;
+use SetBased\Audit\MySql\Metadata\MultiSourceColumnMetadata;
+use SetBased\Audit\MySql\Metadata\TableColumnsMetadata;
 use SetBased\Stratum\MySql\StaticDataLayer;
 use Symfony\Component\Console\Helper\TableSeparator;
 
@@ -86,30 +88,30 @@ class DiffTableHelper
       if (is_array($column))
       {
         // Highlighting for data table column types and audit.
-        if (!empty($column['data_table_type']))
+        if (!empty($column['data']))
         {
-          if (isset($column['data_table_type']) && !isset($column['audit_table_type']))
+          if (isset($column['data']) && !isset($column['audit']))
           {
             if (!isset($column['column_name']))
             {
               $styledColumns[$key - 1]['column_name'] = sprintf('<mm_column>%s</>', $styledColumns[$key - 1]['column_name']);
             }
-            $styledColumn['column_name']     = sprintf('<mm_column>%s</>', $styledColumn['column_name']);
-            $styledColumn['data_table_type'] = sprintf('<mm_type>%s</>', $styledColumn['data_table_type']);
+            $styledColumn['column_name'] = sprintf('<mm_column>%s</>', $styledColumn['column_name']);
+            $styledColumn['data']        = sprintf('<mm_type>%s</>', $styledColumn['data']);
           }
-          else if (!isset($column['data_table_type']) && isset($column['audit_table_type']))
+          else if (!isset($column['data']) && isset($column['audit']))
           {
-            $styledColumn['audit_table_type'] = sprintf('<mm_type>%s</>', $styledColumn['audit_table_type']);
+            $styledColumn['audit'] = sprintf('<mm_type>%s</>', $styledColumn['audit']);
           }
-          else if (strcmp($column['data_table_type'], $column['audit_table_type']))
+          else if (strcmp($column['data'], $column['audit']))
           {
             if (!isset($column['column_name']))
             {
               $styledColumns[$key - 1]['column_name'] = sprintf('<mm_column>%s</>', $styledColumns[$key - 1]['column_name']);
             }
-            $styledColumn['column_name']      = sprintf('<mm_column>%s</>', $styledColumn['column_name']);
-            $styledColumn['data_table_type']  = sprintf('<mm_type>%s</>', $styledColumn['data_table_type']);
-            $styledColumn['audit_table_type'] = sprintf('<mm_type>%s</>', $styledColumn['audit_table_type']);
+            $styledColumn['column_name'] = sprintf('<mm_column>%s</>', $styledColumn['column_name']);
+            $styledColumn['data']        = sprintf('<mm_type>%s</>', $styledColumn['data']);
+            $styledColumn['audit']       = sprintf('<mm_type>%s</>', $styledColumn['audit']);
           }
         }
         else
@@ -119,20 +121,20 @@ class DiffTableHelper
           if (isset($searchColumn))
           {
             $configType = $this->auditColumns[$searchColumn]['column_type'];
-            if (isset($configType) && !isset($column['audit_table_type']))
+            if (isset($configType) && !isset($column['audit']))
             {
               $styledColumn['column_name'] = sprintf('<mm_column>%s</>', $styledColumn['column_name']);
-              $styledColumn['config_type'] = sprintf('<mm_type>%s</>', $styledColumn['config_type']);
+              $styledColumn['config']      = sprintf('<mm_type>%s</>', $styledColumn['config']);
             }
-            else if (!isset($configType) && isset($column['audit_table_type']))
+            else if (!isset($configType) && isset($column['audit']))
             {
-              $styledColumn['audit_table_type'] = sprintf('<mm_type>%s</>', $column['audit_table_type']);
+              $styledColumn['audit'] = sprintf('<mm_type>%s</>', $column['audit']);
             }
-            else if (strcmp($configType, $column['audit_table_type']))
+            else if (strcmp($configType, $column['audit']))
             {
-              $styledColumn['column_name']      = sprintf('<mm_column>%s</>', $styledColumn['column_name']);
-              $styledColumn['audit_table_type'] = sprintf('<mm_type>%s</>', $column['audit_table_type']);
-              $styledColumn['config_type']      = sprintf('<mm_type>%s</>', $styledColumn['config_type']);
+              $styledColumn['column_name'] = sprintf('<mm_column>%s</>', $styledColumn['column_name']);
+              $styledColumn['audit']       = sprintf('<mm_type>%s</>', $column['audit']);
+              $styledColumn['config']      = sprintf('<mm_type>%s</>', $styledColumn['config']);
             }
           }
         }
@@ -147,14 +149,14 @@ class DiffTableHelper
   /**
    * Appends rows.
    *
-   * @param array[] $theRows Rows array.
+   * @param TableColumnsMetadata $theRows Rows array.
    */
   public function appendRows($theRows)
   {
-    /** @var ColumnMetadataExtended $row */
-    foreach ($theRows as $row)
+    /** @var MultiSourceColumnMetadata $rowMetadata */
+    foreach ($theRows->getColumns() as $columnName => $rowMetadata)
     {
-      DiffTableRowHelper::appendRow($this->rows, $row);
+      DiffTableRowHelper::appendRow($this->rows, $rowMetadata, $columnName);
     }
     $this->appendTableOption('engine');
     $this->appendTableOption('character_set_name', 'character set');
@@ -181,11 +183,11 @@ class DiffTableHelper
       {
         $theName = $theOption;
       }
-      $tableRow               = ['column_name'        => $theName,
-                                 'data_column_type'   => $this->dataTableOptions[$theOption],
-                                 'audit_column_type'  => $this->auditTableOptions[$theOption],
-                                 'config_column_type' => null];
-      $this->rows[$theOption] = DiffTableRowHelper::createTableRow($tableRow);
+      $tableRow               = ['column_name' => $theName,
+                                 'data'        => $this->dataTableOptions[$theOption],
+                                 'audit'       => $this->auditTableOptions[$theOption],
+                                 'config'      => null];
+      $this->rows[$theOption] = $tableRow;
     }
   }
 
