@@ -4,6 +4,7 @@ namespace SetBased\Audit\MySql;
 
 use SetBased\Audit\MySql\Helper\DiffTableHelper;
 use SetBased\Audit\MySql\Metadata\TableColumnsMetadata;
+use SetBased\Exception\FallenException;
 use SetBased\Stratum\MySql\StaticDataLayer;
 use SetBased\Stratum\Style\StratumStyle;
 use Symfony\Component\Console\Formatter\OutputFormatterStyle;
@@ -38,6 +39,13 @@ class AuditDiff
    * @var array
    */
   private $config;
+
+  /**
+   * Config metadata columns.
+   *
+   * @var array
+   */
+  private $configMetadata;
 
   /**
    * The names of all tables in data schema.
@@ -94,17 +102,19 @@ class AuditDiff
   /**
    * Object constructor.
    *
-   * @param array[]         $config The content of the configuration file.
-   * @param StratumStyle    $io     The Output decorator.
+   * @param array[]         $config         The content of the configuration file.
+   * @param array[]         $configMetadata The content of the metadata file.
+   * @param StratumStyle    $io             The Output decorator.
    * @param InputInterface  $input
    * @param OutputInterface $output
    */
-  public function __construct(&$config, $io, $input, $output)
+  public function __construct(&$config, $configMetadata, $io, $input, $output)
   {
-    $this->io     = $io;
-    $this->config = &$config;
-    $this->input  = $input;
-    $this->output = $output;
+    $this->io             = $io;
+    $this->config         = &$config;
+    $this->configMetadata = $configMetadata;
+    $this->input          = $input;
+    $this->output         = $output;
   }
 
   //--------------------------------------------------------------------------------------------------------------------
@@ -146,20 +156,22 @@ class AuditDiff
    */
   private function diffTables()
   {
+    $missTables     = [];
+    $obsoleteTables = [];
     foreach ($this->config['tables'] as $tableName => $table)
     {
       $res = StaticDataLayer::searchInRowSet('table_name', $tableName, $this->auditSchemaTables);
       if ($table['audit'] && !isset($res))
       {
-        $this->output->writeln('<miss_table>Missing Tables:</>');
-        $this->output->writeln(sprintf('<miss_table>%s</>', $tableName));
+        $missTables[] = $tableName;
       }
       else if (!$table['audit'] && isset($res))
       {
-        $this->output->writeln('<obsolete_table>Obsolete Tables:</>');
-        $this->output->writeln(sprintf('<obsolete_table>%s</>', $tableName));
+        $obsoleteTables[] = $tableName;
       }
     }
+    $this->printMissObsoleteTables('missing', $missTables);
+    $this->printMissObsoleteTables('obsolete', $obsoleteTables);
   }
 
   //--------------------------------------------------------------------------------------------------------------------
@@ -178,7 +190,8 @@ class AuditDiff
           $this->diffColumns[$table['table_name']] = new AuditDiffTable($this->config['database']['data_schema'],
                                                                         $this->config['database']['audit_schema'],
                                                                         $table['table_name'],
-                                                                        $this->config['audit_columns']);
+                                                                        $this->config['audit_columns'],
+                                                                        $this->configMetadata['table_columns'][$table['table_name']]);
         }
       }
     }
@@ -244,6 +257,39 @@ class AuditDiff
         }
       }
       $this->diffTables();
+    }
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
+   * Print missing or obsolete tables;
+   *
+   * @param string  $tableType Missing or obsolete.
+   * @param array[] $tables    Table names array.
+   */
+  private function printMissObsoleteTables($tableType, $tables)
+  {
+    if ($tables)
+    {
+      switch ($tableType)
+      {
+        case 'missing':
+          $tag = 'miss_table';
+          $this->output->writeln('<miss_table>Missing Tables:</>');
+          break;
+        case 'obsolete':
+          $tag = 'obsolete_table';
+          $this->output->writeln('<obsolete_table>Obsolete Tables:</>');
+          break;
+
+        default:
+          throw new FallenException('table type', $tableType);
+          break;
+      }
+      foreach ($tables as $tableName)
+      {
+        $this->output->writeln(sprintf('<%s>%s</>', $tag, $tableName));
+      }
     }
   }
 

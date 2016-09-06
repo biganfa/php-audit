@@ -2,8 +2,8 @@
 //----------------------------------------------------------------------------------------------------------------------
 namespace SetBased\Audit\MySql\Command;
 
-use SetBased\Audit\MySql\AuditDiff;
 use SetBased\Audit\MySql\AuditDataLayer;
+use SetBased\Audit\MySql\AuditDiff;
 use SetBased\Stratum\Style\StratumStyle;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -18,21 +18,6 @@ class DiffCommand extends AuditCommand
 {
   //--------------------------------------------------------------------------------------------------------------------
   /**
-   * The names of all tables in audit schema.
-   *
-   * @var array
-   */
-  private $auditSchemaTables;
-
-  /**
-   * The names of all tables in data schema.
-   *
-   * @var array
-   */
-  private $dataSchemaTables;
-
-  //--------------------------------------------------------------------------------------------------------------------
-  /**
    * Check full full and return array without new or obsolete columns if full not set.
    *
    * @param array[] $columns The metadata of the columns of a table.
@@ -40,6 +25,22 @@ class DiffCommand extends AuditCommand
    * @var StratumStyle
    */
   protected $io;
+
+  /**
+   * The names of all tables in audit schema.
+   *
+   * @var array
+   */
+  private $auditSchemaTables;
+
+  //--------------------------------------------------------------------------------------------------------------------
+
+  /**
+   * The names of all tables in data schema.
+   *
+   * @var array
+   */
+  private $dataSchemaTables;
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
@@ -77,7 +78,7 @@ class DiffCommand extends AuditCommand
 
     $this->connect($this->config);
 
-    $diff = new AuditDiff($this->config, $this->io, $input, $output);
+    $diff = new AuditDiff($this->config, $this->configMetadata, $this->io, $input, $output);
     $diff->main();
   }
 

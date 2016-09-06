@@ -3,6 +3,7 @@
 namespace SetBased\Audit\MySql;
 
 use SetBased\Audit\MySql\Helper\DiffTableColumns;
+use SetBased\Audit\MySql\Metadata\MultiSourceColumnMetadata;
 use SetBased\Audit\MySql\Metadata\TableColumnsMetadata;
 use SetBased\Stratum\MySql\StaticDataLayer;
 
@@ -14,18 +15,18 @@ class AuditDiffTable
 {
   //--------------------------------------------------------------------------------------------------------------------
   /**
-   * Audit columns from config file
-   *
-   * @var array[]
-   */
-  private $auditColumns;
-
-  /**
    * Audit database schema.
    *
    * @var string
    */
   private $auditSchema;
+
+  /**
+   * Audit columns from config file
+   *
+   * @var array[]
+   */
+  private $configColumns;
 
   /**
    * Data database schema.
@@ -52,17 +53,18 @@ class AuditDiffTable
   /**
    * Object constructor.
    *
-   * @param string  $dataSchema   Data database schema.
-   * @param string  $auditSchema  Audit database schema.
-   * @param string  $tableName    Table name.
-   * @param array[] $auditColumns Audit columns from config file.
+   * @param string  $dataSchema         Data database schema.
+   * @param string  $auditSchema        Audit database schema.
+   * @param string  $tableName          Table name.
+   * @param array[] $configAuditColumns Audit columns from config file.
+   * @param array[] $configColumns      Data columns from config file.
    */
-  public function __construct($dataSchema, $auditSchema, $tableName, $auditColumns)
+  public function __construct($dataSchema, $auditSchema, $tableName, $configAuditColumns, $configColumns)
   {
-    $this->dataSchema   = $dataSchema;
-    $this->auditSchema  = $auditSchema;
-    $this->tableName    = $tableName;
-    $this->auditColumns = $auditColumns;
+    $this->dataSchema    = $dataSchema;
+    $this->auditSchema   = $auditSchema;
+    $this->tableName     = $tableName;
+    $this->configColumns = array_merge($configAuditColumns, $configColumns);
 
     $dataColumns  = new TableColumnsMetadata(AuditDataLayer::getTableColumns($this->dataSchema, $this->tableName));
     $auditColumns = AuditDataLayer::getTableColumns($this->auditSchema, $this->tableName);
@@ -76,50 +78,61 @@ class AuditDiffTable
   /**
    * Return diff columns.
    *
-   * @return array[]
+   * @return TableColumnsMetadata
    */
   public function getDiffColumns()
   {
-    return $this->diffColumns->getTypes();
+    return $this->diffColumns->getColumns();
   }
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
-   * Check full and return array without new or obsolete columns if full not set.   *
+   * Check full and return array without new or obsolete columns if full not set.
    *
-   * @return array[]
+   * @return DiffTableColumns
    */
   public function removeMatchingColumns()
   {
-    $cleaned = [];
-    /** @var DiffTableColumns $column */
-    foreach ($this->diffColumns as $column)
+    $metadata = $this->diffColumns->getColumns();
+    /** @var MultiSourceColumnMetadata $column */
+    foreach ($metadata->getColumns() as $columnName => $column)
     {
-      $columnsArray = $column->getTypes();
-      if (!isset($columnsArray['data_column_type']))
+      $data   = $column->getProperty('data');
+      $audit  = $column->getProperty('audit');
+      $config = $column->getProperty('config');
+
+      if (!isset($data))
       {
-        if ($columnsArray['audit_column_type']!=$columnsArray['config_column_type'])
+        if ($audit->getProperty('column_type')==$config->getProperty('column_type'))
         {
-          $cleaned[] = $column;
-        }
-      }
-      elseif (!isset($columnsArray['config_column_type']))
-      {
-        if (($columnsArray['audit_column_type']!=$columnsArray['data_column_type']) || ($columnsArray['audit_character_set_name']!=$columnsArray['data_character_set_name'] || $columnsArray['audit_collation_name']!=$columnsArray['data_collation_name']))
-        {
-          $cleaned[] = $column;
+          $metadata->removeColumn($columnName);
         }
       }
       else
       {
-        if (($columnsArray['data_column_type']!=$columnsArray['audit_column_type'] && $columnsArray['audit_column_type']!=$columnsArray['config_column_type']) || ($columnsArray['audit_column_type']!=$columnsArray['config_column_type'] && !empty($columnsArray['config_column_type'])))
+        $audit_character_set_name = $audit->getProperty('character_set_name');
+        $audit_collation_name     = $audit->getProperty('collation_name');
+
+        $data_character_set_name = $data->getProperty('character_set_name');
+        $data_collation_name     = $data->getProperty('collation_name');
+
+        $config_character_set_name = $config->getProperty('character_set_name');
+        $config_collation_name     = $config->getProperty('collation_name');
+
+        if (
+          $audit->getProperty('column_type')==$data->getProperty('column_type')
+          && $audit_character_set_name==$data_character_set_name
+          && $audit_character_set_name==$config_character_set_name
+          && $audit_collation_name==$config_collation_name
+          && $audit_collation_name==$data_collation_name
+        )
         {
-          $cleaned[] = $column;
+          $metadata->removeColumn($columnName);
         }
       }
     }
 
-    return $cleaned;
+    return $metadata;
   }
 
   //--------------------------------------------------------------------------------------------------------------------
@@ -136,7 +149,7 @@ class AuditDiffTable
     foreach ($theColumns as $column)
     {
       $modifiedColumn = $column;
-      $auditColumn    = StaticDataLayer::searchInRowSet('column_name', $modifiedColumn['column_name'], $this->auditColumns);
+      $auditColumn    = StaticDataLayer::searchInRowSet('column_name', $modifiedColumn['column_name'], $this->configColumns);
       if (isset($auditColumn))
       {
         if ($modifiedColumn['is_nullable']==='NO')
@@ -159,10 +172,8 @@ class AuditDiffTable
    */
   private function createDiffArray($dataColumns, $auditColumns)
   {
-    $configColumns = new TableColumnsMetadata($this->auditColumns);
-    $diff          = new DiffTableColumns($configColumns, $auditColumns, $dataColumns);
-
-    $this->diffColumns = $diff;
+    $configColumns     = new TableColumnsMetadata($this->configColumns);
+    $this->diffColumns = new DiffTableColumns($configColumns, $auditColumns, $dataColumns);
   }
 
   //--------------------------------------------------------------------------------------------------------------------
