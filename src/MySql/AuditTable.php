@@ -342,7 +342,7 @@ class AuditTable
    */
   private function getTriggerName($action)
   {
-    return strtolower(sprintf('trg_%s_%s', $this->alias, $action));
+    return strtolower(sprintf('trg_audit_%s_%s', $this->alias, $action));
   }
 
   //--------------------------------------------------------------------------------------------------------------------

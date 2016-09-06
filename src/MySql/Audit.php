@@ -168,11 +168,14 @@ class Audit
     $triggers = AuditDataLayer::getTableTriggers($schemaName, $tableName);
     foreach ($triggers as $trigger)
     {
-      $this->io->logInfo('Dropping trigger <dbo>%s</dbo> from obsolete table <dbo>%s</dbo>',
-                         $trigger['trigger_name'],
-                         $tableName);
+      if (preg_match('/trg_audit_.*_(insert|update|delete)/', $trigger['trigger_name']))
+      {
+        $this->io->logInfo('Dropping trigger <dbo>%s</dbo> from obsolete table <dbo>%s</dbo>',
+                           $trigger['trigger_name'],
+                           $tableName);
 
-      AuditDataLayer::dropTrigger($schemaName, $trigger['trigger_name']);
+        AuditDataLayer::dropTrigger($schemaName, $trigger['trigger_name']);
+      }
     }
   }
 

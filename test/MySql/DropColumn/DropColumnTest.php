@@ -41,9 +41,9 @@ class DropColumnTest extends AuditTestCase
 
     // TABLE1 MUST have triggers.
     $triggers = $this->getTableTriggers('TABLE1');
-    $this->assertNotNull(StaticDataLayer::searchInRowSet('trigger_name', 'trg_t1_insert', $triggers));
-    $this->assertNotNull(StaticDataLayer::searchInRowSet('trigger_name', 'trg_t1_update', $triggers));
-    $this->assertNotNull(StaticDataLayer::searchInRowSet('trigger_name', 'trg_t1_delete', $triggers));
+    $this->assertNotNull(StaticDataLayer::searchInRowSet('trigger_name', 'trg_audit_t1_insert', $triggers));
+    $this->assertNotNull(StaticDataLayer::searchInRowSet('trigger_name', 'trg_audit_t1_update', $triggers));
+    $this->assertNotNull(StaticDataLayer::searchInRowSet('trigger_name', 'trg_audit_t1_delete', $triggers));
 
     $actual = $this->getTableColumns(self::$auditSchema, 'TABLE1');
 
@@ -91,9 +91,9 @@ class DropColumnTest extends AuditTestCase
 
     // TABLE1 MUST have triggers.
     $triggers = $this->getTableTriggers('TABLE1');
-    $this->assertNotNull(StaticDataLayer::searchInRowSet('trigger_name', 'trg_t1_insert', $triggers));
-    $this->assertNotNull(StaticDataLayer::searchInRowSet('trigger_name', 'trg_t1_update', $triggers));
-    $this->assertNotNull(StaticDataLayer::searchInRowSet('trigger_name', 'trg_t1_delete', $triggers));
+    $this->assertNotNull(StaticDataLayer::searchInRowSet('trigger_name', 'trg_audit_t1_insert', $triggers));
+    $this->assertNotNull(StaticDataLayer::searchInRowSet('trigger_name', 'trg_audit_t1_update', $triggers));
+    $this->assertNotNull(StaticDataLayer::searchInRowSet('trigger_name', 'trg_audit_t1_delete', $triggers));
 
     // TABLE1 must have column c3.
     $actual = $this->getTableColumns(self::$auditSchema, 'TABLE1');
