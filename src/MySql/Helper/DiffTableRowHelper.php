@@ -111,7 +111,7 @@ class DiffTableRowHelper
     $columnProperties = $rowMetadata->getProperties();
     foreach ($rowMetadata->getProperties() as $sourceName => $metadata)
     {
-      $data = isset($columnProperties['data']) ? $columnProperties['data']->getProperties() : null;
+      $data = isset($columnProperties[$sourceName]) ? $columnProperties[$sourceName]->getProperties() : null;
       if (isset($data['character_set_name']) || isset($data['collation_name']))
       {
         return true;
