@@ -41,9 +41,9 @@ class NewTableTest extends AuditTestCase
 
     // TABLE1 MUST have triggers.
     $triggers = $this->getTableTriggers('TABLE1');
-    $this->assertNotNull(StaticDataLayer::searchInRowSet('trigger_name', 'trg_t1_insert', $triggers));
-    $this->assertNotNull(StaticDataLayer::searchInRowSet('trigger_name', 'trg_t1_update', $triggers));
-    $this->assertNotNull(StaticDataLayer::searchInRowSet('trigger_name', 'trg_t1_delete', $triggers));
+    $this->assertNotNull(StaticDataLayer::searchInRowSet('trigger_name', 'trg_audit_t1_insert', $triggers));
+    $this->assertNotNull(StaticDataLayer::searchInRowSet('trigger_name', 'trg_audit_t1_update', $triggers));
+    $this->assertNotNull(StaticDataLayer::searchInRowSet('trigger_name', 'trg_audit_t1_delete', $triggers));
 
     // Create new table TABLE2.
     StaticDataLayer::multiQuery(file_get_contents(__DIR__.'/config/create_new_table.sql'));
@@ -57,13 +57,13 @@ class NewTableTest extends AuditTestCase
 
     // TABLE1 and TABLE2 MUST have triggers.
     $triggers = $this->getTableTriggers('TABLE1');
-    $this->assertNotNull(StaticDataLayer::searchInRowSet('trigger_name', 'trg_t1_insert', $triggers));
-    $this->assertNotNull(StaticDataLayer::searchInRowSet('trigger_name', 'trg_t1_update', $triggers));
-    $this->assertNotNull(StaticDataLayer::searchInRowSet('trigger_name', 'trg_t1_delete', $triggers));
+    $this->assertNotNull(StaticDataLayer::searchInRowSet('trigger_name', 'trg_audit_t1_insert', $triggers));
+    $this->assertNotNull(StaticDataLayer::searchInRowSet('trigger_name', 'trg_audit_t1_update', $triggers));
+    $this->assertNotNull(StaticDataLayer::searchInRowSet('trigger_name', 'trg_audit_t1_delete', $triggers));
     $triggers = $this->getTableTriggers('TABLE2');
-    $this->assertNotNull(StaticDataLayer::searchInRowSet('trigger_name', 'trg_t2_insert', $triggers));
-    $this->assertNotNull(StaticDataLayer::searchInRowSet('trigger_name', 'trg_t2_update', $triggers));
-    $this->assertNotNull(StaticDataLayer::searchInRowSet('trigger_name', 'trg_t2_delete', $triggers));
+    $this->assertNotNull(StaticDataLayer::searchInRowSet('trigger_name', 'trg_audit_t2_insert', $triggers));
+    $this->assertNotNull(StaticDataLayer::searchInRowSet('trigger_name', 'trg_audit_t2_update', $triggers));
+    $this->assertNotNull(StaticDataLayer::searchInRowSet('trigger_name', 'trg_audit_t2_delete', $triggers));
   }
 
   //--------------------------------------------------------------------------------------------------------------------
