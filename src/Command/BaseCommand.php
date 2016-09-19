@@ -125,11 +125,6 @@ class BaseCommand extends Command
       $this->config['tables'] = [];
     }
 
-    foreach ($this->config['tables'] as $table_name => $params)
-    {
-      $this->config['tables'][$table_name]['audit'] = filter_var($params['audit'], FILTER_VALIDATE_BOOLEAN);
-    }
-
     $this->readMetadata();
   }
 
