@@ -22,6 +22,8 @@ class DropTriggersCommand extends MySqlBaseCommand
   {
     $this->setName('drop-triggers')
          ->setDescription('Drops all triggers')
+         ->setHelp('Drops all triggers (including triggers not created by audit) from all tables (including tables '.
+                   'excluded for auditing) in the data schema.')
          ->addArgument('config file', InputArgument::REQUIRED, 'The audit configuration file');
   }
 
