@@ -22,7 +22,7 @@ class LockTableTestCase extends AuditTestCase
   public static function setUpBeforeClass()
   {
     parent::setUpBeforeClass();
-    
+
     StaticDataLayer::multiQuery(file_get_contents(__DIR__.'/config/setup.sql'));
   }
 

@@ -13,7 +13,7 @@ class LockTableInnodbTest extends LockTableTestCase
   //--------------------------------------------------------------------------------------------------------------------
   /**
    * {@inheritdoc}
-   * 
+   *
    */
   public static function setUpBeforeClass()
   {

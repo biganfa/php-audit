@@ -2,8 +2,8 @@
 //----------------------------------------------------------------------------------------------------------------------
 namespace SetBased\Audit\Test\MySql\TableOptions;
 
-use SetBased\Audit\MySql\Command\AuditCommand;
 use SetBased\Audit\MySql\AuditDataLayer;
+use SetBased\Audit\MySql\Command\AuditCommand;
 use SetBased\Audit\Test\MySql\AuditTestCase;
 use SetBased\Stratum\MySql\StaticDataLayer;
 use Symfony\Component\Console\Application;
@@ -47,15 +47,15 @@ class TableOptionsTest extends AuditTestCase
     // Reconnect to DB.
     AuditDataLayer::connect('localhost', 'test', 'test', self::$dataSchema);
 
-    $table1_data = AuditDataLayer::getTableOptions('test_data', 'TABLE1');
+    $table1_data  = AuditDataLayer::getTableOptions('test_data', 'TABLE1');
     $table1_audit = AuditDataLayer::getTableOptions('test_audit', 'TABLE1');
     $this->assertEquals($table1_data, $table1_audit, 'TABLE1');
 
-    $table1_data = AuditDataLayer::getTableOptions('test_data', 'TABLE2');
+    $table1_data  = AuditDataLayer::getTableOptions('test_data', 'TABLE2');
     $table1_audit = AuditDataLayer::getTableOptions('test_audit', 'TABLE2');
     $this->assertEquals($table1_data, $table1_audit, 'TABLE2');
 
-    $table1_data = AuditDataLayer::getTableOptions('test_data', 'TABLE3');
+    $table1_data  = AuditDataLayer::getTableOptions('test_data', 'TABLE3');
     $table1_audit = AuditDataLayer::getTableOptions('test_audit', 'TABLE3');
     $this->assertEquals($table1_data, $table1_audit, 'TABLE3');
   }

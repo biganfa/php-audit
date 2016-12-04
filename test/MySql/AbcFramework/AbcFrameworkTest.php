@@ -26,18 +26,6 @@ class AbcFrameworkTest extends AuditTestCase
   }
 
   //--------------------------------------------------------------------------------------------------------------------
-  protected function setUp()
-  {
-    // Don't disconnect and connect to the database.
-  }
-
-  //--------------------------------------------------------------------------------------------------------------------
-  protected function tearDown()
-  {
-    // Don't disconnect and connect to the database.
-  }
-
-  //--------------------------------------------------------------------------------------------------------------------
   /**
    * Test audit table is created correctly.
    */
@@ -293,6 +281,18 @@ from   `test_audit`.`AUT_COMPANY`");
 
     // We expect 4 rows: 1 insert, 2 update, and 1 delete.
     $this->assertEquals(4, count($rows));
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  protected function setUp()
+  {
+    // Don't disconnect and connect to the database.
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  protected function tearDown()
+  {
+    // Don't disconnect and connect to the database.
   }
 
   //--------------------------------------------------------------------------------------------------------------------

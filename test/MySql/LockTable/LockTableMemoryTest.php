@@ -13,7 +13,7 @@ class LockTableMemoryTest extends LockTableTestCase
   //--------------------------------------------------------------------------------------------------------------------
   /**
    * {@inheritdoc}
-   * 
+   *
    */
   public static function setUpBeforeClass()
   {

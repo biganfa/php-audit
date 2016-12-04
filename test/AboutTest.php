@@ -16,9 +16,9 @@ class AboutTest extends \PHPUnit_Framework_TestCase
   {
     $application = new AuditApplication();
 
-    $command = $application->find('about');
+    $command       = $application->find('about');
     $commandTester = new CommandTester($command);
-    $commandTester->execute(['command'     => $command->getName()]);
+    $commandTester->execute(['command' => $command->getName()]);
 
     $this->assertSame(0, $commandTester->getStatusCode());
   }
