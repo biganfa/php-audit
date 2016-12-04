@@ -69,6 +69,7 @@ class ConfigCommand extends BaseCommand
       case 'database':
         $this->setDatabasePart($input, $output, $configPart);
         break;
+
       case 'tables':
         foreach ($this->config[$configPart] as $tableName => $tableData)
         {

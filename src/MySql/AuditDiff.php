@@ -277,6 +277,7 @@ class AuditDiff
           $tag = 'miss_table';
           $this->output->writeln('<miss_table>Missing Tables:</>');
           break;
+
         case 'obsolete':
           $tag = 'obsolete_table';
           $this->output->writeln('<obsolete_table>Obsolete Tables:</>');

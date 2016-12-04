@@ -159,8 +159,8 @@ class Audit
       {
         $this->io->writeln(sprintf('<info>Found new table %s</info>', $table['table_name']));
         $this->config['tables'][$table['table_name']] = ['audit' => false,
-                                                                 'alias' => null,
-                                                                 'skip'  => null];
+                                                         'alias' => null,
+                                                         'skip'  => null];
       }
     }
   }
