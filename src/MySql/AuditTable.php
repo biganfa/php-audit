@@ -134,7 +134,7 @@ class AuditTable
     $this->lockTable($this->configTable->getTableName());
 
     // Drop all triggers, if any.
-    $this->dropTriggers($this->configTable->getSchemaName(), $this->configTable->getTableName());
+    $this->dropAuditTriggers($this->configTable->getSchemaName(), $this->configTable->getTableName());
 
     // Create or recreate the audit triggers.
     $this->createTableTrigger('INSERT', $this->skipVariable, $additionalSql);
@@ -143,6 +143,30 @@ class AuditTable
 
     // Insert, updates, and deletes are no audited again. So, release lock on the table.
     $this->unlockTables();
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
+   * Drops all audit triggers from this table.
+   *
+   * @param string $schemaName The name of the table schema.
+   * @param string $tableName  The name of the table.
+   */
+  public function dropAuditTriggers($schemaName, $tableName)
+  {
+    $triggers = AuditDataLayer::getTableTriggers($schemaName, $tableName);
+    foreach ($triggers as $trigger)
+    {
+      if (preg_match('/^trg_audit_.*_(insert|update|delete)$/', $trigger['trigger_name']))
+      {
+        $this->io->logVerbose('Dropping trigger <dbo>%s</dbo> on <dbo>%s.%s</dbo>',
+                              $trigger['trigger_name'],
+                              $schemaName,
+                              $tableName);
+
+        AuditDataLayer::dropTrigger($schemaName, $trigger['trigger_name']);
+      }
+    }
   }
 
   //--------------------------------------------------------------------------------------------------------------------
@@ -250,27 +274,6 @@ class AuditTable
                                        $this->dataTableColumnsDatabase,
                                        $skipVariable,
                                        $additionSql);
-  }
-
-  //--------------------------------------------------------------------------------------------------------------------
-  /**
-   * Drops all triggers from this table.
-   *
-   * @param string $schemaName The name of the table schema.
-   * @param string $tableName  The name of the table.
-   */
-  private function dropTriggers($schemaName, $tableName)
-  {
-    $triggers = AuditDataLayer::getTableTriggers($schemaName, $tableName);
-    foreach ($triggers as $trigger)
-    {
-      $this->io->logVerbose('Dropping trigger <dbo>%s</dbo> on <dbo>%s.%s</dbo>',
-                            $trigger['trigger_name'],
-                            $schemaName,
-                            $tableName);
-
-      AuditDataLayer::dropTrigger($schemaName, $trigger['trigger_name']);
-    }
   }
 
   //--------------------------------------------------------------------------------------------------------------------
