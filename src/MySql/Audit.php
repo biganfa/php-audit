@@ -167,6 +167,29 @@ class Audit
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
+   * Drop triggers from obsolete table.
+   *
+   * @param string $schemaName The schema name.
+   * @param string $tableName  The table name.
+   */
+  protected function dropTriggersFromObsoleteTable($schemaName, $tableName)
+  {
+    $triggers = AuditDataLayer::getTableTriggers($schemaName, $tableName);
+    foreach ($triggers as $trigger)
+    {
+      if (preg_match('/trg_audit_.*_(insert|update|delete)/', $trigger['trigger_name']))
+      {
+        $this->io->logInfo('Dropping trigger <dbo>%s</dbo> from obsolete table <dbo>%s</dbo>',
+                           $trigger['trigger_name'],
+                           $tableName);
+
+        AuditDataLayer::dropTrigger($schemaName, $trigger['trigger_name']);
+      }
+    }
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
    * Resolves the canonical column types of the audit table columns.
    */
   protected function resolveCanonicalAuditColumns()
@@ -251,6 +274,10 @@ class Audit
         {
           $status += 1;
         }
+      }
+      else
+      {
+        $this->dropTriggersFromObsoleteTable($this->config['database']['data_schema'], $table['table_name']);
       }
     }
 
