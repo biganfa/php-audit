@@ -269,7 +269,7 @@ class AuditDiff
    */
   private function printMissObsoleteTables($tableType, $tables)
   {
-    if ($tables)
+    if (!empty($tables))
     {
       switch ($tableType)
       {
@@ -285,8 +285,8 @@ class AuditDiff
 
         default:
           throw new FallenException('table type', $tableType);
-          break;
       }
+
       foreach ($tables as $tableName)
       {
         $this->output->writeln(sprintf('<%s>%s</>', $tag, $tableName));
