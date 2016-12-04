@@ -99,7 +99,7 @@ class Audit
   {
     if ($this->pruneOption)
     {
-      $this->configMetadata['table_columns'] = [];
+      $this->configMetadata = [];
     }
 
     $this->resolveCanonicalAuditColumns();
@@ -127,7 +127,7 @@ class Audit
     {
       $newColumns[] = $column->getProperties();
     }
-    $this->configMetadata['table_columns'][$tableName] = $newColumns;
+    $this->configMetadata[$tableName] = $newColumns;
   }
 
   //--------------------------------------------------------------------------------------------------------------------
@@ -237,9 +237,9 @@ class Audit
     {
       if ($this->config['tables'][$table['table_name']]['audit'])
       {
-        if (isset($this->configMetadata['table_columns'][$table['table_name']]))
+        if (isset($this->configMetadata[$table['table_name']]))
         {
-          $tableColumns = $this->configMetadata['table_columns'][$table['table_name']];
+          $tableColumns = $this->configMetadata[$table['table_name']];
         }
         else
         {
