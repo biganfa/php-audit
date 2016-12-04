@@ -142,6 +142,7 @@ class Audit
       {
         if (!isset($this->config['tables'][$table['table_name']]['audit']))
         {
+          $this->io->writeln(sprintf('<info>Found new table %s</info>', $table['table_name']));
           $this->io->writeln(sprintf('<info>audit is not set for table %s</info>', $table['table_name']));
         }
         else
