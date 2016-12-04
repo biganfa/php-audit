@@ -2,12 +2,11 @@
 //----------------------------------------------------------------------------------------------------------------------
 namespace SetBased\Audit\MySql\Helper;
 
-use SetBased\Audit\MySql\Metadata\ColumnMetadata;
 use SetBased\Audit\MySql\Metadata\TableColumnsMetadata;
 
 //----------------------------------------------------------------------------------------------------------------------
 /**
- * Class container for all column types like audit,data and config.
+ * Class container for multi source column types.
  */
 class DiffTableColumns
 {
@@ -15,9 +14,9 @@ class DiffTableColumns
   /**
    * Contains all column types from audit and data schemas.
    *
-   * @var array[]
+   * @var TableColumnsMetadata
    */
-  private $columnTypes = [];
+  private $multiSourceColumns = [];
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
@@ -29,51 +28,58 @@ class DiffTableColumns
    */
   public function __construct($configColumns, $auditColumns, $dataColumns)
   {
-    $auditConfigTypes = $configColumns;
-    $auditTypes       = $auditColumns;
-    $dataTypes        = $dataColumns;
-    $allTypes         = ['config' => $auditConfigTypes, 'audit' => $auditTypes, 'data' => $dataTypes];
-
-    $this->appendColumnTypes($allTypes);
+    $this->appendColumnTypes(['config' => $configColumns, 'audit' => $auditColumns, 'data' => $dataColumns]);
   }
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
    * Get columns types.
    *
-   * @return array[]
+   * @return TableColumnsMetadata
    */
-  public function getTypes()
+  public function getColumns()
   {
-    return $this->columnTypes;
+    return $this->multiSourceColumns;
   }
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
    * Add to array all columns types.
    *
-   * @param array<string,object> $allTypes The metadata of the column.
+   * @param TableColumnsMetadata[] $allTypes The metadata of the column.
    */
   private function appendColumnTypes($allTypes)
   {
-    /** @var TableColumnsMetadata $typesArray */
-    foreach ($allTypes as $typePrefix => $typesArray)
+    $allColumnNames = [];
+
+    foreach ($allTypes as $source => $columns)
     {
-      $typesArray = $typesArray->getColumns();
-      /** @var ColumnMetadata $type */
-      foreach ($typesArray as $type)
+      $data = array_keys($allTypes[$source]->getColumns());
+      foreach ($data as $columnName)
       {
-        if (isset($this->columnTypes[$type->getProperty('column_name')]))
+        if (!isset($allColumnNames[$columnName]))
         {
-          /** @var ColumnMetadataExtended */
-          $this->columnTypes[$type->getProperty('column_name')]->extendColumnTypes($type, $typePrefix);
-        }
-        else
-        {
-          $this->columnTypes[$type->getProperty('column_name')] = new ColumnMetadataExtended($type, $typePrefix);
+          $allColumnNames[$columnName] = $columnName;
         }
       }
     }
+
+    $multiSourceColumns = [];
+    foreach ($allColumnNames as $columnName => $columnData)
+    {
+      $multiSourceColumn = [];
+      foreach ($allTypes as $typePrefix => $typesArray)
+      {
+        $columns = $typesArray->getColumns();
+        if (isset($columns[$columnName]))
+        {
+          $multiSourceColumn['column_name'] = $columnName;
+          $multiSourceColumn[$typePrefix]   = $columns[$columnName];
+        }
+      }
+      $multiSourceColumns[$columnName] = $multiSourceColumn;
+    }
+    $this->multiSourceColumns = new TableColumnsMetadata($multiSourceColumns, 'MultiSourceColumnMetadata');
   }
 
   //--------------------------------------------------------------------------------------------------------------------

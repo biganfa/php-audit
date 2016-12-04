@@ -2,9 +2,11 @@
 //----------------------------------------------------------------------------------------------------------------------
 namespace SetBased\Audit\MySql\Helper;
 
+use SetBased\Audit\MySql\Metadata\MultiSourceColumnMetadata;
+
 //----------------------------------------------------------------------------------------------------------------------
 /**
- * A helper class for DiffTable.
+ * A helper class for DiffTable rows.
  */
 class DiffTableRowHelper
 {
@@ -12,16 +14,16 @@ class DiffTableRowHelper
   /**
    * Append a row.
    *
-   * @param \array[]               $theExistRows Exist rows array for appending.
-   * @param ColumnMetadataExtended $theRow       Row for append.
+   * @param \array[]                  $theExistRows Exist rows array for appending.
+   * @param MultiSourceColumnMetadata $rowMetadata  Row for append.
+   * @param string                    $columnName   The columns name.
    */
-  public static function appendRow(&$theExistRows, $theRow)
+  public static function appendRow(&$theExistRows, $rowMetadata, $columnName)
   {
-    $theRow         = $theRow->getExtendMetadata();
-    $theExistRows[] = self::createTableRow($theRow);
-    if (self::checkOptions($theRow))
+    $theExistRows[] = self::createTableRow($rowMetadata, $columnName);
+    if (self::checkOptions($rowMetadata))
     {
-      $theRow = self::createColumnOptionsRow($theRow);
+      $theRow = self::createColumnOptionsRow($rowMetadata);
 
       $theExistRows[] = $theRow;
     }
@@ -31,42 +33,52 @@ class DiffTableRowHelper
   /**
    * Create table row.
    *
-   * @param array[] $theRow Data for table row.
+   * @param MultiSourceColumnMetadata $rowMetadata Data for table row.
    *
    * @return array<string,null|string>
    */
-  public static function createColumnOptionsRow($theRow)
+  public static function createColumnOptionsRow($rowMetadata)
   {
-    $dataCharsetName   = isset($theRow['data_character_set_name']) ? $theRow['data_character_set_name'] : null;
-    $dataCollationName = isset($theRow['data_collation_name']) ? $theRow['data_collation_name'] : null;
+    $columnProperties = $rowMetadata->getProperties();
+    $dataMetadata     = isset($columnProperties['data']) ? $columnProperties['data']->getProperties() : null;
+    $auditMetadata    = isset($columnProperties['audit']) ? $columnProperties['audit']->getProperties() : null;
+    $configMetadata   = isset($columnProperties['config']) ? $columnProperties['config']->getProperties() : null;
 
-    $auditCharsetName   = isset($theRow['audit_character_set_name']) ? $theRow['audit_character_set_name'] : null;
-    $auditCollationName = isset($theRow['audit_collation_name']) ? $theRow['audit_collation_name'] : null;
+    $dataCharsetName   = isset($dataMetadata['character_set_name']) ? $dataMetadata['character_set_name'] : null;
+    $dataCollationName = isset($dataMetadata['collation_name']) ? $dataMetadata['collation_name'] : null;
 
-    $tableRow = ['column_name'      => null,
-                 'data_table_type'  => self::styledOptionsRow($dataCharsetName, $dataCollationName),
-                 'audit_table_type' => self::styledOptionsRow($auditCharsetName, $auditCollationName),
-                 'config_type'      => null];
+    $auditCharsetName   = isset($auditMetadata['character_set_name']) ? $auditMetadata['character_set_name'] : null;
+    $auditCollationName = isset($auditMetadata['collation_name']) ? $auditMetadata['collation_name'] : null;
 
-    return $tableRow;
+    $configCharsetName   = isset($configMetadata['character_set_name']) ? $configMetadata['character_set_name'] : null;
+    $configCollationName = isset($configMetadata['collation_name']) ? $configMetadata['collation_name'] : null;
+
+    return ['column_name' => null,
+            'data'        => self::styledOptionsRow($dataCharsetName, $dataCollationName),
+            'audit'       => self::styledOptionsRow($auditCharsetName, $auditCollationName),
+            'config'      => self::styledOptionsRow($configCharsetName, $configCollationName)];
   }
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
    * Create table row.
    *
-   * @param array[] $theRow Data for table row.
+   * @param MultiSourceColumnMetadata $rowMetadata Data for table row.
+   * @param string                    $columnName  The columns name.
    *
    * @return array<string,null|string>
    */
-  public static function createTableRow($theRow)
+  public static function createTableRow($rowMetadata, $columnName)
   {
-    $tableRow = ['column_name'      => isset($theRow['column_name']) ? $theRow['column_name'] : null,
-                 'data_table_type'  => isset($theRow['data_column_type']) ? $theRow['data_column_type'] : null,
-                 'audit_table_type' => isset($theRow['audit_column_type']) ? $theRow['audit_column_type'] : null,
-                 'config_type'      => isset($theRow['config_column_type']) ? $theRow['config_column_type'] : null];
+    $columnProperties = $rowMetadata->getProperties();
+    $dataMetadata     = isset($columnProperties['data']) ? $columnProperties['data']->getProperties() : null;
+    $auditMetadata    = isset($columnProperties['audit']) ? $columnProperties['audit']->getProperties() : null;
+    $configMetadata   = isset($columnProperties['config']) ? $columnProperties['config']->getProperties() : null;
 
-    return $tableRow;
+    return ['column_name' => $columnName,
+            'data'        => isset($dataMetadata['column_type']) ? $dataMetadata['column_type'] : null,
+            'audit'       => isset($auditMetadata['column_type']) ? $auditMetadata['column_type'] : null,
+            'config'      => isset($configMetadata['column_type']) ? $configMetadata['column_type'] : null];
   }
 
   //--------------------------------------------------------------------------------------------------------------------
@@ -90,27 +102,20 @@ class DiffTableRowHelper
   /**
    * Check isset options(collation, character set name) from row.
    *
-   * @param array[] $theRow Row for append.
+   * @param MultiSourceColumnMetadata $rowMetadata Row for append.
    *
    * @return bool
    */
-  private static function checkOptions($theRow)
+  private static function checkOptions($rowMetadata)
   {
-    if (isset($theRow['audit_character_set_name']))
+    $columnProperties = $rowMetadata->getProperties();
+    foreach ($rowMetadata->getProperties() as $sourceName => $metadata)
     {
-      return true;
-    }
-    if (isset($theRow['data_character_set_name']))
-    {
-      return true;
-    }
-    if (isset($theRow['audit_collation_name']))
-    {
-      return true;
-    }
-    if (isset($theRow['data_collation_name']))
-    {
-      return true;
+      $data = isset($columnProperties[$sourceName]) ? $columnProperties[$sourceName]->getProperties() : null;
+      if (isset($data['character_set_name']) || isset($data['collation_name']))
+      {
+        return true;
+      }
     }
 
     return false;

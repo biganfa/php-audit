@@ -118,7 +118,7 @@ class TableColumnsMetadata
    * @param string $type   The type of the metadata.
    * @param array  $column The metadata of the column
    *
-   * @return AlterColumnMetadata|AuditColumnMetadata|ColumnMetadata
+   * @return MultiSourceColumnMetadata|AlterColumnMetadata|AuditColumnMetadata|ColumnMetadata
    */
   private static function columnFactory($type, $column)
   {
@@ -132,6 +132,9 @@ class TableColumnsMetadata
 
       case 'AuditColumnMetadata':
         return new AuditColumnMetadata($column);
+
+      case 'MultiSourceColumnMetadata':
+        return new MultiSourceColumnMetadata($column);
 
       default:
         throw new FallenException('type', $type);
@@ -202,6 +205,17 @@ class TableColumnsMetadata
     {
       $column->makeNullable();
     }
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
+   * Remove column.
+   *
+   * @param string $columnName The columns name.
+   */
+  public function removeColumn($columnName)
+  {
+    unset($this->columns[$columnName]);
   }
 
   //--------------------------------------------------------------------------------------------------------------------
