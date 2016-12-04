@@ -1,5 +1,4 @@
 {
-  "table_columns": {
     "TABLE1": [
       {
         "column_name": "c1",
@@ -22,5 +21,4 @@
         "is_nullable": "YES"
       }
     ]
-  }
 }

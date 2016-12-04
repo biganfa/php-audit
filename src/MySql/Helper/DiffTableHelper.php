@@ -137,6 +137,16 @@ class DiffTableHelper
               $styledColumn['config']      = sprintf('<mm_type>%s</>', $styledColumn['config']);
             }
           }
+          else
+          {
+            if (strcmp($styledColumn['audit'], $styledColumn['config']))
+            {
+              $styledColumns[$key - 1]['column_name'] = sprintf('<mm_column>%s</>', $styledColumns[$key - 1]['column_name']);
+              $styledColumn['column_name'] = sprintf('<mm_column>%s</>', $styledColumn['column_name']);
+              $styledColumn['audit']       = sprintf('<mm_type>%s</>', $column['audit']);
+              $styledColumn['config']      = sprintf('<mm_type>%s</>', $styledColumn['config']);
+            }
+          }
         }
       }
       $styledColumns[] = $styledColumn;

@@ -134,7 +134,7 @@ class AuditTable
     $this->lockTable($this->configTable->getTableName());
 
     // Drop all triggers, if any.
-    $this->dropTriggers();
+    $this->dropTriggers($this->configTable->getSchemaName(), $this->configTable->getTableName());
 
     // Create or recreate the audit triggers.
     $this->createTableTrigger('INSERT', $this->skipVariable, $additionalSql);
@@ -255,18 +255,21 @@ class AuditTable
   //--------------------------------------------------------------------------------------------------------------------
   /**
    * Drops all triggers from this table.
+   *
+   * @param string $schemaName The name of the table schema.
+   * @param string $tableName  The name of the table.
    */
-  private function dropTriggers()
+  private function dropTriggers($schemaName, $tableName)
   {
-    $triggers = AuditDataLayer::getTableTriggers($this->configTable->getSchemaName(), $this->configTable->getTableName());
+    $triggers = AuditDataLayer::getTableTriggers($schemaName, $tableName);
     foreach ($triggers as $trigger)
     {
       $this->io->logVerbose('Dropping trigger <dbo>%s</dbo> on <dbo>%s.%s</dbo>',
                             $trigger['trigger_name'],
-                            $this->configTable->getSchemaName(),
-                            $this->configTable->getTableName());
+                            $schemaName,
+                            $tableName);
 
-      AuditDataLayer::dropTrigger($this->configTable->getSchemaName(), $trigger['trigger_name']);
+      AuditDataLayer::dropTrigger($schemaName, $trigger['trigger_name']);
     }
   }
 
@@ -339,7 +342,7 @@ class AuditTable
    */
   private function getTriggerName($action)
   {
-    return strtolower(sprintf('trg_%s_%s', $this->alias, $action));
+    return strtolower(sprintf('trg_audit_%s_%s', $this->alias, $action));
   }
 
   //--------------------------------------------------------------------------------------------------------------------

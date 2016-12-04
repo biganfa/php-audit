@@ -99,7 +99,7 @@ class Audit
   {
     if ($this->pruneOption)
     {
-      $this->configMetadata['table_columns'] = [];
+      $this->configMetadata = [];
     }
 
     $this->resolveCanonicalAuditColumns();
@@ -127,7 +127,7 @@ class Audit
     {
       $newColumns[] = $column->getProperties();
     }
-    $this->configMetadata['table_columns'][$tableName] = $newColumns;
+    $this->configMetadata[$tableName] = $newColumns;
   }
 
   //--------------------------------------------------------------------------------------------------------------------
@@ -142,6 +142,7 @@ class Audit
       {
         if (!isset($this->config['tables'][$table['table_name']]['audit']))
         {
+          $this->io->writeln(sprintf('<info>Found new table %s</info>', $table['table_name']));
           $this->io->writeln(sprintf('<info>audit is not set for table %s</info>', $table['table_name']));
         }
         else
@@ -161,6 +162,29 @@ class Audit
         $this->config['tables'][$table['table_name']] = ['audit' => false,
                                                          'alias' => null,
                                                          'skip'  => null];
+      }
+    }
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
+   * Drop triggers from obsolete table.
+   *
+   * @param string $schemaName The schema name.
+   * @param string $tableName  The table name.
+   */
+  protected function dropTriggersFromObsoleteTable($schemaName, $tableName)
+  {
+    $triggers = AuditDataLayer::getTableTriggers($schemaName, $tableName);
+    foreach ($triggers as $trigger)
+    {
+      if (preg_match('/trg_audit_.*_(insert|update|delete)/', $trigger['trigger_name']))
+      {
+        $this->io->logInfo('Dropping trigger <dbo>%s</dbo> from obsolete table <dbo>%s</dbo>',
+                           $trigger['trigger_name'],
+                           $tableName);
+
+        AuditDataLayer::dropTrigger($schemaName, $trigger['trigger_name']);
       }
     }
   }
@@ -214,9 +238,9 @@ class Audit
     {
       if ($this->config['tables'][$table['table_name']]['audit'])
       {
-        if (isset($this->configMetadata['table_columns'][$table['table_name']]))
+        if (isset($this->configMetadata[$table['table_name']]))
         {
-          $tableColumns = $this->configMetadata['table_columns'][$table['table_name']];
+          $tableColumns = $this->configMetadata[$table['table_name']];
         }
         else
         {
@@ -251,6 +275,10 @@ class Audit
         {
           $status += 1;
         }
+      }
+      else
+      {
+        $this->dropTriggersFromObsoleteTable($this->config['database']['data_schema'], $table['table_name']);
       }
     }
 
