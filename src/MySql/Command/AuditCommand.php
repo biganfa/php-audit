@@ -22,7 +22,11 @@ class AuditCommand extends MySqlBaseCommand
   protected function configure()
   {
     $this->setName('audit')
-         ->setDescription('Create (missing) audit table and (re)creates audit triggers')
+         ->setDescription('Maintains audit tables and audit triggers')
+         ->setHelp("Maintains audit tables and audit triggers:\n".
+                   "- creates new audit tables\n".
+                   "- adds new columns to exiting audit tables\n".
+                   "- creates new and recreates existing audit triggers\n")
          ->addArgument('config file', InputArgument::OPTIONAL, 'The audit configuration file');
   }
 
