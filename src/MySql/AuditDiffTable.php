@@ -24,7 +24,7 @@ class AuditDiffTable
   /**
    * Audit columns from config file
    *
-   * @var \array[]
+   * @var array[]
    */
   private $configColumns;
 
