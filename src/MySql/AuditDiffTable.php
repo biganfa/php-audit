@@ -24,7 +24,7 @@ class AuditDiffTable
   /**
    * Audit columns from config file
    *
-   * @var array[]
+   * @var \array[]
    */
   private $configColumns;
 
@@ -89,7 +89,7 @@ class AuditDiffTable
   /**
    * Check full and return array without new or obsolete columns if full not set.
    *
-   * @return DiffTableColumns
+   * @return TableColumnsMetadata
    */
   public function removeMatchingColumns()
   {
@@ -97,8 +97,11 @@ class AuditDiffTable
     /** @var MultiSourceColumnMetadata $column */
     foreach ($metadata->getColumns() as $columnName => $column)
     {
-      $data   = $column->getProperty('data');
-      $audit  = $column->getProperty('audit');
+      /** @var MultiSourceColumnMetadata $data */
+      $data = $column->getProperty('data');
+      /** @var MultiSourceColumnMetadata $audit */
+      $audit = $column->getProperty('audit');
+      /** @var MultiSourceColumnMetadata $config */
       $config = $column->getProperty('config');
 
       if (!isset($data))
