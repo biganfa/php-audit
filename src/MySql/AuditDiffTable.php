@@ -103,31 +103,36 @@ class AuditDiffTable
 
       if (!isset($data))
       {
-        if ($audit->getProperty('column_type')==$config->getProperty('column_type'))
+        if (isset($audit) && isset($config))
         {
-          $metadata->removeColumn($columnName);
+          if ($audit->getProperty('column_type')==$config->getProperty('column_type'))
+          {
+            $metadata->removeColumn($columnName);
+          }
         }
       }
       else
       {
-        $audit_character_set_name = $audit->getProperty('character_set_name');
-        $audit_collation_name     = $audit->getProperty('collation_name');
-
-        $data_character_set_name = $data->getProperty('character_set_name');
-        $data_collation_name     = $data->getProperty('collation_name');
-
-        $config_character_set_name = $config->getProperty('character_set_name');
-        $config_collation_name     = $config->getProperty('collation_name');
-
-        if (
-          $audit->getProperty('column_type')==$data->getProperty('column_type')
-          && $audit_character_set_name==$data_character_set_name
-          && $audit_character_set_name==$config_character_set_name
-          && $audit_collation_name==$config_collation_name
-          && $audit_collation_name==$data_collation_name
-        )
+        if (isset($audit) && isset($config))
         {
-          $metadata->removeColumn($columnName);
+          $config_character_set_name = $config->getProperty('character_set_name');
+          $config_collation_name     = $config->getProperty('collation_name');
+          $audit_character_set_name  = $audit->getProperty('character_set_name');
+          $audit_collation_name      = $audit->getProperty('collation_name');
+
+          $data_character_set_name = $data->getProperty('character_set_name');
+          $data_collation_name     = $data->getProperty('collation_name');
+
+          if (
+            $audit->getProperty('column_type')==$data->getProperty('column_type')
+            && $audit_character_set_name==$data_character_set_name
+            && $audit_character_set_name==$config_character_set_name
+            && $audit_collation_name==$config_collation_name
+            && $audit_collation_name==$data_collation_name
+          )
+          {
+            $metadata->removeColumn($columnName);
+          }
         }
       }
     }
