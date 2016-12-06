@@ -3,6 +3,7 @@
 namespace SetBased\Audit\Command;
 
 use SetBased\Stratum\Style\StratumStyle;
+use Symfony\Component\Console\Helper\QuestionHelper;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -18,6 +19,8 @@ class ConfigCommand extends BaseCommand
   //--------------------------------------------------------------------------------------------------------------------
   /**
    * The helper instance by name.
+   *
+   * @var QuestionHelper
    */
   private $helper;
 
@@ -92,8 +95,9 @@ class ConfigCommand extends BaseCommand
     $this->io->logInfo('Please input data for <dbo>\'%s\'</dbo> part.', $configPart);
     foreach ($this->config[$configPart] as $parameter => $value)
     {
-      $question                              = sprintf('Please enter the \'%s\' (%s): ', $parameter, $value);
-      $question                              = new Question($question, $value);
+      $question = sprintf('Please enter the \'%s\' (%s): ', $parameter, $value);
+      $question = new Question($question, $value);
+
       $this->config[$configPart][$parameter] = $this->helper->ask($input, $output, $question);
     }
   }
