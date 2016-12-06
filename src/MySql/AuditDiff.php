@@ -56,17 +56,8 @@ class AuditDiff
 
   /**
    * Array with columns for each table.
-   * array [
-   *    table_name [
-   *            column [
-   *                    data table type,
-   *                    audit table type
-   *                    ],
-   *                      ...
-   *               ]
-   *       ]
    *
-   * @var array[]
+   * @var array<string,AuditDiffTable>
    */
   private $diffColumns;
 
