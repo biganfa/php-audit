@@ -12,7 +12,7 @@ class DiffTableRowHelper
 {
   //--------------------------------------------------------------------------------------------------------------------
   /**
-   * Append a row.
+   * Append a row to existing rows array.
    *
    * @param \array[]                  $theExistRows Exist rows array for appending.
    * @param MultiSourceColumnMetadata $rowMetadata  Row for append.
@@ -31,7 +31,7 @@ class DiffTableRowHelper
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
-   * Create table row.
+   * Create additional row for column with character set name and collation name.
    *
    * @param MultiSourceColumnMetadata $rowMetadata Data for table row.
    *
@@ -61,7 +61,7 @@ class DiffTableRowHelper
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
-   * Create table row.
+   * Create table row for columns with information from all schemas and config file.
    *
    * @param MultiSourceColumnMetadata $rowMetadata Data for table row.
    * @param string                    $columnName  The columns name.
@@ -83,10 +83,10 @@ class DiffTableRowHelper
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
-   * Create table row.
+   * Helper function for creating string with character set name and collation name.
    *
-   * @param $theCharacterSetName
-   * @param $theCollationName
+   * @param string $theCharacterSetName Character set name
+   * @param string $theCollationName    Collation name
    *
    * @return string
    */
