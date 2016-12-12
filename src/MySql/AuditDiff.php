@@ -182,7 +182,7 @@ class AuditDiff
                                                                         $this->config['database']['audit_schema'],
                                                                         $table['table_name'],
                                                                         $this->config['audit_columns'],
-                                                                        $this->configMetadata['table_columns'][$table['table_name']]);
+                                                                        $this->configMetadata[$table['table_name']]);
         }
       }
     }
@@ -218,7 +218,7 @@ class AuditDiff
           $columns = $diffTable->removeMatchingColumns();
         }
 
-        if (!empty($columns))
+        if ($columns->getNumberOfColumns()>0)
         {
           // Add an empty line between tables.
           if ($first)

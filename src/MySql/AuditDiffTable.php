@@ -22,6 +22,13 @@ class AuditDiffTable
   private $auditSchema;
 
   /**
+   * Audit columns from config file.
+   *
+   * @var array[]
+   */
+  private $configAuditColumns;
+
+  /**
    * Audit columns from config file
    *
    * @var array[]
@@ -61,10 +68,11 @@ class AuditDiffTable
    */
   public function __construct($dataSchema, $auditSchema, $tableName, $configAuditColumns, $configColumns)
   {
-    $this->dataSchema    = $dataSchema;
-    $this->auditSchema   = $auditSchema;
-    $this->tableName     = $tableName;
-    $this->configColumns = array_merge($configAuditColumns, $configColumns);
+    $this->dataSchema         = $dataSchema;
+    $this->auditSchema        = $auditSchema;
+    $this->tableName          = $tableName;
+    $this->configAuditColumns = $configAuditColumns;
+    $this->configColumns      = array_merge($configAuditColumns, $configColumns);
 
     $dataColumns  = new TableColumnsMetadata(AuditDataLayer::getTableColumns($this->dataSchema, $this->tableName));
     $auditColumns = AuditDataLayer::getTableColumns($this->auditSchema, $this->tableName);
@@ -104,13 +112,17 @@ class AuditDiffTable
       /** @var MultiSourceColumnMetadata $config */
       $config = $column->getProperty('config');
 
+      $auditColumn = StaticDataLayer::searchInRowSet('column_name', $columnName, $this->configAuditColumns);
       if (!isset($data))
       {
         if (isset($audit) && isset($config))
         {
           if ($audit->getProperty('column_type')==$config->getProperty('column_type'))
           {
-            $metadata->removeColumn($columnName);
+            if (isset($auditColumn))
+            {
+              $metadata->removeColumn($columnName);
+            }
           }
         }
       }
