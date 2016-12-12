@@ -42,14 +42,15 @@ class DiffTableRowHelper
   {
     $columnProperties = $rowMetadata->getProperties();
     /** @var ColumnMetadata $data */
-    $data = $columnProperties['data'];
+    $data = isset($columnProperties['data']) ? $columnProperties['data'] : null;
     /** @var ColumnMetadata $audit */
-    $audit = $columnProperties['audit'];
+    $audit = isset($columnProperties['audit']) ? $columnProperties['audit'] : null;
     /** @var ColumnMetadata $config */
-    $config         = $columnProperties['config'];
-    $dataMetadata   = isset($columnProperties['data']) ? $data->getProperties() : null;
-    $auditMetadata  = isset($columnProperties['audit']) ? $audit->getProperties() : null;
-    $configMetadata = isset($columnProperties['config']) ? $config->getProperties() : null;
+    $config = isset($columnProperties['config']) ? $columnProperties['config'] : null;
+
+    $dataMetadata   = isset($data) ? $data->getProperties() : null;
+    $auditMetadata  = isset($audit) ? $audit->getProperties() : null;
+    $configMetadata = isset($config) ? $config->getProperties() : null;
 
     $dataCharsetName   = isset($dataMetadata['character_set_name']) ? $dataMetadata['character_set_name'] : null;
     $dataCollationName = isset($dataMetadata['collation_name']) ? $dataMetadata['collation_name'] : null;
@@ -79,14 +80,15 @@ class DiffTableRowHelper
   {
     $columnProperties = $rowMetadata->getProperties();
     /** @var ColumnMetadata $data */
-    $data = $columnProperties['data'];
+    $data = isset($columnProperties['data']) ? $columnProperties['data'] : null;
     /** @var ColumnMetadata $audit */
-    $audit = $columnProperties['audit'];
+    $audit = isset($columnProperties['audit']) ? $columnProperties['audit'] : null;
     /** @var ColumnMetadata $config */
-    $config         = $columnProperties['config'];
-    $dataMetadata   = isset($columnProperties['data']) ? $data->getProperties() : null;
-    $auditMetadata  = isset($columnProperties['audit']) ? $audit->getProperties() : null;
-    $configMetadata = isset($columnProperties['config']) ? $config->getProperties() : null;
+    $config = isset($columnProperties['config']) ? $columnProperties['config'] : null;
+
+    $dataMetadata   = isset($data) ? $data->getProperties() : null;
+    $auditMetadata  = isset($audit) ? $audit->getProperties() : null;
+    $configMetadata = isset($config) ? $config->getProperties() : null;
 
     return ['column_name' => $columnName,
             'data'        => isset($dataMetadata['column_type']) ? $dataMetadata['column_type'] : null,
@@ -125,8 +127,8 @@ class DiffTableRowHelper
     foreach ($rowMetadata->getProperties() as $sourceName => $metadata)
     {
       /** @var ColumnMetadata $source */
-      $source = $columnProperties[$sourceName];
-      $data   = isset($columnProperties[$sourceName]) ? $source->getProperties() : null;
+      $source = isset($columnProperties[$sourceName]) ? $columnProperties[$sourceName] : null;
+      $data   = isset($source) ? $source->getProperties() : null;
       if (isset($data['character_set_name']) || isset($data['collation_name']))
       {
         return true;
