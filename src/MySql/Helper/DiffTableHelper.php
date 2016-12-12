@@ -87,6 +87,7 @@ class DiffTableHelper
       $styledColumn = $column;
       if (is_array($column))
       {
+        $auditColumn = StaticDataLayer::searchInRowSet('column_name', $column['column_name'], $this->auditColumns);
         // Highlighting for data table column types and audit.
         if (!empty($column['data']))
         {
@@ -116,6 +117,10 @@ class DiffTableHelper
         }
         else
         {
+          if (!isset($column['data']) && isset($column['audit']) && !isset($auditColumn))
+          {
+            $styledColumn['audit'] = sprintf('<mm_type>%s</>', $styledColumn['audit']);
+          }
           // Highlighting for audit table column types and audit_columns in config file.
           $searchColumn = StaticDataLayer::searchInRowSet('column_name', $styledColumn['column_name'], $this->auditColumns);
           if (isset($searchColumn))
@@ -141,10 +146,13 @@ class DiffTableHelper
           {
             if (strcmp($styledColumn['audit'], $styledColumn['config']))
             {
-              $styledColumns[$key - 1]['column_name'] = sprintf('<mm_column>%s</>', $styledColumns[$key - 1]['column_name']);
-              $styledColumn['column_name']            = sprintf('<mm_column>%s</>', $styledColumn['column_name']);
-              $styledColumn['audit']                  = sprintf('<mm_type>%s</>', $column['audit']);
-              $styledColumn['config']                 = sprintf('<mm_type>%s</>', $styledColumn['config']);
+              if (!isset($column['column_name']))
+              {
+                $styledColumns[$key - 1]['column_name'] = sprintf('<mm_column>%s</>', $styledColumns[$key - 1]['column_name']);
+              }
+              $styledColumn['column_name'] = sprintf('<mm_column>%s</>', $styledColumn['column_name']);
+              $styledColumn['audit']       = sprintf('<mm_type>%s</>', $column['audit']);
+              $styledColumn['config']      = sprintf('<mm_type>%s</>', $styledColumn['config']);
             }
           }
         }
