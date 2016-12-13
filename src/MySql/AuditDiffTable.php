@@ -117,7 +117,8 @@ class AuditDiffTable
       {
         if (isset($audit) && isset($config))
         {
-          if ($audit->getProperty('column_type')==$config->getProperty('column_type'))
+          $check = $this->compareCollationCharSetName($audit, $config);
+          if ($audit->getProperty('column_type')==$config->getProperty('column_type') && $check)
           {
             if (isset($auditColumn))
             {
@@ -130,21 +131,8 @@ class AuditDiffTable
       {
         if (isset($audit) && isset($config))
         {
-          $config_character_set_name = $config->getProperty('character_set_name');
-          $config_collation_name     = $config->getProperty('collation_name');
-          $audit_character_set_name  = $audit->getProperty('character_set_name');
-          $audit_collation_name      = $audit->getProperty('collation_name');
-
-          $data_character_set_name = $data->getProperty('character_set_name');
-          $data_collation_name     = $data->getProperty('collation_name');
-
-          if (
-            $audit->getProperty('column_type')==$data->getProperty('column_type')
-            && $audit_character_set_name==$data_character_set_name
-            && $audit_character_set_name==$config_character_set_name
-            && $audit_collation_name==$config_collation_name
-            && $audit_collation_name==$data_collation_name
-          )
+          $check = $this->compareCollationCharSetName($data, $audit, $config);
+          if ($audit->getProperty('column_type')==$data->getProperty('column_type') && $check)
           {
             $metadata->removeColumn($columnName);
           }
@@ -181,6 +169,48 @@ class AuditDiffTable
     }
 
     return $modifiedColumns;
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
+   * Compare collations and character set names.
+   *
+   * @param MultiSourceColumnMetadata      $audit  Column information from audit schema.
+   * @param MultiSourceColumnMetadata      $config Column information from config file.
+   * @param MultiSourceColumnMetadata|null $data   Column information from data schema.
+   *
+   * @return array
+   */
+  private function compareCollationCharSetName($audit, $config, $data = null)
+  {
+    $config_character_set_name = $config->getProperty('character_set_name');
+    $config_collation_name     = $config->getProperty('collation_name');
+    $audit_character_set_name  = $audit->getProperty('character_set_name');
+    $audit_collation_name      = $audit->getProperty('collation_name');
+
+    if (isset($data))
+    {
+      $data_character_set_name = $data->getProperty('character_set_name');
+      $data_collation_name     = $data->getProperty('collation_name');
+
+      if ($audit_character_set_name==$data_character_set_name
+        && $audit_character_set_name==$config_character_set_name
+        && $audit_collation_name==$config_collation_name
+        && $audit_collation_name==$data_collation_name
+      )
+      {
+        return true;
+      }
+    }
+    else
+    {
+      if ($audit_character_set_name==$config_character_set_name && $audit_collation_name==$config_collation_name)
+      {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   //--------------------------------------------------------------------------------------------------------------------
