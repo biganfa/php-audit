@@ -22,7 +22,7 @@ class AuditDiff
   /**
    * The metadata (additional) audit columns (as stored in the config file).
    *
-   * @var TableColumnsMetadata
+   * @var array[]
    */
   private $auditColumnsMetadata;
 
@@ -181,7 +181,7 @@ class AuditDiff
           $this->diffColumns[$table['table_name']] = new AuditDiffTable($this->config['database']['data_schema'],
                                                                         $this->config['database']['audit_schema'],
                                                                         $table['table_name'],
-                                                                        $this->config['audit_columns'],
+                                                                        $this->auditColumnsMetadata,
                                                                         $this->configMetadata[$table['table_name']]);
         }
       }
@@ -237,7 +237,7 @@ class AuditDiff
           $rows = new DiffTableHelper($this->config['database']['data_schema'],
                                       $this->config['database']['audit_schema'],
                                       $tableName,
-                                      $this->config['audit_columns'],
+                                      $this->auditColumnsMetadata,
                                       $this->full);
           $rows->appendRows($columns);
           $rows->addHighlighting();
@@ -306,6 +306,11 @@ class AuditDiff
       foreach ($this->config['audit_columns'] as $audit_column)
       {
         $key = StaticDataLayer::searchInRowSet('column_name', $audit_column['column_name'], $columns);
+
+        if ($columns[$key]['is_nullable']==='NO')
+        {
+          $columns[$key]['column_type'] = sprintf('%s not null', $columns[$key]['column_type']);
+        }
         if (isset($audit_column['value_type']))
         {
           $columns[$key]['value_type'] = $audit_column['value_type'];
@@ -316,7 +321,7 @@ class AuditDiff
         }
       }
 
-      $this->auditColumnsMetadata = new TableColumnsMetadata($columns, 'AuditColumnMetadata');
+      $this->auditColumnsMetadata = $columns;
     }
   }
 
