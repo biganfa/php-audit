@@ -149,11 +149,13 @@ class BaseCommand extends Command
     // Return immediately when the config file must not be rewritten.
     if (!$this->rewriteConfigFile) return;
 
+    ksort($this->config['tables']);
     $this->writeTwoPhases($this->configFileName, json_encode($this->config, JSON_PRETTY_PRINT));
 
     $filename = $this->getTableMetadataPath();
     if ($filename!==null)
     {
+      ksort($this->configMetadata);
       $this->writeTwoPhases($filename, json_encode($this->configMetadata, JSON_PRETTY_PRINT));
     }
   }
