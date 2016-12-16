@@ -1,6 +1,7 @@
 #!/usr/bin/env php
 <?php
 //----------------------------------------------------------------------------------------------------------------------
+
 use SetBased\Affirm\ErrorHandler;
 use SetBased\Stratum\MySql\StaticDataLayer;
 
@@ -8,7 +9,8 @@ use SetBased\Stratum\MySql\StaticDataLayer;
 $files = [__DIR__.'/../vendor/autoload.php',
           __DIR__.'/../../vendor/autoload.php',
           __DIR__.'/../../../vendor/autoload.php',
-          __DIR__.'/../../../../vendor/autoload.php'];
+          __DIR__.'/../../../../vendor/autoload.php',
+          __DIR__.'/../../../../../vendor/autoload.php'];
 
 foreach ($files as $file)
 {
