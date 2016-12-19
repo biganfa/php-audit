@@ -293,7 +293,7 @@ class AuditDiff
   {
     if (empty($this->config['audit_columns']))
     {
-      $this->auditColumnsMetadata = new TableColumnsMetadata();
+      $this->auditColumnsMetadata = [];
     }
     else
     {

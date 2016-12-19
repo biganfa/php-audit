@@ -1,6 +1,6 @@
 <?php
 //----------------------------------------------------------------------------------------------------------------------
-namespace SetBased\Audit\Test\MySql\LockTable;
+namespace SetBased\Audit\Test\MySql\AuditCommand\LockTable;
 
 use SetBased\Stratum\MySql\StaticDataLayer;
 

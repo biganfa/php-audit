@@ -1,6 +1,6 @@
 <?php
 //----------------------------------------------------------------------------------------------------------------------
-namespace SetBased\Audit\Test\MySql\AbcFramework;
+namespace SetBased\Audit\Test\MySql\AbcFramework\AuditCommand;
 
 use SetBased\Audit\MySql\Command\AuditCommand;
 use SetBased\Audit\Test\MySql\AuditTestCase;
