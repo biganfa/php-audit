@@ -179,7 +179,7 @@ class AuditDiffTable
    * @param MultiSourceColumnMetadata      $config Column information from config file.
    * @param MultiSourceColumnMetadata|null $data   Column information from data schema.
    *
-   * @return array
+   * @return bool
    */
   private function compareCollationCharSetName($audit, $config, $data = null)
   {
