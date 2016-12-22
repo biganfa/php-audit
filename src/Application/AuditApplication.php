@@ -3,6 +3,7 @@
 namespace SetBased\Audit\Application;
 
 use SetBased\Audit\Command\AboutCommand;
+use SetBased\Audit\MySql\Command\AlterTableCommand;
 use SetBased\Audit\MySql\Command\AuditCommand;
 use SetBased\Audit\MySql\Command\DiffCommand;
 use SetBased\Audit\MySql\Command\DropTriggersCommand;
@@ -38,6 +39,7 @@ class AuditApplication extends Application
     $commands[] = new AuditCommand();
     $commands[] = new DiffCommand();
     $commands[] = new DropTriggersCommand();
+    $commands[] = new AlterTableCommand();
 
     return $commands;
   }
