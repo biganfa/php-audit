@@ -22,7 +22,7 @@ class AuditDiff
   /**
    * The metadata (additional) audit columns (as stored in the config file).
    *
-   * @var array[]
+   * @var array<integer,object<array>>
    */
   private $auditColumnsMetadata;
 
