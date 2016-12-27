@@ -97,9 +97,11 @@ class AuditDiffTable
   /**
    * Check full and return array without new or obsolete columns if full not set.
    *
+   * @param bool $skipObsoleteNew Flag for skipping obsolete and new columns.
+   *
    * @return TableColumnsMetadata
    */
-  public function removeMatchingColumns()
+  public function removeMatchingColumns($skipObsoleteNew)
   {
     $metadata = $this->diffColumns->getColumns();
     /** @var MultiSourceColumnMetadata $column */
@@ -126,6 +128,10 @@ class AuditDiffTable
             }
           }
         }
+        elseif ($skipObsoleteNew)
+        {
+          $metadata->removeColumn($columnName);
+        }
       }
       else
       {
@@ -136,6 +142,10 @@ class AuditDiffTable
           {
             $metadata->removeColumn($columnName);
           }
+        }
+        elseif ($skipObsoleteNew)
+        {
+          $metadata->removeColumn($columnName);
         }
       }
     }

@@ -215,7 +215,7 @@ class AuditDiff
         // Remove matching columns unless the full option is used.
         if (!$this->full)
         {
-          $columns = $diffTable->removeMatchingColumns();
+          $columns = $diffTable->removeMatchingColumns(false);
         }
 
         if ($columns->getNumberOfColumns()>0)

@@ -2,19 +2,17 @@
 //----------------------------------------------------------------------------------------------------------------------
 namespace SetBased\Audit\MySql\Command;
 
-use SetBased\Audit\MySql\AuditDataLayer;
-use SetBased\Audit\MySql\AuditDiff;
+use SetBased\Audit\MySql\AuditAlter;
 use SetBased\Stratum\Style\StratumStyle;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
 //----------------------------------------------------------------------------------------------------------------------
 /**
  * Command for comparing data tables with audit tables.
  */
-class DiffCommand extends AuditCommand
+class AlterTableCommand extends AuditCommand
 {
   //--------------------------------------------------------------------------------------------------------------------
   /**
@@ -32,10 +30,10 @@ class DiffCommand extends AuditCommand
    */
   protected function configure()
   {
-    $this->setName('diff')
-         ->setDescription('Compares data tables and audit tables')
+    $this->setName('alter-table-sql')
+         ->setDescription('Create alter table SQL commands for audit tables columns that are different from the config columns or from columns data tables')
          ->addArgument('config file', InputArgument::OPTIONAL, 'The audit configuration file', 'etc/audit.json')
-         ->addOption('full', 'f', InputOption::VALUE_NONE, 'Show all columns');
+         ->addArgument('result sql file', InputArgument::OPTIONAL, 'The result file for SQL statement', 'etc/alter-table-sql-result.sql');
   }
 
   //--------------------------------------------------------------------------------------------------------------------
@@ -46,13 +44,17 @@ class DiffCommand extends AuditCommand
   {
     $this->io = new StratumStyle($input, $output);
 
+    $resultSqlFile = $input->getArgument('result sql file');
+
     $this->configFileName = $input->getArgument('config file');
     $this->readConfigFile();
 
     $this->connect($this->config);
 
-    $diff = new AuditDiff($this->config, $this->configMetadata, $this->io, $input, $output);
-    $diff->main();
+    $alter   = new AuditAlter($this->config, $this->configMetadata);
+    $content = $alter->main();
+
+    $this->writeTwoPhases($resultSqlFile, $content);
   }
 
   //--------------------------------------------------------------------------------------------------------------------
