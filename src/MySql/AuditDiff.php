@@ -3,7 +3,6 @@
 namespace SetBased\Audit\MySql;
 
 use SetBased\Audit\MySql\Helper\DiffTableHelper;
-use SetBased\Audit\MySql\Metadata\TableColumnsMetadata;
 use SetBased\Exception\FallenException;
 use SetBased\Stratum\MySql\StaticDataLayer;
 use SetBased\Stratum\Style\StratumStyle;
