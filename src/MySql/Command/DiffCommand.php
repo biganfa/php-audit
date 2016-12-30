@@ -2,7 +2,6 @@
 //----------------------------------------------------------------------------------------------------------------------
 namespace SetBased\Audit\MySql\Command;
 
-use SetBased\Audit\MySql\AuditDataLayer;
 use SetBased\Audit\MySql\AuditDiff;
 use SetBased\Stratum\Style\StratumStyle;
 use Symfony\Component\Console\Input\InputArgument;
@@ -34,7 +33,7 @@ class DiffCommand extends AuditCommand
   {
     $this->setName('diff')
          ->setDescription('Compares data tables and audit tables')
-         ->addArgument('config file', InputArgument::OPTIONAL, 'The audit configuration file', 'etc/audit.json')
+         ->addArgument('config file', InputArgument::REQUIRED, 'The audit configuration file')
          ->addOption('full', 'f', InputOption::VALUE_NONE, 'Show all columns');
   }
 

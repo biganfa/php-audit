@@ -12,7 +12,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 /**
  * Command for comparing data tables with audit tables.
  */
-class AlterTableCommand extends AuditCommand
+class AlterAuditTableCommand extends AuditCommand
 {
   //--------------------------------------------------------------------------------------------------------------------
   /**
@@ -30,10 +30,27 @@ class AlterTableCommand extends AuditCommand
    */
   protected function configure()
   {
-    $this->setName('alter-table-sql')
-         ->setDescription('Create alter table SQL commands for audit tables columns that are different from the config columns or from columns data tables')
-         ->addArgument('config file', InputArgument::OPTIONAL, 'The audit configuration file', 'etc/audit.json')
-         ->addArgument('result sql file', InputArgument::OPTIONAL, 'The result file for SQL statement', 'etc/alter-table-sql-result.sql');
+    $this->setName('alter-audit-table')
+         ->setDescription('Creates alter SQL statements for audit tables')
+         ->addArgument('config file', InputArgument::REQUIRED, 'The audit configuration file')
+         ->addArgument('sql file', InputArgument::REQUIRED, 'The destination file for the SQL statements');
+
+    $this->setHelp(<<<EOL
+Generates alter table SQL statements for aligning the audit tables with the 
+audit configuration file and data tables.
+
+Manual inspection of the generated SQL statements is required. For example: 
+changing an audit column from varchar(20) character set utf8 to varchar(10)
+character set ascii might cause problems when the audit column has values
+longer than 10 characters or values outside the ASCII character set (even 
+though the current data table hold only values with length 10 or less and 
+only in the ASCII character set).
+
+No SQL statements will be generated for missing or obsolete columns in the 
+audit tables. Use the command 'audit' for creating missing columns in audit
+tables.
+EOL
+    );
   }
 
   //--------------------------------------------------------------------------------------------------------------------

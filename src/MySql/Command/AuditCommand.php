@@ -27,7 +27,7 @@ class AuditCommand extends MySqlBaseCommand
                    "- creates new audit tables\n".
                    "- adds new columns to exiting audit tables\n".
                    "- creates new and recreates existing audit triggers\n")
-         ->addArgument('config file', InputArgument::OPTIONAL, 'The audit configuration file');
+         ->addArgument('config file', InputArgument::REQUIRED, 'The audit configuration file');
   }
 
   //--------------------------------------------------------------------------------------------------------------------
