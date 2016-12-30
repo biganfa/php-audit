@@ -31,7 +31,7 @@ class AuditDiffTable
   /**
    * Audit columns from config file
    *
-   * @var array[]
+   * @var \array[]
    */
   private $configColumns;
 
@@ -60,11 +60,11 @@ class AuditDiffTable
   /**
    * Object constructor.
    *
-   * @param string  $dataSchema         Data database schema.
-   * @param string  $auditSchema        Audit database schema.
-   * @param string  $tableName          Table name.
-   * @param array[] $configAuditColumns Audit columns from config file.
-   * @param array[] $configColumns      Data columns from config file.
+   * @param string   $dataSchema         Data database schema.
+   * @param string   $auditSchema        Audit database schema.
+   * @param string   $tableName          Table name.
+   * @param \array[] $configAuditColumns Audit columns from config file.
+   * @param \array[] $configColumns      Data columns from config file.
    */
   public function __construct($dataSchema, $auditSchema, $tableName, $configAuditColumns, $configColumns)
   {
