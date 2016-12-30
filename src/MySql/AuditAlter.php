@@ -18,7 +18,7 @@ class AuditAlter
   /**
    * The metadata (additional) audit columns (as stored in the config file).
    *
-   * @var array[]
+   * @var \array[]
    */
   private $auditColumnsMetadata;
 

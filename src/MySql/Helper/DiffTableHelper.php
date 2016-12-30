@@ -167,12 +167,12 @@ class DiffTableHelper
   /**
    * Appends rows.
    *
-   * @param TableColumnsMetadata $theRows Rows array.
+   * @param TableColumnsMetadata $rows Rows array.
    */
-  public function appendRows($theRows)
+  public function appendRows($rows)
   {
     /** @var MultiSourceColumnMetadata $rowMetadata */
-    foreach ($theRows->getColumns() as $columnName => $rowMetadata)
+    foreach ($rows->getColumns() as $columnName => $rowMetadata)
     {
       DiffTableRowHelper::appendRow($this->rows, $rowMetadata, $columnName);
     }
@@ -185,27 +185,27 @@ class DiffTableHelper
   /**
    * Append row with table option.
    *
-   * @param string      $theOption The option.
-   * @param null|string $theName   Display name.
+   * @param string      $option The option.
+   * @param null|string $name   Display name.
    */
-  public function appendTableOption($theOption, $theName = null)
+  public function appendTableOption($option, $name = null)
   {
-    if ($this->dataTableOptions[$theOption]!=$this->auditTableOptions[$theOption] || $this->fullOption)
+    if ($this->dataTableOptions[$option]!=$this->auditTableOptions[$option] || $this->fullOption)
     {
       if (!$this->existSeparator)
       {
         $this->rows[]         = new TableSeparator();
         $this->existSeparator = true;
       }
-      if ($theName===null)
+      if ($name===null)
       {
-        $theName = $theOption;
+        $name = $option;
       }
-      $tableRow               = ['column_name' => $theName,
-                                 'data'        => $this->dataTableOptions[$theOption],
-                                 'audit'       => $this->auditTableOptions[$theOption],
-                                 'config'      => null];
-      $this->rows[$theOption] = $tableRow;
+      $tableRow            = ['column_name' => $name,
+                              'data'        => $this->dataTableOptions[$option],
+                              'audit'       => $this->auditTableOptions[$option],
+                              'config'      => null];
+      $this->rows[$option] = $tableRow;
     }
   }
 

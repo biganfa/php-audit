@@ -23,7 +23,7 @@ class ColumnMetadata
   /**
    * The the properties of this table column.
    *
-   * @var array<string,string>
+   * @var array
    */
   protected $properties = [];
 
@@ -76,7 +76,7 @@ class ColumnMetadata
   /**
    * Returns the properties of this table column as an array.
    *
-   * @return array<string,string>
+   * @return array
    */
   public function getProperties()
   {
