@@ -31,7 +31,7 @@ class ColumnMetadata
   /**
    * Object constructor.
    *
-   * @param array[] $properties The metadata of the column.
+   * @param array $properties The metadata of the column.
    */
   public function __construct($properties)
   {
