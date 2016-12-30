@@ -61,7 +61,7 @@ EOL
   {
     $this->io = new StratumStyle($input, $output);
 
-    $resultSqlFile = $input->getArgument('result sql file');
+    $resultSqlFile = $input->getArgument('sql file');
 
     $this->configFileName = $input->getArgument('config file');
     $this->readConfigFile();
