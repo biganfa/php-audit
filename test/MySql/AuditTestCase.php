@@ -2,13 +2,28 @@
 //----------------------------------------------------------------------------------------------------------------------
 namespace SetBased\Audit\Test\MySql;
 
+use SetBased\Audit\MySql\AuditDataLayer;
 use SetBased\Stratum\MySql\StaticDataLayer;
 
 //----------------------------------------------------------------------------------------------------------------------
+/**
+ * Parent class for the Audit test classes.
+ */
 class AuditTestCase extends \PHPUnit_Framework_TestCase
 {
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
+   * The schema name with the audit tables.
+   *
+   * @var string
+   */
   protected static $auditSchema = 'test_audit';
 
+  /**
+   * The schema name with the data (or application's) tables.
+   *
+   * @var string
+   */
   protected static $dataSchema = 'test_data';
 
   //--------------------------------------------------------------------------------------------------------------------
@@ -52,6 +67,16 @@ where TABLE_SCHEMA in (%s,%s)";
   }
 
   //--------------------------------------------------------------------------------------------------------------------
+  protected function reconnect()
+  {
+    // Reconnect to MySQL.
+    AuditDataLayer::connect('localhost', 'test', 'test', self::$dataSchema);
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
+   * Connects to MySQL instance.
+   */
   protected function setUp()
   {
     StaticDataLayer::disconnect();
@@ -59,6 +84,9 @@ where TABLE_SCHEMA in (%s,%s)";
   }
 
   //--------------------------------------------------------------------------------------------------------------------
+  /**
+   * Disconnects from MySQL instance.
+   */
   protected function tearDown()
   {
     StaticDataLayer::disconnect();

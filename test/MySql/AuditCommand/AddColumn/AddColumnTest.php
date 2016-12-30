@@ -1,19 +1,16 @@
 <?php
 //----------------------------------------------------------------------------------------------------------------------
-namespace SetBased\Audit\Test\MySql\AddColumn;
+namespace SetBased\Audit\Test\MySql\AuditCommand\AddColumn;
 
 use SetBased\Audit\MySql\AuditDataLayer;
-use SetBased\Audit\MySql\Command\AuditCommand;
-use SetBased\Audit\Test\MySql\AuditTestCase;
+use SetBased\Audit\Test\MySql\AuditCommand\AuditCommandTestCase;
 use SetBased\Stratum\MySql\StaticDataLayer;
-use Symfony\Component\Console\Application;
-use Symfony\Component\Console\Tester\CommandTester;
 
 //----------------------------------------------------------------------------------------------------------------------
 /**
  * Tests for running audit with a new table column.
  */
-class AddColumnTest extends AuditTestCase
+class AddColumnTest extends AuditCommandTestCase
 {
   //--------------------------------------------------------------------------------------------------------------------
   /**
@@ -21,12 +18,9 @@ class AddColumnTest extends AuditTestCase
    */
   public static function setUpBeforeClass()
   {
+    self::$dir = __DIR__;
+
     parent::setUpBeforeClass();
-
-    StaticDataLayer::disconnect();
-    StaticDataLayer::connect('localhost', 'test', 'test', self::$dataSchema);
-
-    StaticDataLayer::multiQuery(file_get_contents(__DIR__.'/config/setup.sql'));
   }
 
   //--------------------------------------------------------------------------------------------------------------------
@@ -115,7 +109,7 @@ class AddColumnTest extends AuditTestCase
 
     $rows = StaticDataLayer::executeRows(sprintf('select * from `%s`.`TABLE1` where c3 is not null',
                                                  self::$auditSchema));
-    $this->assertSame(4, count($rows));
+    $this->assertSame(4, count($rows), 'row_count');
   }
 
   //--------------------------------------------------------------------------------------------------------------------
@@ -160,25 +154,6 @@ class AddColumnTest extends AuditTestCase
     $triggers = AuditDataLayer::getTableTriggers(self::$dataSchema, $table_name);
 
     return $triggers;
-  }
-
-  //--------------------------------------------------------------------------------------------------------------------
-  private function runAudit()
-  {
-    $application = new Application();
-    $application->add(new AuditCommand());
-
-    /** @var AuditCommand $command */
-    $command = $application->find('audit');
-    $command->setRewriteConfigFile(false);
-    $commandTester = new CommandTester($command);
-    $commandTester->execute(['command'     => $command->getName(),
-                             'config file' => __DIR__.'/config/audit.json']);
-
-    // Reconnect to MySQL.
-    StaticDataLayer::disconnect();
-    StaticDataLayer::connect('localhost', 'test', 'test', self::$dataSchema);
-    AuditDataLayer::connect('localhost', 'test', 'test', self::$dataSchema);
   }
 
   //--------------------------------------------------------------------------------------------------------------------

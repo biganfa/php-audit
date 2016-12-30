@@ -1,19 +1,16 @@
 <?php
 //----------------------------------------------------------------------------------------------------------------------
-namespace SetBased\Audit\Test\MySql\NewTable;
+namespace SetBased\Audit\Test\MySql\AuditCommand\NewTable;
 
 use SetBased\Audit\MySql\AuditDataLayer;
-use SetBased\Audit\MySql\Command\AuditCommand;
-use SetBased\Audit\Test\MySql\AuditTestCase;
+use SetBased\Audit\Test\MySql\AuditCommand\AuditCommandTestCase;
 use SetBased\Stratum\MySql\StaticDataLayer;
-use Symfony\Component\Console\Application;
-use Symfony\Component\Console\Tester\CommandTester;
 
 //----------------------------------------------------------------------------------------------------------------------
 /**
  * Tests for running audit with a new table.
  */
-class NewTableTest extends AuditTestCase
+class NewTableTest extends AuditCommandTestCase
 {
   //--------------------------------------------------------------------------------------------------------------------
   /**
@@ -21,12 +18,9 @@ class NewTableTest extends AuditTestCase
    */
   public static function setUpBeforeClass()
   {
+    self::$dir = __DIR__;
+
     parent::setUpBeforeClass();
-
-    StaticDataLayer::disconnect();
-    StaticDataLayer::connect('localhost', 'test', 'test', self::$dataSchema);
-
-    StaticDataLayer::multiQuery(file_get_contents(__DIR__.'/config/setup.sql'));
   }
 
   //--------------------------------------------------------------------------------------------------------------------
@@ -96,20 +90,6 @@ class NewTableTest extends AuditTestCase
     $triggers = AuditDataLayer::getTableTriggers(self::$dataSchema, $table_name);
 
     return $triggers;
-  }
-
-  //--------------------------------------------------------------------------------------------------------------------
-  private function runAudit()
-  {
-    $application = new Application();
-    $application->add(new AuditCommand());
-
-    /** @var AuditCommand $command */
-    $command = $application->find('audit');
-    $command->setRewriteConfigFile(false);
-    $commandTester = new CommandTester($command);
-    $commandTester->execute(['command'     => $command->getName(),
-                             'config file' => __DIR__.'/config/audit.json']);
   }
 
   //--------------------------------------------------------------------------------------------------------------------

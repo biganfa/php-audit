@@ -1,1 +1,1 @@
-alter table `TABLE1` add column `c3` mediumint after `c2`;
+alter table `test_audit`.`TABLE1` add column `c3` mediumint after `c2`;

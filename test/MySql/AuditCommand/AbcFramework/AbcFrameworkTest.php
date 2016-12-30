@@ -1,18 +1,15 @@
 <?php
 //----------------------------------------------------------------------------------------------------------------------
-namespace SetBased\Audit\Test\MySql\AbcFramework\AuditCommand;
+namespace SetBased\Audit\Test\MySql\AuditCommand\AbcFramework;
 
-use SetBased\Audit\MySql\Command\AuditCommand;
-use SetBased\Audit\Test\MySql\AuditTestCase;
+use SetBased\Audit\Test\MySql\AuditCommand\AuditCommandTestCase;
 use SetBased\Stratum\MySql\StaticDataLayer;
-use Symfony\Component\Console\Application;
-use Symfony\Component\Console\Tester\CommandTester;
 
 //----------------------------------------------------------------------------------------------------------------------
 /**
  * Tests for/with typical config for ABC Framework.
  */
-class AbcFrameworkTest extends AuditTestCase
+class AbcFrameworkTest extends AuditCommandTestCase
 {
   //--------------------------------------------------------------------------------------------------------------------
   /**
@@ -20,9 +17,9 @@ class AbcFrameworkTest extends AuditTestCase
    */
   public static function setUpBeforeClass()
   {
-    parent::setUpBeforeClass();
+    self::$dir = __DIR__;
 
-    StaticDataLayer::multiQuery(file_get_contents(__DIR__.'/config/setup.sql'));
+    parent::setUpBeforeClass();
   }
 
   //--------------------------------------------------------------------------------------------------------------------
@@ -31,17 +28,7 @@ class AbcFrameworkTest extends AuditTestCase
    */
   public function test01()
   {
-    $application = new Application();
-    $application->add(new AuditCommand());
-
-    /** @var AuditCommand $command */
-    $command = $application->find('audit');
-    $command->setRewriteConfigFile(false);
-    $commandTester = new CommandTester($command);
-    $commandTester->execute(['command'     => $command->getName(),
-                             'config file' => __DIR__.'/config/audit.json']);
-
-    $this->assertSame(0, $commandTester->getStatusCode());
+    $this->runAudit();
 
     // Reconnect to DB.
     StaticDataLayer::connect('localhost', 'test', 'test', self::$dataSchema);
@@ -284,15 +271,21 @@ from   `test_audit`.`AUT_COMPANY`");
   }
 
   //--------------------------------------------------------------------------------------------------------------------
+  /**
+   * Does not disconnect and connect to the database because we need continues numbering of audit_uuid and audit_rownum.
+   */
   protected function setUp()
   {
-    // Don't disconnect and connect to the database.
+    // Nothing to do.
   }
 
   //--------------------------------------------------------------------------------------------------------------------
+  /**
+   * Does not disconnect and connect to the database because we need continues numbering of audit_uuid and audit_rownum.
+   */
   protected function tearDown()
   {
-    // Don't disconnect and connect to the database.
+    // Nothing to do.
   }
 
   //--------------------------------------------------------------------------------------------------------------------

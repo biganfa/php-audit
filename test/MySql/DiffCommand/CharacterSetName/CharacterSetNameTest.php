@@ -2,19 +2,14 @@
 //----------------------------------------------------------------------------------------------------------------------
 namespace SetBased\Audit\Test\MySql\DiffCommand\CharacterSetName;
 
-use SetBased\Audit\MySql\AuditDataLayer;
-use SetBased\Audit\MySql\Command\AuditCommand;
-use SetBased\Audit\MySql\Command\DiffCommand;
-use SetBased\Audit\Test\MySql\AuditTestCase;
+use SetBased\Audit\Test\MySql\DiffCommand\DiffCommandTestCase;
 use SetBased\Stratum\MySql\StaticDataLayer;
-use Symfony\Component\Console\Application;
-use Symfony\Component\Console\Tester\CommandTester;
 
 //----------------------------------------------------------------------------------------------------------------------
 /**
- * Tests for running diff with a new table column in data table.
+ * Tests changed character set of a column.
  */
-class DiffCharacterSetNameTest extends AuditTestCase
+class CharacterSetNameTest extends DiffCommandTestCase
 {
   //--------------------------------------------------------------------------------------------------------------------
   /**
@@ -22,66 +17,26 @@ class DiffCharacterSetNameTest extends AuditTestCase
    */
   public static function setUpBeforeClass()
   {
+    self::$dir = __DIR__;
+
     parent::setUpBeforeClass();
-
-    StaticDataLayer::disconnect();
-    StaticDataLayer::connect('localhost', 'test', 'test', self::$dataSchema);
-
-    StaticDataLayer::multiQuery(file_get_contents(__DIR__.'/config/setup.sql'));
   }
 
   //--------------------------------------------------------------------------------------------------------------------
+  /**
+   * Runs the test.
+   */
   public function test01()
   {
-    // Run audit.
     $this->runAudit();
 
-    // Create new column.
+    // Change character set of column c4.
     StaticDataLayer::multiQuery(file_get_contents(__DIR__.'/config/change_charset.sql'));
 
-    $this->runDiff();    
-  }
+    $output = $this->runDiff();
 
-  //--------------------------------------------------------------------------------------------------------------------
-  private function runDiff()
-  {
-    $application = new Application();
-    $application->add(new DiffCommand());
-
-    /** @var DiffCommand $command */
-    $command = $application->find('diff');
-    $command->setRewriteConfigFile(false);
-    $commandTester = new CommandTester($command);
-    $commandTester->execute(['command'     => $command->getName(),
-                             'config file' => __DIR__.'/config/audit.json']);
-
-    $output = $commandTester->getDisplay();
-    $this->assertContains('| c4     | varchar(20)              | varchar(20)                | int(11) |', $output, 'acquire');
-    $this->assertContains('|        | [utf8] [utf8_general_ci] | [ascii] [ascii_general_ci] |         |', $output, 'acquire');
-
-    // Reconnect to MySQL.
-    StaticDataLayer::disconnect();
-    StaticDataLayer::connect('localhost', 'test', 'test', self::$dataSchema);
-    AuditDataLayer::connect('localhost', 'test', 'test', self::$dataSchema);
-  }
-
-  //--------------------------------------------------------------------------------------------------------------------
-  private function runAudit()
-  {
-    $application = new Application();
-    $application->add(new AuditCommand());
-
-    /** @var AuditCommand $command */
-    $command = $application->find('audit');
-    $command->setRewriteConfigFile(true);
-    $commandTester = new CommandTester($command);
-    $commandTester->execute(['command'     => $command->getName(),
-                             'config file' => __DIR__.'/config/audit.json']);
-
-    // Reconnect to MySQL.
-    StaticDataLayer::disconnect();
-    StaticDataLayer::connect('localhost', 'test', 'test', self::$auditSchema);
-    AuditDataLayer::connect('localhost', 'test', 'test', self::$auditSchema);
+    $this->assertContains('| c4     | varchar(20)                | varchar(20)              | int(11) |', $output);
+    $this->assertContains('|        | [ascii] [ascii_general_ci] | [utf8] [utf8_general_ci] |         |', $output);
   }
 
   //--------------------------------------------------------------------------------------------------------------------

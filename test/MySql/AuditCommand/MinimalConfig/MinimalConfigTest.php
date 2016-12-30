@@ -1,6 +1,6 @@
 <?php
 //----------------------------------------------------------------------------------------------------------------------
-namespace SetBased\Audit\Test\MySql\MinimalConfig;
+namespace SetBased\Audit\Test\MySql\AuditCommand\MinimalConfig;
 
 use SetBased\Audit\MySql\Command\AuditCommand;
 use SetBased\Audit\Test\MySql\AuditTestCase;

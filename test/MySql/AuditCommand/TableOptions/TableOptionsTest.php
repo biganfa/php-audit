@@ -1,19 +1,15 @@
 <?php
 //----------------------------------------------------------------------------------------------------------------------
-namespace SetBased\Audit\Test\MySql\TableOptions;
+namespace SetBased\Audit\Test\MySql\AuditCommand\TableOptions;
 
 use SetBased\Audit\MySql\AuditDataLayer;
-use SetBased\Audit\MySql\Command\AuditCommand;
-use SetBased\Audit\Test\MySql\AuditTestCase;
-use SetBased\Stratum\MySql\StaticDataLayer;
-use Symfony\Component\Console\Application;
-use Symfony\Component\Console\Tester\CommandTester;
+use SetBased\Audit\Test\MySql\AuditCommand\AuditCommandTestCase;
 
 //----------------------------------------------------------------------------------------------------------------------
 /**
  * Tests for preservation of table options.
  */
-class TableOptionsTest extends AuditTestCase
+class TableOptionsTest extends AuditCommandTestCase
 {
   //--------------------------------------------------------------------------------------------------------------------
   /**
@@ -21,9 +17,9 @@ class TableOptionsTest extends AuditTestCase
    */
   public static function setUpBeforeClass()
   {
-    parent::setUpBeforeClass();
+    self::$dir = __DIR__;
 
-    StaticDataLayer::multiQuery(file_get_contents(__DIR__.'/config/setup.sql'));
+    parent::setUpBeforeClass();
   }
 
   //--------------------------------------------------------------------------------------------------------------------
@@ -32,20 +28,7 @@ class TableOptionsTest extends AuditTestCase
    */
   public function test01()
   {
-    $application = new Application();
-    $application->add(new AuditCommand());
-
-    /** @var AuditCommand $command */
-    $command = $application->find('audit');
-    $command->setRewriteConfigFile(false);
-    $commandTester = new CommandTester($command);
-    $commandTester->execute(['command'     => $command->getName(),
-                             'config file' => __DIR__.'/config/audit.json']);
-
-    $this->assertSame(0, $commandTester->getStatusCode());
-
-    // Reconnect to DB.
-    AuditDataLayer::connect('localhost', 'test', 'test', self::$dataSchema);
+    $this->runAudit();
 
     $table1_data  = AuditDataLayer::getTableOptions('test_data', 'TABLE1');
     $table1_audit = AuditDataLayer::getTableOptions('test_audit', 'TABLE1');

@@ -1,6 +1,6 @@
 <?php
 //----------------------------------------------------------------------------------------------------------------------
-namespace SetBased\Audit\Test\MySql\TriggerCode;
+namespace SetBased\Audit\Test\MySql\AuditCommand\TriggerCode;
 
 use PHPUnit_Framework_TestCase;
 use SetBased\Audit\MySql\Metadata\TableColumnsMetadata;

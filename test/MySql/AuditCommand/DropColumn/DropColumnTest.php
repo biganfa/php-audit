@@ -1,19 +1,16 @@
 <?php
 //----------------------------------------------------------------------------------------------------------------------
-namespace SetBased\Audit\Test\MySql\DropColumn;
+namespace SetBased\Audit\Test\MySql\AuditCommand\DropColumn;
 
 use SetBased\Audit\MySql\AuditDataLayer;
-use SetBased\Audit\MySql\Command\AuditCommand;
-use SetBased\Audit\Test\MySql\AuditTestCase;
+use SetBased\Audit\Test\MySql\AuditCommand\AuditCommandTestCase;
 use SetBased\Stratum\MySql\StaticDataLayer;
-use Symfony\Component\Console\Application;
-use Symfony\Component\Console\Tester\CommandTester;
 
 //----------------------------------------------------------------------------------------------------------------------
 /**
  * Tests for running audit with a new table column.
  */
-class DropColumnTest extends AuditTestCase
+class DropColumnTest extends AuditCommandTestCase
 {
   //--------------------------------------------------------------------------------------------------------------------
   /**
@@ -21,12 +18,9 @@ class DropColumnTest extends AuditTestCase
    */
   public static function setUpBeforeClass()
   {
+    self::$dir = __DIR__;
+
     parent::setUpBeforeClass();
-
-    StaticDataLayer::disconnect();
-    StaticDataLayer::connect('localhost', 'test', 'test', self::$dataSchema);
-
-    StaticDataLayer::multiQuery(file_get_contents(__DIR__.'/config/setup.sql'));
   }
 
   //--------------------------------------------------------------------------------------------------------------------
@@ -78,7 +72,7 @@ class DropColumnTest extends AuditTestCase
 
     $rows = StaticDataLayer::executeRows(sprintf('select * from `%s`.`TABLE1` where c3 is not null',
                                                  self::$auditSchema));
-    $this->assertSame(4, count($rows));
+    $this->assertSame(4, count($rows), 'row_count1');
 
     // Drop column c3.
     StaticDataLayer::multiQuery(file_get_contents(__DIR__.'/config/drop_column.sql'));
@@ -130,11 +124,11 @@ class DropColumnTest extends AuditTestCase
     // Assert we 4 rows with c3 is null.
     $rows = StaticDataLayer::executeRows(sprintf('select * from `%s`.`TABLE1` where c3 is null',
                                                  self::$auditSchema));
-    $this->assertSame(4, count($rows));
+    $this->assertSame(4, count($rows), 'row_count2');
 
     // Assert we 8 rows in total.
     $rows = StaticDataLayer::executeRows(sprintf('select * from `%s`.`TABLE1`', self::$auditSchema));
-    $this->assertSame(8, count($rows));
+    $this->assertSame(8, count($rows), 'row_count3');
   }
 
   //--------------------------------------------------------------------------------------------------------------------
@@ -179,25 +173,6 @@ class DropColumnTest extends AuditTestCase
     $triggers = AuditDataLayer::getTableTriggers(self::$dataSchema, $table_name);
 
     return $triggers;
-  }
-
-  //--------------------------------------------------------------------------------------------------------------------
-  private function runAudit()
-  {
-    $application = new Application();
-    $application->add(new AuditCommand());
-
-    /** @var AuditCommand $command */
-    $command = $application->find('audit');
-    $command->setRewriteConfigFile(false);
-    $commandTester = new CommandTester($command);
-    $commandTester->execute(['command'     => $command->getName(),
-                             'config file' => __DIR__.'/config/audit.json']);
-
-    // Reconnect to MySQL.
-    StaticDataLayer::disconnect();
-    StaticDataLayer::connect('localhost', 'test', 'test', self::$dataSchema);
-    AuditDataLayer::connect('localhost', 'test', 'test', self::$dataSchema);
   }
 
   //--------------------------------------------------------------------------------------------------------------------

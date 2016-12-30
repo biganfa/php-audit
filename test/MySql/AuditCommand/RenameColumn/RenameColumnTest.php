@@ -1,19 +1,16 @@
 <?php
 //----------------------------------------------------------------------------------------------------------------------
-namespace SetBased\Audit\Test\MySql\RenameColumn;
+namespace SetBased\Audit\Test\MySql\AuditCommand\RenameColumn;
 
-use SetBased\Audit\MySql\Command\AuditCommand;
-use SetBased\Audit\Test\MySql\AuditTestCase;
+use SetBased\Audit\Test\MySql\AuditCommand\AuditCommandTestCase;
 use SetBased\Stratum\MySql\Exception\DataLayerException;
 use SetBased\Stratum\MySql\StaticDataLayer;
-use Symfony\Component\Console\Application;
-use Symfony\Component\Console\Tester\CommandTester;
 
 //----------------------------------------------------------------------------------------------------------------------
 /**
- * Tests for running audit with a new table column.
+ * Tests for running audit with a renamed column.
  */
-class RenameColumnTest extends AuditTestCase
+class RenameColumnTest extends AuditCommandTestCase
 {
   //--------------------------------------------------------------------------------------------------------------------
   /**
@@ -21,15 +18,15 @@ class RenameColumnTest extends AuditTestCase
    */
   public static function setUpBeforeClass()
   {
+    self::$dir = __DIR__;
+
     parent::setUpBeforeClass();
-
-    StaticDataLayer::disconnect();
-    StaticDataLayer::connect('localhost', 'test', 'test', self::$dataSchema);
-
-    StaticDataLayer::multiQuery(file_get_contents(__DIR__.'/config/setup.sql'));
   }
 
   //--------------------------------------------------------------------------------------------------------------------
+  /**
+   * Run audit on a table with a renamed column.
+   */
   public function test01()
   {
     // Run audit.
@@ -41,12 +38,14 @@ class RenameColumnTest extends AuditTestCase
     // Rename column c3 and d3.
     StaticDataLayer::multiQuery(file_get_contents(__DIR__.'/config/rename_column.sql'));
 
-    $status = $this->runAudit();
-
-    $this->assertSame(1, $status);
+    // We expect exit status 1.
+    $this->runAudit(1);
   }
 
   //--------------------------------------------------------------------------------------------------------------------
+  /**
+   * Trigger must use column c3 that does not exists anymore.
+   */
   public function test02()
   {
     try
@@ -61,6 +60,9 @@ class RenameColumnTest extends AuditTestCase
   }
 
   //--------------------------------------------------------------------------------------------------------------------
+  /**
+   * Trigger must use column c3 that does not exists anymore.
+   */
   public function test03()
   {
     try
@@ -75,6 +77,9 @@ class RenameColumnTest extends AuditTestCase
   }
 
   //--------------------------------------------------------------------------------------------------------------------
+  /**
+   * Trigger must use column c3 that does not exists anymore.
+   */
   public function test04()
   {
     try
@@ -86,26 +91,6 @@ class RenameColumnTest extends AuditTestCase
       $this->assertContains('Unknown column', $e->getMessage());
       $this->assertContains('c3', $e->getMessage());
     }
-  }
-
-  //--------------------------------------------------------------------------------------------------------------------
-  private function runAudit()
-  {
-    $application = new Application();
-    $application->add(new AuditCommand());
-
-    /** @var AuditCommand $command */
-    $command = $application->find('audit');
-    $command->setRewriteConfigFile(false);
-    $commandTester = new CommandTester($command);
-    $commandTester->execute(['command'     => $command->getName(),
-                             'config file' => __DIR__.'/config/audit.json']);
-
-    // Reconnect to MySQL.
-    StaticDataLayer::disconnect();
-    StaticDataLayer::connect('localhost', 'test', 'test', self::$dataSchema);
-
-    return $commandTester->getStatusCode();
   }
 
   //--------------------------------------------------------------------------------------------------------------------
