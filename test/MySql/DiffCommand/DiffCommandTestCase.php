@@ -54,7 +54,7 @@ class DiffCommandTestCase extends AuditTestCase
                              'config file' => self::$dir.'/config/audit.json']);
 
     // Reconnects to the MySQL instance (because the audit command always disconnects from the MySQL instance).
-    $this->reconnect();
+    StaticDataLayer::connect('localhost', 'test', 'test', self::$dataSchema);
   }
 
   //--------------------------------------------------------------------------------------------------------------------

@@ -14,16 +14,9 @@ use SetBased\Stratum\Style\StratumStyle;
 /**
  * Class for executing SQL statements and retrieving metadata from MySQL.
  */
-class AuditDataLayer
+class AuditDataLayer extends StaticDataLayer
 {
   //--------------------------------------------------------------------------------------------------------------------
-  /**
-   * The connection to the MySQL instance.
-   *
-   * @var StaticDataLayer
-   */
-  private static $dl;
-
   /**
    * The Output decorator.
    *
@@ -45,26 +38,6 @@ class AuditDataLayer
     $sql    = $helper->buildStatement();
 
     self::executeNone($sql);
-  }
-
-  //--------------------------------------------------------------------------------------------------------------------
-  /**
-   * Connects to a MySQL instance.
-   *
-   * Wrapper around [mysqli::__construct](http://php.net/manual/mysqli.construct.php), however on failure an exception
-   * is thrown.
-   *
-   * @param string $host     The hostname.
-   * @param string $user     The MySQL user name.
-   * @param string $passWord The password.
-   * @param string $database The default database.
-   * @param int    $port     The port number.
-   */
-  public static function connect($host, $user, $passWord, $database, $port = 3306)
-  {
-    self::$dl = new StaticDataLayer();
-
-    self::$dl->connect($host, $user, $passWord, $database, $port);
   }
 
   //--------------------------------------------------------------------------------------------------------------------
@@ -150,19 +123,6 @@ class AuditDataLayer
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
-   * Closes the connection to the MySQL instance, if connected.
-   */
-  public static function disconnect()
-  {
-    if (self::$dl!==null)
-    {
-      self::$dl->disconnect();
-      self::$dl = null;
-    }
-  }
-
-  //--------------------------------------------------------------------------------------------------------------------
-  /**
    * Drop table.
    *
    * @param string $schemaName The name of the table schema.
@@ -191,94 +151,90 @@ class AuditDataLayer
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
-   * @param string $query The SQL statement.
-   *
-   * @return int The number of affected rows (if any).
+   * {@inheritdoc}
+   */
+  public static function executeBulk($bulkHandler, $query)
+  {
+    self::logQuery($query);
+
+    parent::executeBulk($bulkHandler, $query);
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
+   * {@inheritdoc}
    */
   public static function executeNone($query)
   {
     self::logQuery($query);
 
-    return self::$dl->executeNone($query);
+    return parent::executeNone($query);
   }
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
-   * Executes a query that returns 0 or 1 row.
-   * Throws an exception if the query selects 2 or more rows.
-   *
-   * @param string $query The SQL statement.
-   *
-   * @return array|null The selected row.
+   * {@inheritdoc}
    */
   public static function executeRow0($query)
   {
     self::logQuery($query);
 
-    return self::$dl->executeRow0($query);
+    return parent::executeRow0($query);
   }
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
-   * Executes a query that returns 1 and only 1 row.
-   * Throws an exception if the query selects none, 2 or more rows.
-   *
-   * @param string $query The SQL statement.
-   *
-   * @return array The selected row.
+   * {@inheritdoc}
    */
   public static function executeRow1($query)
   {
     self::logQuery($query);
 
-    return self::$dl->executeRow1($query);
+    return parent::executeRow1($query);
   }
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
-   * Executes a query that returns 0 or more rows.
-   *
-   * @param string $query The SQL statement.
-   *
-   * @return \array[]
+   * {@inheritdoc}
    */
   public static function executeRows($query)
   {
     self::logQuery($query);
 
-    return self::$dl->executeRows($query);
+    return parent::executeRows($query);
   }
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
-   * Executes a query that returns 0 or 1 row.
-   * Throws an exception if the query selects 2 or more rows.
-   *
-   * @param string $query The SQL statement.
-   *
-   * @return int|string|null The selected row.
+   * {@inheritdoc}
    */
   public static function executeSingleton0($query)
   {
     self::logQuery($query);
 
-    return self::$dl->executeSingleton0($query);
+    return parent::executeSingleton0($query);
   }
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
-   * Executes a query that returns 1 and only 1 row with 1 column.
-   * Throws an exception if the query selects none, 2 or more rows.
-   *
-   * @param string $query The SQL statement.
-   *
-   * @return int|string The selected row.
+   * {@inheritdoc}
    */
   public static function executeSingleton1($query)
   {
     self::logQuery($query);
 
-    return self::$dl->executeSingleton1($query);
+    return parent::executeSingleton1($query);
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
+   * {@inheritdoc}
+   */
+  public static function executeTable($query)
+  {
+    self::logQuery($query);
+
+    return parent::executeTable($query);
   }
 
   //--------------------------------------------------------------------------------------------------------------------
@@ -302,8 +258,8 @@ from   information_schema.COLUMNS
 where  TABLE_SCHEMA = %s
 and    TABLE_NAME   = %s
 order by ORDINAL_POSITION',
-                   self::$dl->quoteString($schemaName),
-                   self::$dl->quoteString($tableName));
+                   parent::quoteString($schemaName),
+                   parent::quoteString($tableName));
 
     return self::executeRows($sql);
   }
@@ -327,8 +283,8 @@ FROM       information_schema.TABLES                                t1
 inner join information_schema.COLLATION_CHARACTER_SET_APPLICABILITY t2  on  t2.COLLATION_NAME = t1.TABLE_COLLATION
 WHERE t1.TABLE_SCHEMA = %s
 AND   t1.TABLE_NAME   = %s',
-                   self::$dl->quoteString($schemaName),
-                   self::$dl->quoteString($tableName));
+                   parent::quoteString($schemaName),
+                   parent::quoteString($tableName));
 
     return self::executeRow1($sql);
   }
@@ -350,8 +306,8 @@ from   information_schema.TRIGGERS
 where  TRIGGER_SCHEMA     = %s
 and    EVENT_OBJECT_TABLE = %s
 order by Trigger_Name',
-                   self::$dl->quoteString($schemaName),
-                   self::$dl->quoteString($tableName));
+                   parent::quoteString($schemaName),
+                   parent::quoteString($tableName));
 
     return self::executeRows($sql);
   }
@@ -371,7 +327,7 @@ select TABLE_NAME as table_name
 from   information_schema.TABLES
 where  TABLE_SCHEMA = %s
 and    TABLE_TYPE   = 'BASE TABLE'
-order by TABLE_NAME", self::$dl->quoteString($schemaName));
+order by TABLE_NAME", parent::quoteString($schemaName));
 
     return self::executeRows($sql);
   }
@@ -393,7 +349,7 @@ from   information_schema.TRIGGERS
 where  TRIGGER_SCHEMA     = %s
 order by EVENT_OBJECT_TABLE
 ,        TRIGGER_NAME',
-                   self::$dl->quoteString($schemaName));
+                   parent::quoteString($schemaName));
 
     return self::executeRows($sql);
   }
@@ -409,6 +365,28 @@ order by EVENT_OBJECT_TABLE
     $sql = sprintf('lock tables `%s` write', $tableName);
 
     self::executeNone($sql);
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
+   * {@inheritdoc}
+   */
+  public static function multiQuery($queries)
+  {
+    self::logQuery($queries);
+
+    return parent::multiQuery($queries);
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
+   * {@inheritdoc}
+   */
+  public static function query($query)
+  {
+    self::logQuery($query);
+
+    return parent::multiQuery($query);
   }
 
   //--------------------------------------------------------------------------------------------------------------------
@@ -447,6 +425,17 @@ order by EVENT_OBJECT_TABLE
     $sql = 'unlock tables';
 
     self::executeNone($sql);
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+  /**
+   * {@inheritdoc}
+   */
+  protected static function realQuery($query)
+  {
+    self::logQuery($query);
+
+    return parent::realQuery($query);
   }
 
   //--------------------------------------------------------------------------------------------------------------------

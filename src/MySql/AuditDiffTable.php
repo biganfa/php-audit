@@ -5,7 +5,6 @@ namespace SetBased\Audit\MySql;
 use SetBased\Audit\MySql\Helper\DiffTableColumns;
 use SetBased\Audit\MySql\Metadata\MultiSourceColumnMetadata;
 use SetBased\Audit\MySql\Metadata\TableColumnsMetadata;
-use SetBased\Stratum\MySql\StaticDataLayer;
 
 //----------------------------------------------------------------------------------------------------------------------
 /**
@@ -114,7 +113,7 @@ class AuditDiffTable
       /** @var MultiSourceColumnMetadata $config */
       $config = $column->getProperty('config');
 
-      $auditColumn = StaticDataLayer::searchInRowSet('column_name', $columnName, $this->configAuditColumns);
+      $auditColumn = AuditDataLayer::searchInRowSet('column_name', $columnName, $this->configAuditColumns);
       if (!isset($data))
       {
         if (isset($audit) && isset($config))
@@ -167,7 +166,7 @@ class AuditDiffTable
     foreach ($theColumns as $column)
     {
       $modifiedColumn = $column;
-      $auditColumn    = StaticDataLayer::searchInRowSet('column_name', $modifiedColumn['column_name'], $this->configColumns);
+      $auditColumn    = AuditDataLayer::searchInRowSet('column_name', $modifiedColumn['column_name'], $this->configColumns);
       if (isset($auditColumn))
       {
         if ($modifiedColumn['is_nullable']==='NO')

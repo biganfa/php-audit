@@ -30,16 +30,16 @@ class AddColumnTest extends AuditCommandTestCase
     $this->runAudit();
 
     // TABLE1 MUST exist.
-    $tables = $this->getAuditTables();
+    $tables = AuditDataLayer::getTablesNames(self::$auditSchema);
     $this->assertNotNull(StaticDataLayer::searchInRowSet('table_name', 'TABLE1', $tables));
 
     // TABLE1 MUST have triggers.
-    $triggers = $this->getTableTriggers('TABLE1');
+    $triggers = AuditDataLayer::getTableTriggers(self::$dataSchema, 'TABLE1');
     $this->assertNotNull(StaticDataLayer::searchInRowSet('trigger_name', 'trg_audit_t1_insert', $triggers));
     $this->assertNotNull(StaticDataLayer::searchInRowSet('trigger_name', 'trg_audit_t1_update', $triggers));
     $this->assertNotNull(StaticDataLayer::searchInRowSet('trigger_name', 'trg_audit_t1_delete', $triggers));
 
-    $actual = $this->getTableColumns(self::$auditSchema, 'TABLE1');
+    $actual = AuditDataLayer::getTableColumns(self::$auditSchema, 'TABLE1');
 
     $expected   = [];
     $expected[] = ['column_name'        => 'c1',
@@ -66,17 +66,17 @@ class AddColumnTest extends AuditCommandTestCase
     $this->runAudit();
 
     // TABLE1 MUST exist.
-    $tables = $this->getAuditTables();
+    $tables = AuditDataLayer::getTablesNames(self::$auditSchema);
     $this->assertNotNull(StaticDataLayer::searchInRowSet('table_name', 'TABLE1', $tables));
 
     // TABLE1 MUST have triggers.
-    $triggers = $this->getTableTriggers('TABLE1');
+    $triggers = AuditDataLayer::getTableTriggers(self::$dataSchema, 'TABLE1');
     $this->assertNotNull(StaticDataLayer::searchInRowSet('trigger_name', 'trg_audit_t1_insert', $triggers));
     $this->assertNotNull(StaticDataLayer::searchInRowSet('trigger_name', 'trg_audit_t1_update', $triggers));
     $this->assertNotNull(StaticDataLayer::searchInRowSet('trigger_name', 'trg_audit_t1_delete', $triggers));
 
     // TABLE1 must have column c3.
-    $actual = $this->getTableColumns(self::$auditSchema, 'TABLE1');
+    $actual = AuditDataLayer::getTableColumns(self::$auditSchema, 'TABLE1');
 
     $expected   = [];
     $expected[] = ['column_name'        => 'c1',
@@ -110,50 +110,6 @@ class AddColumnTest extends AuditCommandTestCase
     $rows = StaticDataLayer::executeRows(sprintf('select * from `%s`.`TABLE1` where c3 is not null',
                                                  self::$auditSchema));
     $this->assertSame(4, count($rows), 'row_count');
-  }
-
-  //--------------------------------------------------------------------------------------------------------------------
-  /**
-   * Returns all tables in the audit schema.
-   *
-   * @return \array[]
-   */
-  private function getAuditTables()
-  {
-    $tables = AuditDataLayer::getTablesNames(self::$auditSchema);
-
-    return $tables;
-  }
-
-  //--------------------------------------------------------------------------------------------------------------------
-  /**
-   * Selects metadata of all columns of table.
-   *
-   * @param string $schemaName The name of the table schema.
-   * @param string $tableName  The name of the table.
-   *
-   * @return \array[]
-   */
-  private function getTableColumns($schemaName, $tableName)
-  {
-    $tables = AuditDataLayer::getTableColumns($schemaName, $tableName);
-
-    return $tables;
-  }
-
-  //--------------------------------------------------------------------------------------------------------------------
-  /**
-   * Returns all triggers on a table.
-   *
-   * @param string $table_name The name of the table.
-   *
-   * @return \array[]
-   */
-  private function getTableTriggers($table_name)
-  {
-    $triggers = AuditDataLayer::getTableTriggers(self::$dataSchema, $table_name);
-
-    return $triggers;
   }
 
   //--------------------------------------------------------------------------------------------------------------------

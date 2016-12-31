@@ -2,11 +2,11 @@
 //----------------------------------------------------------------------------------------------------------------------
 namespace SetBased\Audit\MySql\Sql;
 
+use SetBased\Audit\MySql\AuditDataLayer;
 use SetBased\Audit\MySql\Metadata\TableColumnsMetadata;
 use SetBased\Exception\FallenException;
 use SetBased\Exception\RuntimeException;
 use SetBased\Helper\CodeStore\MySqlCompoundSyntaxCodeStore;
-use SetBased\Stratum\MySql\StaticDataLayer;
 
 //----------------------------------------------------------------------------------------------------------------------
 /**
@@ -233,11 +233,11 @@ class CreateAuditTrigger
           switch ($column['value_type'])
           {
             case 'ACTION':
-              $values .= StaticDataLayer::quoteString($this->triggerAction);
+              $values .= AuditDataLayer::quoteString($this->triggerAction);
               break;
 
             case 'STATE':
-              $values .= StaticDataLayer::quoteString($rowState);
+              $values .= AuditDataLayer::quoteString($rowState);
               break;
 
             default:

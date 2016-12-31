@@ -4,7 +4,6 @@ namespace SetBased\Audit\MySql;
 
 use SetBased\Audit\MySql\Metadata\TableColumnsMetadata;
 use SetBased\Audit\MySql\Metadata\TableMetadata;
-use SetBased\Stratum\MySql\StaticDataLayer;
 use SetBased\Stratum\Style\StratumStyle;
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -186,7 +185,7 @@ class Audit
 
       foreach ($this->config['audit_columns'] as $audit_column)
       {
-        $key = StaticDataLayer::searchInRowSet('column_name', $audit_column['column_name'], $columns);
+        $key = AuditDataLayer::searchInRowSet('column_name', $audit_column['column_name'], $columns);
         if (isset($audit_column['value_type']))
         {
           $columns[$key]['value_type'] = $audit_column['value_type'];
@@ -236,7 +235,7 @@ class Audit
                                        $this->config['tables'][$table['table_name']]['skip']);
 
         // Ensure an audit table exists.
-        if (StaticDataLayer::searchInRowSet('table_name', $table['table_name'], $this->auditSchemaTables)===null)
+        if (AuditDataLayer::searchInRowSet('table_name', $table['table_name'], $this->auditSchemaTables)===null)
         {
           $currentTable->createAuditTable();
         }

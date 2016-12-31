@@ -5,7 +5,6 @@ namespace SetBased\Audit\MySql\Helper;
 use SetBased\Audit\MySql\AuditDataLayer;
 use SetBased\Audit\MySql\Metadata\MultiSourceColumnMetadata;
 use SetBased\Audit\MySql\Metadata\TableColumnsMetadata;
-use SetBased\Stratum\MySql\StaticDataLayer;
 use Symfony\Component\Console\Helper\TableSeparator;
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -87,7 +86,7 @@ class DiffTableHelper
       $styledColumn = $column;
       if (is_array($column))
       {
-        $auditColumn = StaticDataLayer::searchInRowSet('column_name', $column['column_name'], $this->auditColumns);
+        $auditColumn = AuditDataLayer::searchInRowSet('column_name', $column['column_name'], $this->auditColumns);
         // Highlighting for data table column types and audit.
         if (!empty($column['data']))
         {
@@ -122,7 +121,7 @@ class DiffTableHelper
             $styledColumn['audit'] = sprintf('<mm_type>%s</>', $styledColumn['audit']);
           }
           // Highlighting for audit table column types and audit_columns in config file.
-          $searchColumn = StaticDataLayer::searchInRowSet('column_name', $styledColumn['column_name'], $this->auditColumns);
+          $searchColumn = AuditDataLayer::searchInRowSet('column_name', $styledColumn['column_name'], $this->auditColumns);
           if (isset($searchColumn))
           {
             $configType = $this->auditColumns[$searchColumn]['column_type'];

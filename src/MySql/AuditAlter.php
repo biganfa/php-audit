@@ -6,7 +6,6 @@ use SetBased\Audit\MySql\Helper\MySqlAlterTableCodeStore;
 use SetBased\Audit\MySql\Metadata\ColumnMetadata;
 use SetBased\Audit\MySql\Metadata\MultiSourceColumnMetadata;
 use SetBased\Audit\MySql\Metadata\TableColumnsMetadata;
-use SetBased\Stratum\MySql\StaticDataLayer;
 
 //----------------------------------------------------------------------------------------------------------------------
 /**
@@ -160,7 +159,7 @@ class AuditAlter
     {
       if ($this->config['tables'][$table['table_name']]['audit'])
       {
-        $res = StaticDataLayer::searchInRowSet('table_name', $table['table_name'], $this->auditSchemaTables);
+        $res = AuditDataLayer::searchInRowSet('table_name', $table['table_name'], $this->auditSchemaTables);
         if (isset($res))
         {
           $this->diffColumns[$table['table_name']] = new AuditDiffTable($this->config['database']['data_schema'],
@@ -226,7 +225,7 @@ class AuditAlter
 
       foreach ($this->config['audit_columns'] as $audit_column)
       {
-        $key = StaticDataLayer::searchInRowSet('column_name', $audit_column['column_name'], $columns);
+        $key = AuditDataLayer::searchInRowSet('column_name', $audit_column['column_name'], $columns);
 
         if ($columns[$key]['is_nullable']==='NO')
         {

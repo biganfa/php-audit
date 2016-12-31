@@ -4,7 +4,6 @@ namespace SetBased\Audit\MySql;
 
 use SetBased\Audit\MySql\Helper\DiffTableHelper;
 use SetBased\Exception\FallenException;
-use SetBased\Stratum\MySql\StaticDataLayer;
 use SetBased\Stratum\Style\StratumStyle;
 use Symfony\Component\Console\Formatter\OutputFormatterStyle;
 use Symfony\Component\Console\Helper\Table;
@@ -150,7 +149,7 @@ class AuditDiff
     $obsoleteTables = [];
     foreach ($this->config['tables'] as $tableName => $table)
     {
-      $res = StaticDataLayer::searchInRowSet('table_name', $tableName, $this->auditSchemaTables);
+      $res = AuditDataLayer::searchInRowSet('table_name', $tableName, $this->auditSchemaTables);
       if ($table['audit'] && !isset($res))
       {
         $missTables[] = $tableName;
@@ -174,7 +173,7 @@ class AuditDiff
     {
       if ($this->config['tables'][$table['table_name']]['audit'])
       {
-        $res = StaticDataLayer::searchInRowSet('table_name', $table['table_name'], $this->auditSchemaTables);
+        $res = AuditDataLayer::searchInRowSet('table_name', $table['table_name'], $this->auditSchemaTables);
         if (isset($res))
         {
           $this->diffColumns[$table['table_name']] = new AuditDiffTable($this->config['database']['data_schema'],
@@ -304,7 +303,7 @@ class AuditDiff
 
       foreach ($this->config['audit_columns'] as $audit_column)
       {
-        $key = StaticDataLayer::searchInRowSet('column_name', $audit_column['column_name'], $columns);
+        $key = AuditDataLayer::searchInRowSet('column_name', $audit_column['column_name'], $columns);
 
         if ($columns[$key]['is_nullable']==='NO')
         {

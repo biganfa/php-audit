@@ -2,7 +2,6 @@
 //----------------------------------------------------------------------------------------------------------------------
 namespace SetBased\Audit\Test\MySql;
 
-use SetBased\Audit\MySql\AuditDataLayer;
 use SetBased\Stratum\MySql\StaticDataLayer;
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -64,13 +63,6 @@ where TABLE_SCHEMA in (%s,%s)";
 
       StaticDataLayer::executeNone($sql);
     }
-  }
-
-  //--------------------------------------------------------------------------------------------------------------------
-  protected function reconnect()
-  {
-    // Reconnect to MySQL.
-    AuditDataLayer::connect('localhost', 'test', 'test', self::$dataSchema);
   }
 
   //--------------------------------------------------------------------------------------------------------------------
