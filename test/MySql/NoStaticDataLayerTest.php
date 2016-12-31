@@ -40,7 +40,7 @@ class NoStaticDataLayerTest extends \PHPUnit_Framework_TestCase
     /** @var \Composer\Autoload\ClassLoader $loader */
     $loader = spl_autoload_functions()[0][0];
 
-    $audit_data_layer_path = $loader->findFile('SetBased\\Audit\\MySql\\AuditDataLayer');
+    $audit_data_layer_path = realpath($loader->findFile('SetBased\\Audit\\MySql\\AuditDataLayer'));
     $dir                   = realpath(dirname($audit_data_layer_path).DIRECTORY_SEPARATOR.'..');
 
     $directory = new RecursiveDirectoryIterator($dir);
@@ -50,6 +50,7 @@ class NoStaticDataLayerTest extends \PHPUnit_Framework_TestCase
     $files = [];
     foreach ($regex as $name => $object)
     {
+      $name = realpath($name);
       if ($name!=$audit_data_layer_path)
       {
         $files[] = $name;
