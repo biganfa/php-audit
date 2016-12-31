@@ -20,6 +20,8 @@ class NoStaticDataLayerTest extends \PHPUnit_Framework_TestCase
   public function testNoStaticDataLayer()
   {
     $files = $this->findPhpFiles();
+    $this->assertNotEmpty($files);
+
     foreach ($files as $file)
     {
       $source = file_get_contents($file);
@@ -30,7 +32,7 @@ class NoStaticDataLayerTest extends \PHPUnit_Framework_TestCase
 
   //--------------------------------------------------------------------------------------------------------------------
   /**
-   * Finds all PHP
+   * Finds all PHP sources files.
    */
   private function findPhpFiles()
   {
@@ -41,9 +43,9 @@ class NoStaticDataLayerTest extends \PHPUnit_Framework_TestCase
     $audit_data_layer_path = $loader->findFile('\SetBased\Audit\MySql\AuditDataLayer');
     $dir                   = realpath(dirname($audit_data_layer_path).DIRECTORY_SEPARATOR.'..');
 
-    $Directory = new RecursiveDirectoryIterator($dir);
-    $Iterator  = new RecursiveIteratorIterator($Directory);
-    $regex     = new RegexIterator($Iterator, '/^.+\.php$/i', RecursiveRegexIterator::GET_MATCH);
+    $directory = new RecursiveDirectoryIterator($dir);
+    $iterator  = new RecursiveIteratorIterator($directory);
+    $regex     = new RegexIterator($iterator, '/^.+\.php$/i', RecursiveRegexIterator::GET_MATCH);
 
     $files = [];
     foreach ($regex as $name => $object)
