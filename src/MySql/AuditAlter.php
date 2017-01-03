@@ -111,7 +111,7 @@ class AuditAlter
           $editCharSet = true;
           $charSet     = $configMetadata['character_set_name'];
         }
-        $line = sprintf('%s %s %s', $columnName, $columnName, $configMetadata['column_type']);
+        $line = sprintf('`%s` `%s` %s', $columnName, $columnName, $configMetadata['column_type']);
         if ($count!=$countMax) $line .= ',';
         $this->codeStore->append($line);
       }
