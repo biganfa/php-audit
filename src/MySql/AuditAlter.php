@@ -89,7 +89,7 @@ class AuditAlter
   {
     $editCharSet = false;
     $charSet     = '';
-    $this->codeStore->append(sprintf('ALTER TABLE %s.`%s` CHANGE', $this->config['database']['audit_schema'], $tableName));
+    $this->codeStore->append(sprintf('ALTER TABLE `%s`.`%s` CHANGE', $this->config['database']['audit_schema'], $tableName));
     $countMax = $columns->getNumberOfColumns();
     $count    = 1;
     /** @var MultiSourceColumnMetadata $rowMetadata */
@@ -131,7 +131,7 @@ class AuditAlter
     $this->codeStore->append(';');
     if ($editCharSet)
     {
-      $this->codeStore->append(sprintf('ALTER TABLE %s.`%s` DEFAULT CHARACTER SET %s;', $this->config['database']['audit_schema'], $tableName, $charSet));
+      $this->codeStore->append(sprintf('ALTER TABLE `%s`.`%s` DEFAULT CHARACTER SET %s;', $this->config['database']['audit_schema'], $tableName, $charSet));
     }
   }
 
