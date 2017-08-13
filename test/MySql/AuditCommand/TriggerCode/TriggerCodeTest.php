@@ -2,15 +2,14 @@
 //----------------------------------------------------------------------------------------------------------------------
 namespace SetBased\Audit\Test\MySql\AuditCommand\TriggerCode;
 
-use PHPUnit_Framework_TestCase;
+use PHPUnit\Framework\TestCase;
 use SetBased\Audit\MySql\Metadata\TableColumnsMetadata;
 use SetBased\Audit\MySql\Sql\CreateAuditTrigger;
 
-//----------------------------------------------------------------------------------------------------------------------
 /**
  * Tests on trigger code.
  */
-class TriggerCodeTest extends PHPUnit_Framework_TestCase
+class TriggerCodeTest extends TestCase
 {
   //--------------------------------------------------------------------------------------------------------------------
   public function test01()
@@ -69,7 +68,7 @@ class TriggerCodeTest extends PHPUnit_Framework_TestCase
     {
       foreach ($additionalSql as $line)
       {
-        $this->assertContains($line.PHP_EOL, $sql, sprintf('%s: %s', $line, $triggerAction));
+        self::assertContains($line.PHP_EOL, $sql, sprintf('%s: %s', $line, $triggerAction));
       }
     }
   }
@@ -98,13 +97,13 @@ class TriggerCodeTest extends PHPUnit_Framework_TestCase
     $sql = $helper->buildStatement();
 
     // Code must have one EOL at the end.
-    $this->assertRegExp('/\r?\n$/', $sql, sprintf('Single EOL: %s', $triggerAction));
+    self::assertRegExp('/\r?\n$/', $sql, sprintf('Single EOL: %s', $triggerAction));
 
     // Code must have one and only EOL at the end.
-    $this->assertNotRegExp('/\r?\n\r?\n$/', $sql, sprintf('Double EOL: %s', $triggerAction));
+    self::assertNotRegExp('/\r?\n\r?\n$/', $sql, sprintf('Double EOL: %s', $triggerAction));
 
     // Code must not have a semicolon at the end.
-    $this->assertNotRegExp('/;$/', trim($sql), sprintf('Semicolon: %s', $triggerAction));
+    self::assertNotRegExp('/;$/', trim($sql), sprintf('Semicolon: %s', $triggerAction));
   }
 
   //--------------------------------------------------------------------------------------------------------------------

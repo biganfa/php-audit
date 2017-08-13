@@ -35,7 +35,7 @@ class NewColumnDataTableCommandTest extends DiffCommandTestCase
 
     $output = $this->runDiff();
 
-    $this->assertContains('| c3     | mediumint(9) |             |        |', $output, 'acquire');
+    self::assertContains('| c3     | mediumint(9) |             |        |', $output, 'acquire');
   }
 
   //--------------------------------------------------------------------------------------------------------------------

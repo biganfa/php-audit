@@ -9,7 +9,6 @@ use SetBased\Stratum\MySql\StaticDataLayer;
 use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Tester\CommandTester;
 
-//----------------------------------------------------------------------------------------------------------------------
 /**
  * Parent class for testing the diff command.
  */

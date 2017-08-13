@@ -14,10 +14,6 @@
             "alias": "t1"
         }
     },
-    "audit_columns": [
-
-    ],
-    "additional_sql": [
-
-    ]
+    "audit_columns": [],
+    "additional_sql": []
 }

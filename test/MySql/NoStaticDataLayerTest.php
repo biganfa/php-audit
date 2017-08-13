@@ -2,7 +2,7 @@
 //----------------------------------------------------------------------------------------------------------------------
 namespace SetBased\Audit\Test\MySql;
 
-//----------------------------------------------------------------------------------------------------------------------
+use PHPUnit\Framework\TestCase;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use RecursiveRegexIterator;
@@ -11,7 +11,7 @@ use RegexIterator;
 /**
  * Test StaticDataLayer is not used in the sources of PhpAudit.
  */
-class NoStaticDataLayerTest extends \PHPUnit_Framework_TestCase
+class NoStaticDataLayerTest extends TestCase
 {
   //--------------------------------------------------------------------------------------------------------------------
   /**
@@ -20,13 +20,13 @@ class NoStaticDataLayerTest extends \PHPUnit_Framework_TestCase
   public function testNoStaticDataLayer()
   {
     $files = $this->findPhpFiles();
-    $this->assertNotEmpty($files);
+    self::assertNotEmpty($files);
 
     foreach ($files as $file)
     {
       $source = file_get_contents($file);
       $pos    = strpos($source, 'StaticDataLayer');
-      $this->assertFalse($pos, sprintf('Found usage of StaticDataLayer in %s', $file));
+      self::assertFalse($pos, sprintf('Found usage of StaticDataLayer in %s', $file));
     }
   }
 

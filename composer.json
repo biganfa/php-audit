@@ -3,21 +3,21 @@
   "description": "A tool for creating audit tables and triggers for logging data changes in a MySQL database.",
   "keywords": [
     "MySQL",
-    "audit",
-    "triggers"
+    "Audit",
+    "Triggers"
   ],
   "type": "tool",
   "license": "MIT",
   "require": {
-    "php": ">=5.4.0",
-    "setbased/exception": "1.*",
-    "setbased/helper-code-store-mysql": "1.*",
-    "setbased/php-stratum": "*",
-    "symfony/console": "^2.8 || ^3.0"
+    "php": ">=7.0.0",
+    "setbased/exception": "^1.0.0",
+    "setbased/helper-code-store-mysql": "^1.0.0",
+    "setbased/php-stratum": "^0.9.0",
+    "symfony/console": "^3.0.0"
   },
   "require-dev": {
-    "phpunit/phpunit": "4.* || 5.*",
-    "phing/phing": "2.*"
+    "phpunit/phpunit": "^6.0.0",
+    "phing/phing": "^2.0.0"
   },
   "autoload": {
     "psr-4": {

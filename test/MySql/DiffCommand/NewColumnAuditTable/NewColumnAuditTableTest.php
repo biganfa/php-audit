@@ -5,7 +5,6 @@ namespace SetBased\Audit\Test\MySql\DiffCommand\NewColumnAuditTable;
 use SetBased\Audit\Test\MySql\DiffCommand\DiffCommandTestCase;
 use SetBased\Stratum\MySql\StaticDataLayer;
 
-//----------------------------------------------------------------------------------------------------------------------
 /**
  * Tests new column in audit table.
  */
@@ -36,7 +35,7 @@ class NewColumnAuditTableTest extends DiffCommandTestCase
 
     $output = $this->runDiff();
 
-    $this->assertContains('| c3     |            | mediumint(9) |        |', $output, 'acquire');
+    self::assertContains('| c3     |            | mediumint(9) |        |', $output, 'acquire');
   }
 
   //--------------------------------------------------------------------------------------------------------------------

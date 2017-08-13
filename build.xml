@@ -2,6 +2,11 @@
 <project name="Phing Extensions" default="build"  basedir=".">
     <target name="build"/>
 
+    <!-- Run composer update and executes various other updates -->
+    <target name="update">
+        <exec command="composer update" checkreturn="true" passthru="true"/>
+    </target>
+
     <!-- Runs all unit tests -->
     <target name="unit">
         <exec command="bin/phpunit" passthru="true" checkreturn="true"/>

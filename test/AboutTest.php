@@ -2,14 +2,14 @@
 //----------------------------------------------------------------------------------------------------------------------
 namespace SetBased\Audit\Test;
 
+use PHPUnit\Framework\TestCase;
 use SetBased\Audit\Application\AuditApplication;
 use Symfony\Component\Console\Tester\CommandTester;
 
-//----------------------------------------------------------------------------------------------------------------------
 /**
  * Test for about command.
  */
-class AboutTest extends \PHPUnit_Framework_TestCase
+class AboutTest extends TestCase
 {
   //--------------------------------------------------------------------------------------------------------------------
   public function test01()
@@ -20,7 +20,7 @@ class AboutTest extends \PHPUnit_Framework_TestCase
     $commandTester = new CommandTester($command);
     $commandTester->execute(['command' => $command->getName()]);
 
-    $this->assertSame(0, $commandTester->getStatusCode());
+    self::assertSame(0, $commandTester->getStatusCode());
   }
 
   //--------------------------------------------------------------------------------------------------------------------

@@ -6,7 +6,6 @@ use SetBased\Audit\Test\MySql\AuditCommand\AuditCommandTestCase;
 use SetBased\Stratum\MySql\Exception\DataLayerException;
 use SetBased\Stratum\MySql\StaticDataLayer;
 
-//----------------------------------------------------------------------------------------------------------------------
 /**
  * Tests for running audit with a renamed column.
  */
@@ -54,8 +53,8 @@ class RenameColumnTest extends AuditCommandTestCase
     }
     catch (DataLayerException $e)
     {
-      $this->assertContains('Unknown column', $e->getMessage());
-      $this->assertContains('c3', $e->getMessage());
+      self::assertContains('Unknown column', $e->getMessage());
+      self::assertContains('c3', $e->getMessage());
     }
   }
 
@@ -71,8 +70,8 @@ class RenameColumnTest extends AuditCommandTestCase
     }
     catch (DataLayerException $e)
     {
-      $this->assertContains('Unknown column', $e->getMessage());
-      $this->assertContains('c3', $e->getMessage());
+      self::assertContains('Unknown column', $e->getMessage());
+      self::assertContains('c3', $e->getMessage());
     }
   }
 
@@ -88,8 +87,8 @@ class RenameColumnTest extends AuditCommandTestCase
     }
     catch (DataLayerException $e)
     {
-      $this->assertContains('Unknown column', $e->getMessage());
-      $this->assertContains('c3', $e->getMessage());
+      self::assertContains('Unknown column', $e->getMessage());
+      self::assertContains('c3', $e->getMessage());
     }
   }
 

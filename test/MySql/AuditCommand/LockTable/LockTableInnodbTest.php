@@ -4,7 +4,6 @@ namespace SetBased\Audit\Test\MySql\AuditCommand\LockTable;
 
 use SetBased\Stratum\MySql\StaticDataLayer;
 
-//----------------------------------------------------------------------------------------------------------------------
 /**
  * Tests for table locking.
  */

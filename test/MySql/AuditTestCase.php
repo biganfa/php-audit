@@ -2,13 +2,13 @@
 //----------------------------------------------------------------------------------------------------------------------
 namespace SetBased\Audit\Test\MySql;
 
+use PHPUnit\Framework\TestCase;
 use SetBased\Stratum\MySql\StaticDataLayer;
 
-//----------------------------------------------------------------------------------------------------------------------
 /**
  * Parent class for the Audit test classes.
  */
-class AuditTestCase extends \PHPUnit_Framework_TestCase
+class AuditTestCase extends TestCase
 {
   //--------------------------------------------------------------------------------------------------------------------
   /**

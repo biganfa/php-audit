@@ -6,7 +6,6 @@ use SetBased\Audit\MySql\AuditDataLayer;
 use SetBased\Audit\Test\MySql\AuditCommand\AuditCommandTestCase;
 use SetBased\Stratum\MySql\StaticDataLayer;
 
-//----------------------------------------------------------------------------------------------------------------------
 /**
  * Tests for running audit with a new table column.
  */
@@ -31,13 +30,13 @@ class DropColumnTest extends AuditCommandTestCase
 
     // TABLE1 MUST exist.
     $tables = AuditDataLayer::getTablesNames(self::$auditSchema);
-    $this->assertNotNull(StaticDataLayer::searchInRowSet('table_name', 'TABLE1', $tables));
+    self::assertNotNull(StaticDataLayer::searchInRowSet('table_name', 'TABLE1', $tables));
 
     // TABLE1 MUST have triggers.
     $triggers = AuditDataLayer::getTableTriggers(self::$dataSchema, 'TABLE1');
-    $this->assertNotNull(StaticDataLayer::searchInRowSet('trigger_name', 'trg_audit_t1_insert', $triggers));
-    $this->assertNotNull(StaticDataLayer::searchInRowSet('trigger_name', 'trg_audit_t1_update', $triggers));
-    $this->assertNotNull(StaticDataLayer::searchInRowSet('trigger_name', 'trg_audit_t1_delete', $triggers));
+    self::assertNotNull(StaticDataLayer::searchInRowSet('trigger_name', 'trg_audit_t1_insert', $triggers));
+    self::assertNotNull(StaticDataLayer::searchInRowSet('trigger_name', 'trg_audit_t1_update', $triggers));
+    self::assertNotNull(StaticDataLayer::searchInRowSet('trigger_name', 'trg_audit_t1_delete', $triggers));
 
     $actual = AuditDataLayer::getTableColumns(self::$auditSchema, 'TABLE1');
 
@@ -63,7 +62,7 @@ class DropColumnTest extends AuditCommandTestCase
                    'character_set_name' => null,
                    'collation_name'     => null];
 
-    $this->assertSame($expected, $actual);
+    self::assertSame($expected, $actual);
 
     // Test triggers.
     StaticDataLayer::query('insert into `TABLE1`(c1, c2, c3, c4) values(1, 2, 3, 4)');
@@ -72,7 +71,7 @@ class DropColumnTest extends AuditCommandTestCase
 
     $rows = StaticDataLayer::executeRows(sprintf('select * from `%s`.`TABLE1` where c3 is not null',
                                                  self::$auditSchema));
-    $this->assertSame(4, count($rows), 'row_count1');
+    self::assertSame(4, count($rows), 'row_count1');
 
     // Drop column c3.
     StaticDataLayer::multiQuery(file_get_contents(__DIR__.'/config/drop_column.sql'));
@@ -81,13 +80,13 @@ class DropColumnTest extends AuditCommandTestCase
 
     // TABLE1 MUST exist.
     $tables = AuditDataLayer::getTablesNames(self::$auditSchema);
-    $this->assertNotNull(StaticDataLayer::searchInRowSet('table_name', 'TABLE1', $tables));
+    self::assertNotNull(StaticDataLayer::searchInRowSet('table_name', 'TABLE1', $tables));
 
     // TABLE1 MUST have triggers.
     $triggers = AuditDataLayer::getTableTriggers(self::$dataSchema, 'TABLE1');
-    $this->assertNotNull(StaticDataLayer::searchInRowSet('trigger_name', 'trg_audit_t1_insert', $triggers));
-    $this->assertNotNull(StaticDataLayer::searchInRowSet('trigger_name', 'trg_audit_t1_update', $triggers));
-    $this->assertNotNull(StaticDataLayer::searchInRowSet('trigger_name', 'trg_audit_t1_delete', $triggers));
+    self::assertNotNull(StaticDataLayer::searchInRowSet('trigger_name', 'trg_audit_t1_insert', $triggers));
+    self::assertNotNull(StaticDataLayer::searchInRowSet('trigger_name', 'trg_audit_t1_update', $triggers));
+    self::assertNotNull(StaticDataLayer::searchInRowSet('trigger_name', 'trg_audit_t1_delete', $triggers));
 
     // TABLE1 must have column c3.
     $actual = AuditDataLayer::getTableColumns(self::$auditSchema, 'TABLE1');
@@ -114,7 +113,7 @@ class DropColumnTest extends AuditCommandTestCase
                    'character_set_name' => null,
                    'collation_name'     => null];
 
-    $this->assertSame($expected, $actual);
+    self::assertSame($expected, $actual);
 
     // Test triggers.
     StaticDataLayer::query('insert into `TABLE1`(c1, c2, c4) values(1, 2, 4)');
@@ -124,11 +123,11 @@ class DropColumnTest extends AuditCommandTestCase
     // Assert we 4 rows with c3 is null.
     $rows = StaticDataLayer::executeRows(sprintf('select * from `%s`.`TABLE1` where c3 is null',
                                                  self::$auditSchema));
-    $this->assertSame(4, count($rows), 'row_count2');
+    self::assertSame(4, count($rows), 'row_count2');
 
     // Assert we 8 rows in total.
     $rows = StaticDataLayer::executeRows(sprintf('select * from `%s`.`TABLE1`', self::$auditSchema));
-    $this->assertSame(8, count($rows), 'row_count3');
+    self::assertSame(8, count($rows), 'row_count3');
   }
 
   //--------------------------------------------------------------------------------------------------------------------

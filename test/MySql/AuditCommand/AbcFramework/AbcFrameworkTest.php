@@ -5,7 +5,6 @@ namespace SetBased\Audit\Test\MySql\AuditCommand\AbcFramework;
 use SetBased\Audit\Test\MySql\AuditCommand\AuditCommandTestCase;
 use SetBased\Stratum\MySql\StaticDataLayer;
 
-//----------------------------------------------------------------------------------------------------------------------
 /**
  * Tests for/with typical config for ABC Framework.
  */
@@ -99,7 +98,7 @@ order by ORDINAL_POSITION',
                   'character_set_name' => 'ascii',
                   'collation_name'     => 'ascii_general_ci']];
 
-    $this->assertEquals($expected, $rows);
+    self::assertEquals($expected, $rows);
   }
 
   //--------------------------------------------------------------------------------------------------------------------
@@ -129,22 +128,22 @@ where  `audit_statement` = 'INSERT'");
     $rows = StaticDataLayer::executeRows($sql);
 
     // We expect 1 row.
-    $this->assertEquals(1, count($rows));
+    self::assertEquals(1, count($rows));
     $row = $rows[0];
 
     // Tests on fields.
     $time = new \DateTime();
-    $this->assertLessThanOrEqual(date_format($time->add(new \DateInterval('PT1M')), 'Y-m-d H:i:s'), $row['audit_timestamp']);
+    self::assertLessThanOrEqual(date_format($time->add(new \DateInterval('PT1M')), 'Y-m-d H:i:s'), $row['audit_timestamp']);
     $time = new \DateTime();
-    $this->assertGreaterThanOrEqual(date_format($time->sub(new \DateInterval('PT1M')), 'Y-m-d H:i:s'), $row['audit_timestamp']);
-    $this->assertEquals('NEW', $row['audit_type']);
-    $this->assertNotEmpty($row['audit_uuid']);
-    $this->assertEquals(1, $row['audit_rownum']);
-    $this->assertNull($row['audit_ses_id']);
-    $this->assertNull($row['audit_usr_id']);
-    $this->assertEquals('1', $row['cmp_id']);
-    $this->assertEquals('SYS', $row['cmp_abbr']);
-    $this->assertEquals('SYS', $row['cmp_label']);
+    self::assertGreaterThanOrEqual(date_format($time->sub(new \DateInterval('PT1M')), 'Y-m-d H:i:s'), $row['audit_timestamp']);
+    self::assertEquals('NEW', $row['audit_type']);
+    self::assertNotEmpty($row['audit_uuid']);
+    self::assertEquals(1, $row['audit_rownum']);
+    self::assertNull($row['audit_ses_id']);
+    self::assertNull($row['audit_usr_id']);
+    self::assertEquals('1', $row['cmp_id']);
+    self::assertEquals('SYS', $row['cmp_abbr']);
+    self::assertEquals('SYS', $row['cmp_label']);
   }
 
   //--------------------------------------------------------------------------------------------------------------------
@@ -177,37 +176,37 @@ where  `audit_statement` = 'UPDATE'");
     $rows = StaticDataLayer::executeRows($sql);
 
     // We expect 2 rows.
-    $this->assertEquals(2, count($rows), 'row count');
+    self::assertEquals(2, count($rows), 'row count');
 
     // Tests on 'OLD' fields.
     $row  = $rows[StaticDataLayer::searchInRowSet('audit_type', 'OLD', $rows)];
     $time = new \DateTime();
-    $this->assertLessThanOrEqual(date_format($time->add(new \DateInterval('PT1M')), 'Y-m-d H:i:s'), $row['audit_timestamp']);
+    self::assertLessThanOrEqual(date_format($time->add(new \DateInterval('PT1M')), 'Y-m-d H:i:s'), $row['audit_timestamp']);
     $time = new \DateTime();
-    $this->assertGreaterThanOrEqual(date_format($time->sub(new \DateInterval('PT1M')), 'Y-m-d H:i:s'), $row['audit_timestamp']);
-    $this->assertEquals('OLD', $row['audit_type']);
-    $this->assertNotEmpty($row['audit_uuid']);
-    $this->assertSame('2', $row['audit_rownum']);
-    $this->assertSame('12345', $row['audit_ses_id']);
-    $this->assertSame('7011', $row['audit_usr_id']);
-    $this->assertEquals('1', $row['cmp_id']);
-    $this->assertEquals('SYS', $row['cmp_abbr']);
-    $this->assertEquals('SYS', $row['cmp_label']);
+    self::assertGreaterThanOrEqual(date_format($time->sub(new \DateInterval('PT1M')), 'Y-m-d H:i:s'), $row['audit_timestamp']);
+    self::assertEquals('OLD', $row['audit_type']);
+    self::assertNotEmpty($row['audit_uuid']);
+    self::assertSame('2', $row['audit_rownum']);
+    self::assertSame('12345', $row['audit_ses_id']);
+    self::assertSame('7011', $row['audit_usr_id']);
+    self::assertEquals('1', $row['cmp_id']);
+    self::assertEquals('SYS', $row['cmp_abbr']);
+    self::assertEquals('SYS', $row['cmp_label']);
 
     // Tests on 'NEW' fields.
     $row  = $rows[StaticDataLayer::searchInRowSet('audit_type', 'NEW', $rows)];
     $time = new \DateTime();
-    $this->assertLessThanOrEqual(date_format($time->add(new \DateInterval('PT1M')), 'Y-m-d H:i:s'), $row['audit_timestamp']);
+    self::assertLessThanOrEqual(date_format($time->add(new \DateInterval('PT1M')), 'Y-m-d H:i:s'), $row['audit_timestamp']);
     $time = new \DateTime();
-    $this->assertGreaterThanOrEqual(date_format($time->sub(new \DateInterval('PT1M')), 'Y-m-d H:i:s'), $row['audit_timestamp']);
-    $this->assertEquals('NEW', $row['audit_type']);
-    $this->assertNotEmpty($row['audit_uuid']);
-    $this->assertSame('2', $row['audit_rownum']);
-    $this->assertSame('12345', $row['audit_ses_id']);
-    $this->assertSame('7011', $row['audit_usr_id']);
-    $this->assertEquals('1', $row['cmp_id']);
-    $this->assertEquals('SYS', $row['cmp_abbr']);
-    $this->assertEquals('CMP_ID_SYS', $row['cmp_label']);
+    self::assertGreaterThanOrEqual(date_format($time->sub(new \DateInterval('PT1M')), 'Y-m-d H:i:s'), $row['audit_timestamp']);
+    self::assertEquals('NEW', $row['audit_type']);
+    self::assertNotEmpty($row['audit_uuid']);
+    self::assertSame('2', $row['audit_rownum']);
+    self::assertSame('12345', $row['audit_ses_id']);
+    self::assertSame('7011', $row['audit_usr_id']);
+    self::assertEquals('1', $row['cmp_id']);
+    self::assertEquals('SYS', $row['cmp_abbr']);
+    self::assertEquals('CMP_ID_SYS', $row['cmp_label']);
   }
 
   //--------------------------------------------------------------------------------------------------------------------
@@ -235,22 +234,22 @@ where  audit_statement = 'DELETE'");
     $rows = StaticDataLayer::executeRows($sql);
 
     // We expect 1 row.
-    $this->assertEquals(1, count($rows));
+    self::assertEquals(1, count($rows));
     $row = $rows[0];
 
     // Tests on fields.
     $time = new \DateTime();
-    $this->assertLessThanOrEqual(date_format($time->add(new \DateInterval('PT1M')), 'Y-m-d H:i:s'), $row['audit_timestamp']);
+    self::assertLessThanOrEqual(date_format($time->add(new \DateInterval('PT1M')), 'Y-m-d H:i:s'), $row['audit_timestamp']);
     $time = new \DateTime();
-    $this->assertGreaterThanOrEqual(date_format($time->sub(new \DateInterval('PT1M')), 'Y-m-d H:i:s'), $row['audit_timestamp']);
-    $this->assertEquals('OLD', $row['audit_type']);
-    $this->assertNotEmpty($row['audit_uuid']);
-    $this->assertEquals(3, $row['audit_rownum']);
-    $this->assertSame('12345', $row['audit_ses_id']);
-    $this->assertSame('7011', $row['audit_usr_id']);
-    $this->assertEquals('1', $row['cmp_id']);
-    $this->assertEquals('SYS', $row['cmp_abbr']);
-    $this->assertEquals('CMP_ID_SYS', $row['cmp_label']);
+    self::assertGreaterThanOrEqual(date_format($time->sub(new \DateInterval('PT1M')), 'Y-m-d H:i:s'), $row['audit_timestamp']);
+    self::assertEquals('OLD', $row['audit_type']);
+    self::assertNotEmpty($row['audit_uuid']);
+    self::assertEquals(3, $row['audit_rownum']);
+    self::assertSame('12345', $row['audit_ses_id']);
+    self::assertSame('7011', $row['audit_usr_id']);
+    self::assertEquals('1', $row['cmp_id']);
+    self::assertEquals('SYS', $row['cmp_abbr']);
+    self::assertEquals('CMP_ID_SYS', $row['cmp_label']);
   }
 
   //--------------------------------------------------------------------------------------------------------------------
@@ -267,7 +266,7 @@ from   `test_audit`.`AUT_COMPANY`");
     $rows = StaticDataLayer::executeRows($sql);
 
     // We expect 4 rows: 1 insert, 2 update, and 1 delete.
-    $this->assertEquals(4, count($rows));
+    self::assertEquals(4, count($rows));
   }
 
   //--------------------------------------------------------------------------------------------------------------------

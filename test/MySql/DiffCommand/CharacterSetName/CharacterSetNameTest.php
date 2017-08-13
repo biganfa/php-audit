@@ -5,7 +5,6 @@ namespace SetBased\Audit\Test\MySql\DiffCommand\CharacterSetName;
 use SetBased\Audit\Test\MySql\DiffCommand\DiffCommandTestCase;
 use SetBased\Stratum\MySql\StaticDataLayer;
 
-//----------------------------------------------------------------------------------------------------------------------
 /**
  * Tests changed character set of a column.
  */
@@ -35,8 +34,8 @@ class CharacterSetNameTest extends DiffCommandTestCase
 
     $output = $this->runDiff();
 
-    $this->assertContains('| c4     | varchar(20)                | varchar(20)              | int(11) |', $output);
-    $this->assertContains('|        | [ascii] [ascii_general_ci] | [utf8] [utf8_general_ci] |         |', $output);
+    self::assertContains('| c4     | varchar(20)                | varchar(20)              | int(11) |', $output);
+    self::assertContains('|        | [ascii] [ascii_general_ci] | [utf8] [utf8_general_ci] |         |', $output);
   }
 
   //--------------------------------------------------------------------------------------------------------------------

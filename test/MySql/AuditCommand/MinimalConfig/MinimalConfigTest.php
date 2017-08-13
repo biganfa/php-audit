@@ -7,7 +7,6 @@ use SetBased\Audit\Test\MySql\AuditTestCase;
 use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Tester\CommandTester;
 
-//----------------------------------------------------------------------------------------------------------------------
 /**
  * Tests for/with minimal configuration.
  */
@@ -26,7 +25,7 @@ class MinimalConfigTest extends AuditTestCase
     $commandTester->execute(['command'     => $command->getName(),
                              'config file' => __DIR__.'/config/audit.json']);
 
-    $this->assertSame(0, $commandTester->getStatusCode());
+    self::assertSame(0, $commandTester->getStatusCode());
   }
 
   //--------------------------------------------------------------------------------------------------------------------

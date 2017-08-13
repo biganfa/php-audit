@@ -9,7 +9,6 @@ use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Tester\CommandTester;
 
-//----------------------------------------------------------------------------------------------------------------------
 /**
  * Tests for table locking.
  */
@@ -47,11 +46,11 @@ class LockTableTestCase extends AuditTestCase
                                OutputInterface::VERBOSITY_VERY_VERBOSE]);
 
     $status = $commandTester->getStatusCode();
-    $this->assertSame(0, $status, 'status code');
+    self::assertSame(0, $status, 'status code');
 
     $output = $commandTester->getDisplay();
-    $this->assertContains('lock tables `TABLE1` write', $output, 'acquire');
-    $this->assertContains('unlock tables', $output, 'release');
+    self::assertContains('lock tables `TABLE1` write', $output, 'acquire');
+    self::assertContains('unlock tables', $output, 'release');
   }
 
   //--------------------------------------------------------------------------------------------------------------------
@@ -84,10 +83,10 @@ class LockTableTestCase extends AuditTestCase
     posix_kill($pid, SIGUSR1);
 
     $status = $commandTester->getStatusCode();
-    $this->assertSame(0, $status, 'status code');
+    self::assertSame(0, $status, 'status code');
 
     pcntl_waitpid($pid, $status);
-    $this->assertEquals(0, $status);
+    self::assertEquals(0, $status);
 
     // Reconnect to DB.
     StaticDataLayer::connect('localhost', 'test', 'test', self::$dataSchema);
@@ -109,7 +108,7 @@ class LockTableTestCase extends AuditTestCase
       sleep(3);
     }
 
-    $this->assertEquals(4 * $n1, $n2, 'count');
+    self::assertEquals(4 * $n1, $n2, 'count');
   }
 
   //--------------------------------------------------------------------------------------------------------------------
