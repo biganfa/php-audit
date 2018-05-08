@@ -52,7 +52,7 @@ class DiffTableHelper
   /**
    * Array with rows for table.
    *
-   * @var \array[]
+   * @var array[]
    */
   private $rows = [];
 
@@ -212,7 +212,7 @@ class DiffTableHelper
   /**
    * Get rows.
    *
-   * @return \array[]
+   * @return array[]
    */
   public function getRows()
   {

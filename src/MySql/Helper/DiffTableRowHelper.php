@@ -15,7 +15,7 @@ class DiffTableRowHelper
   /**
    * Append a row to existing rows array.
    *
-   * @param \array[]                  $theExistRows Exist rows array for appending.
+   * @param array[]                  $theExistRows Exist rows array for appending.
    * @param MultiSourceColumnMetadata $rowMetadata  Row for append.
    * @param string                    $columnName   The columns name.
    */

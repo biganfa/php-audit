@@ -302,7 +302,7 @@ class AuditTable
   /**
    * Selects and returns the metadata of the columns of this table from information_schema.
    *
-   * @return \array[]
+   * @return array[]
    */
   private function getColumnsFromInformationSchema()
   {

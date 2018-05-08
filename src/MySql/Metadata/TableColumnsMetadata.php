@@ -22,7 +22,7 @@ class TableColumnsMetadata
   /**
    * Object constructor.
    *
-   * @param \array[] $columns The metadata of the columns as returned by AuditDataLayer::getTableColumns().
+   * @param array[] $columns The metadata of the columns as returned by AuditDataLayer::getTableColumns().
    * @param string   $type    The class for columns metadata.
    */
   public function __construct($columns = [], $type = 'ColumnMetadata')
