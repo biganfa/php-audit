@@ -1,5 +1,5 @@
 {
-  "name": "setbased/php-audit",
+  "name": "vonq/php-audit",
   "description": "A tool for creating audit tables and triggers for logging data changes in a MySQL database.",
   "keywords": [
     "MySQL",
@@ -10,8 +10,8 @@
   "license": "MIT",
   "require": {
     "php": ">=5.4.0",
-    "setbased/exception": "1.*",
-    "setbased/helper-code-store-mysql": "1.*",
+    "setbased/exception": "1.0.0",
+    "setbased/helper-code-store-mysql": "1.0.0",
     "setbased/php-stratum": "*",
     "symfony/console": "^2.8 || ^3.0"
   },
