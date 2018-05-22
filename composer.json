@@ -1,38 +1,43 @@
 {
-  "name": "setbased/php-audit",
-  "description": "A tool for creating audit tables and triggers for logging data changes in a MySQL database.",
-  "keywords": [
-    "MySQL",
-    "Audit",
-    "Triggers"
-  ],
-  "type": "tool",
-  "license": "MIT",
-  "require": {
-    "php": ">=7.0.0",
-    "setbased/exception": "^1.0.0",
-    "setbased/helper-code-store-mysql": "^1.0.0",
-    "setbased/php-stratum": "^0.9.0",
-    "symfony/console": "^3.0.0"
-  },
-  "require-dev": {
-    "phpunit/phpunit": "^6.0.0",
-    "phing/phing": "^2.0.0"
-  },
-  "autoload": {
-    "psr-4": {
-      "SetBased\\Audit\\": "src/"
+    "name": "biganfa/php-audit",
+    "minimum-stability": "dev",
+    "description": "A tool for creating audit tables and triggers for logging data changes in a MySQL database.",
+    "keywords": [
+        "MySQL",
+        "audit",
+        "triggers"
+    ],
+    "type": "tool",
+    "license": "MIT",
+    "require": {
+        "php": ">=5.4.0",
+        "setbased/exception": "1.0.0",
+        "setbased/helper-code-store-mysql": "1.0.0",
+        "biganfa/php-stratum": "v1.2.0",
+        "symfony/console": "^2.8 || ^3.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "4.* || 5.*",
+        "phing/phing": "2.*"
+    },
+    "repositories": [{
+        "type": "vcs",
+        "url": "git@github.com:biganfa/php-stratum.git"
+    }],
+    "autoload": {
+        "psr-4": {
+            "SetBased\\Audit\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "SetBased\\Audit\\Test\\": "test/"
+        }
+    },
+    "bin": [
+        "bin/audit"
+    ],
+    "config": {
+        "bin-dir": "bin"
     }
-  },
-  "autoload-dev": {
-    "psr-4": {
-      "SetBased\\Audit\\Test\\": "test/"
-    }
-  },
-  "bin": [
-    "bin/audit"
-  ],
-  "config": {
-    "bin-dir": "bin"
-  }
 }
